@@ -48,7 +48,7 @@ export default function AdminPage() {
       return;
     }
     updateMutation.mutate(
-      { code: newSequence, adminPassword },
+      { data: { code: newSequence, adminPassword } },
       {
         onSuccess: () => {
           setMessage({ type: "success", text: "Login code updated successfully" });

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useVerifyLogin } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
   const handleSubmit = useCallback(() => {
     if (sequence.length === 0) return;
     verifyMutation.mutate(
-      { sequence },
+      { data: { sequence } },
       {
         onSuccess: (data) => {
           if (data.success) {

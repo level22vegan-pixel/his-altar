@@ -1,7 +1,18 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
+
+const CAMPUSES = [
+  "HALLMARK",
+  "ARROWHEAD",
+  "RIVERSIDE",
+  "POMONA",
+  "LA",
+  "ARIZONA",
+];
 
 export default function HomePage() {
   const [, navigate] = useLocation();
+  const [showCampuses, setShowCampuses] = useState(false);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
@@ -23,38 +34,72 @@ export default function HomePage() {
       />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center gap-12 px-6 text-center">
-        {/* Decorative line */}
+      <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center w-full max-w-lg">
+
+        {/* Decorative line top */}
         <div className="flex items-center gap-4 w-64">
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
-          <span style={{ color: "hsl(38 50% 45%)", fontFamily: "Georgia, serif", fontSize: "1.4rem" }}>
-            ✦
-          </span>
+          <span style={{ color: "hsl(38 50% 45%)", fontFamily: "Georgia, serif", fontSize: "1.4rem" }}>✦</span>
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
         </div>
 
-        {/* Main button */}
-        <button
-          onClick={() => alert("Campus selection coming soon")}
-          className="campus-btn px-12 py-4 text-base uppercase tracking-widest rounded"
-          style={{
-            background: "linear-gradient(135deg, hsl(35 40% 22%), hsl(35 35% 18%))",
-            color: "hsl(38 70% 72%)",
-            border: "1px solid hsl(38 40% 35%)",
-            fontFamily: "Georgia, serif",
-            letterSpacing: "0.25em",
-            boxShadow: "0 4px 24px hsl(38 50% 20% / 0.4), inset 0 1px 0 hsl(38 50% 40% / 0.2)",
-          }}
-        >
-          Select Campus
-        </button>
+        {!showCampuses ? (
+          /* Select Campus button */
+          <button
+            onClick={() => setShowCampuses(true)}
+            className="campus-btn px-12 py-4 text-base uppercase tracking-widest rounded"
+            style={{
+              background: "linear-gradient(135deg, hsl(35 40% 22%), hsl(35 35% 18%))",
+              color: "hsl(38 70% 72%)",
+              border: "1px solid hsl(38 40% 35%)",
+              fontFamily: "Georgia, serif",
+              letterSpacing: "0.25em",
+              boxShadow: "0 4px 24px hsl(38 50% 20% / 0.4), inset 0 1px 0 hsl(38 50% 40% / 0.2)",
+            }}
+          >
+            Select Campus
+          </button>
+        ) : (
+          /* Campus grid */
+          <div className="flex flex-col items-center gap-3 w-full fade-in">
+            <p
+              className="text-xs uppercase tracking-widest mb-1 opacity-60"
+              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.3em" }}
+            >
+              Choose Your Campus
+            </p>
+            <div className="grid grid-cols-2 gap-3 w-full">
+              {CAMPUSES.map((campus) => (
+                <button
+                  key={campus}
+                  className="campus-btn py-4 px-4 text-sm uppercase rounded"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",
+                    color: "hsl(38 65% 68%)",
+                    border: "1px solid hsl(38 35% 30%)",
+                    fontFamily: "Georgia, serif",
+                    letterSpacing: "0.2em",
+                    boxShadow: "0 2px 12px hsl(38 40% 15% / 0.4), inset 0 1px 0 hsl(38 45% 35% / 0.15)",
+                  }}
+                >
+                  {campus}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowCampuses(false)}
+              className="mt-2 text-xs uppercase tracking-widest opacity-40 hover:opacity-70 transition-opacity"
+              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", border: "none", background: "none", cursor: "pointer", letterSpacing: "0.2em" }}
+            >
+              ← Back
+            </button>
+          </div>
+        )}
 
         {/* Decorative line bottom */}
         <div className="flex items-center gap-4 w-64">
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
-          <span style={{ color: "hsl(38 50% 45%)", fontFamily: "Georgia, serif", fontSize: "1.4rem" }}>
-            ✦
-          </span>
+          <span style={{ color: "hsl(38 50% 45%)", fontFamily: "Georgia, serif", fontSize: "1.4rem" }}>✦</span>
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
         </div>
       </div>
@@ -65,7 +110,7 @@ export default function HomePage() {
         className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase transition-opacity duration-200 opacity-40 hover:opacity-80"
         style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
       >
-        &larr; Back
+        &larr; Login
       </button>
     </div>
   );

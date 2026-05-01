@@ -672,6 +672,8 @@ components:
           type: string
         campus:
           type: string
+        service:
+          type: string
         salvations:
           type: integer
         prayers:
@@ -688,6 +690,7 @@ components:
         - id
         - date
         - campus
+        - service
         - salvations
         - prayers
         - altarMembers
@@ -700,6 +703,8 @@ components:
           type: string
         campus:
           type: string
+        service:
+          type: string
         salvations:
           type: integer
         prayers:
@@ -709,6 +714,7 @@ components:
       required:
         - date
         - campus
+        - service
     DailyAltarReportList:
       type: object
       properties:

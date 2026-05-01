@@ -6,7 +6,18 @@ import type { DailyAltarReport } from "@workspace/api-client-react";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// Sunday = 0, Wednesday = 3
+const SUNDAY_SERVICES = ["8am", "10am", "12pm"];
+const WEDNESDAY_SERVICES = ["7pm"];
+
+function getDayServices(date: Date): string[] | null {
+  const dow = date.getDay();
+  if (dow === 0) return SUNDAY_SERVICES;
+  if (dow === 3) return WEDNESDAY_SERVICES;
+  return null; // not clickable
+}
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
 function toDateStr(y: number, m: number, d: number) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
@@ -42,56 +53,147 @@ const LABEL_STYLE: React.CSSProperties = {
   textAlign: "center",
 };
 
-type DayReports = Record<string, DailyAltarReport[]>; // date → reports
+type DayServiceKey = string; // `${date}__${service}`
+type DayMap = Record<string, DailyAltarReport[]>; // keyed by date__service
 
-function buildDayMap(reports: DailyAltarReport[]): DayReports {
-  const map: DayReports = {};
+function buildDayMap(reports: DailyAltarReport[]): DayMap {
+  const map: DayMap = {};
   for (const r of reports) {
-    if (!map[r.date]) map[r.date] = [];
-    map[r.date].push(r);
+    const key = `${r.date}__${r.service}`;
+    if (!map[key]) map[key] = [];
+    map[key].push(r);
   }
   return map;
 }
 
-// ── Day Entry Card ────────────────────────────────────────────────────────────
+// Also build a set of dates that have ANY data (for dot indicators on calendar)
+function buildDatesWithData(reports: DailyAltarReport[]): Set<string> {
+  return new Set(reports.map(r => r.date));
+}
+
+// ── Stat input row ─────────────────────────────────────────────────────────────
+function StatFields({
+  salvations, prayers, altarMembers,
+  onChange,
+}: {
+  salvations: string; prayers: string; altarMembers: string;
+  onChange: (field: "salvations" | "prayers" | "altarMembers", val: string) => void;
+}) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+      <div>
+        <label style={LABEL_STYLE}>Salvations</label>
+        <input type="number" min="0" value={salvations} onChange={e => onChange("salvations", e.target.value)} style={INPUT_STYLE} />
+      </div>
+      <div>
+        <label style={LABEL_STYLE}>Prayers</label>
+        <input type="number" min="0" value={prayers} onChange={e => onChange("prayers", e.target.value)} style={INPUT_STYLE} />
+      </div>
+      <div>
+        <label style={LABEL_STYLE}>Altar Members</label>
+        <input type="number" min="0" value={altarMembers} onChange={e => onChange("altarMembers", e.target.value)} style={INPUT_STYLE} />
+      </div>
+    </div>
+  );
+}
+
+// ── Day Entry Card (view + inline edit) ───────────────────────────────────────
 function DayEntry({
   report,
   onDelete,
+  onSave,
 }: {
   report: DailyAltarReport;
   onDelete: (id: number) => void;
+  onSave: (id: number, data: { salvations: number; prayers: number; altarMembers: number }) => void;
 }) {
-  const stats = [
+  const [editing, setEditing] = useState(false);
+  const [salvations, setSalvations] = useState(String(report.salvations));
+  const [prayers, setPrayers] = useState(String(report.prayers));
+  const [altarMembers, setAltarMembers] = useState(String(report.altarMembers));
+
+  // Keep local state in sync when report updates (after save)
+  useEffect(() => {
+    setSalvations(String(report.salvations));
+    setPrayers(String(report.prayers));
+    setAltarMembers(String(report.altarMembers));
+  }, [report.salvations, report.prayers, report.altarMembers]);
+
+  const handleSave = () => {
+    onSave(report.id, {
+      salvations: parseInt(salvations) || 0,
+      prayers: parseInt(prayers) || 0,
+      altarMembers: parseInt(altarMembers) || 0,
+    });
+    setEditing(false);
+  };
+
+  const statColors = [
     { label: "Salvations", value: report.salvations, color: "hsl(130 55% 52%)" },
     { label: "Prayers", value: report.prayers, color: "hsl(200 60% 62%)" },
     { label: "Altar Members", value: report.altarMembers, color: GOLD },
   ];
+
   return (
-    <div style={{ background: "hsl(35 18% 16%)", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12 }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", marginBottom: 8 }}>{report.campus}</div>
-        <div style={{ display: "flex", gap: 18 }}>
-          {stats.map(s => (
+    <div style={{ background: "hsl(35 18% 16%)", border: `1px solid ${editing ? "hsl(38 28% 28%)" : BORDER}`, borderRadius: 8, overflow: "hidden", transition: "border-color 0.2s" }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}>
+        <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em" }}>{report.campus}</span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            onClick={() => setEditing(e => !e)}
+            style={{ color: editing ? GOLD_BRIGHT : GOLD_DIM, background: editing ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editing ? "hsl(38 35% 28%)" : BORDER}`, borderRadius: 4, padding: "3px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}
+          >
+            {editing ? "Close" : "Edit"}
+          </button>
+          <button
+            onClick={() => { if (confirm("Remove this entry?")) onDelete(report.id); }}
+            style={{ color: "hsl(0 50% 50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, opacity: 0.4, transition: "opacity 0.2s" }}
+            onMouseOver={e => (e.currentTarget.style.opacity = "1")}
+            onMouseOut={e => (e.currentTarget.style.opacity = "0.4")}
+          >✕</button>
+        </div>
+      </div>
+
+      {/* Stat display (when not editing) */}
+      {!editing && (
+        <div style={{ display: "flex", gap: 20, padding: "0 14px 12px" }}>
+          {statColors.map(s => (
             <div key={s.label} style={{ textAlign: "center" }}>
               <div style={{ color: s.color, fontFamily: "Georgia, serif", fontSize: 20, fontWeight: "bold", lineHeight: 1 }}>{s.value}</div>
               <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
-      </div>
-      <button onClick={() => onDelete(report.id)} style={{ color: "hsl(0 50% 50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, opacity: 0.4, flexShrink: 0, transition: "opacity 0.2s" }} onMouseOver={e => (e.currentTarget.style.opacity = "1")} onMouseOut={e => (e.currentTarget.style.opacity = "0.4")}>✕</button>
+      )}
+
+      {/* Edit form (when editing) */}
+      {editing && (
+        <div style={{ padding: "0 14px 14px" }}>
+          <StatFields
+            salvations={salvations} prayers={prayers} altarMembers={altarMembers}
+            onChange={(field, val) => {
+              if (field === "salvations") setSalvations(val);
+              else if (field === "prayers") setPrayers(val);
+              else setAltarMembers(val);
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <button onClick={handleSave} style={{ flex: 1, background: "hsl(38 50% 28%)", color: GOLD_BRIGHT, border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "8px 0", borderRadius: 5, cursor: "pointer" }}>Save Changes</button>
+            <button onClick={() => setEditing(false)} style={{ background: "none", color: GOLD_DIM, border: `1px solid ${BORDER}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "8px 14px", borderRadius: 5, cursor: "pointer" }}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Add / Edit Form ───────────────────────────────────────────────────────────
+// ── Add Entry Form ─────────────────────────────────────────────────────────────
 function AddEntryForm({
-  date,
   existingCampuses,
   onSave,
   onCancel,
 }: {
-  date: string;
   existingCampuses: string[];
   onSave: (data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onCancel: () => void;
@@ -101,86 +203,83 @@ function AddEntryForm({
   const [salvations, setSalvations] = useState("0");
   const [prayers, setPrayers] = useState("0");
   const [altarMembers, setAltarMembers] = useState("0");
-  const [error, setError] = useState("");
 
   if (available.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "16px 0", opacity: 0.4 }}>
-        <p style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 12 }}>All campuses have entries for this day</p>
-        <button onClick={onCancel} style={{ marginTop: 8, color: GOLD_DIM, background: "none", border: "none", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase" }}>Cancel</button>
+      <div style={{ textAlign: "center", padding: "14px 0", opacity: 0.4 }}>
+        <p style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 12 }}>All campuses have entries for this service</p>
+        <button onClick={onCancel} style={{ marginTop: 6, color: GOLD_DIM, background: "none", border: "none", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase" }}>Close</button>
       </div>
     );
   }
 
-  const handleSave = () => {
-    if (!campus) { setError("Select a campus"); return; }
-    onSave({ campus, salvations: parseInt(salvations) || 0, prayers: parseInt(prayers) || 0, altarMembers: parseInt(altarMembers) || 0 });
-  };
-
   return (
-    <div style={{ background: "hsl(35 18% 15%)", border: `1px solid hsl(38 25% 26%)`, borderRadius: 8, padding: "16px" }}>
-      <div style={{ marginBottom: 14 }}>
+    <div style={{ background: "hsl(35 18% 15%)", border: `1px solid hsl(38 25% 26%)`, borderRadius: 8, padding: "14px" }}>
+      <div style={{ marginBottom: 12 }}>
         <label style={LABEL_STYLE}>Campus</label>
         <select value={campus} onChange={e => setCampus(e.target.value)} style={{ ...INPUT_STYLE, textAlign: "left" }}>
           {available.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-        <div>
-          <label style={LABEL_STYLE}>Salvations</label>
-          <input type="number" min="0" value={salvations} onChange={e => setSalvations(e.target.value)} style={INPUT_STYLE} />
-        </div>
-        <div>
-          <label style={LABEL_STYLE}>Prayers</label>
-          <input type="number" min="0" value={prayers} onChange={e => setPrayers(e.target.value)} style={INPUT_STYLE} />
-        </div>
-        <div>
-          <label style={LABEL_STYLE}>Altar Members</label>
-          <input type="number" min="0" value={altarMembers} onChange={e => setAltarMembers(e.target.value)} style={INPUT_STYLE} />
-        </div>
-      </div>
-      {error && <p style={{ color: "hsl(0 60% 55%)", fontFamily: "Georgia, serif", fontSize: 12, marginBottom: 10, textAlign: "center" }}>{error}</p>}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={handleSave} style={{ flex: 1, background: "hsl(38 50% 28%)", color: GOLD_BRIGHT, border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 5, cursor: "pointer" }}>Save Entry</button>
-        <button onClick={onCancel} style={{ background: "none", color: GOLD_DIM, border: `1px solid ${BORDER}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "9px 16px", borderRadius: 5, cursor: "pointer" }}>Cancel</button>
+      <StatFields
+        salvations={salvations} prayers={prayers} altarMembers={altarMembers}
+        onChange={(field, val) => {
+          if (field === "salvations") setSalvations(val);
+          else if (field === "prayers") setPrayers(val);
+          else setAltarMembers(val);
+        }}
+      />
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <button onClick={() => onSave({ campus, salvations: parseInt(salvations) || 0, prayers: parseInt(prayers) || 0, altarMembers: parseInt(altarMembers) || 0 })} style={{ flex: 1, background: "hsl(38 50% 28%)", color: GOLD_BRIGHT, border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 5, cursor: "pointer" }}>Save Entry</button>
+        <button onClick={onCancel} style={{ background: "none", color: GOLD_DIM, border: `1px solid ${BORDER}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "9px 14px", borderRadius: 5, cursor: "pointer" }}>Cancel</button>
       </div>
     </div>
   );
 }
 
-// ── Day Detail Panel ──────────────────────────────────────────────────────────
+// ── Day Detail Panel ───────────────────────────────────────────────────────────
 function DayDetail({
   dateStr,
-  reports,
+  dayServices,
+  dayMap,
   onClose,
   onSave,
+  onEdit,
   onDelete,
 }: {
   dateStr: string;
-  reports: DailyAltarReport[];
+  dayServices: string[];
+  dayMap: DayMap;
   onClose: () => void;
-  onSave: (data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
+  onSave: (service: string, data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
+  onEdit: (id: number, service: string, data: { salvations: number; prayers: number; altarMembers: number }) => void;
   onDelete: (id: number) => void;
 }) {
-  const [showForm, setShowForm] = useState(false);
-  const date = new Date(dateStr + "T12:00:00");
-  const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const [activeService, setActiveService] = useState(dayServices[0]);
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  const totals = reports.reduce(
+  const date = new Date(dateStr + "T12:00:00");
+  const dayLabel = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const isWednesday = date.getDay() === 3;
+
+  const serviceKey: DayServiceKey = `${dateStr}__${activeService}`;
+  const serviceReports = dayMap[serviceKey] ?? [];
+  const existingCampuses = serviceReports.map(r => r.campus);
+
+  // Totals for active service
+  const totals = serviceReports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
     { salvations: 0, prayers: 0, altarMembers: 0 }
   );
 
-  const existingCampuses = reports.map(r => r.campus);
+  // Switch service → reset add form
+  const handleServiceSwitch = (s: string) => { setActiveService(s); setShowAddForm(false); };
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", justifyContent: "flex-end" }} onClick={onClose}>
-      {/* Backdrop */}
       <div style={{ position: "absolute", inset: 0, background: "hsl(30 18% 5% / 0.75)", backdropFilter: "blur(2px)" }} />
-
-      {/* Panel */}
       <div
-        style={{ position: "relative", background: "hsl(35 22% 11%)", borderRadius: "16px 16px 0 0", border: `1px solid hsl(38 22% 22%)`, borderBottom: "none", maxHeight: "82vh", overflowY: "auto", padding: "0 0 40px 0" }}
+        style={{ position: "relative", background: "hsl(35 22% 11%)", borderRadius: "16px 16px 0 0", border: `1px solid hsl(38 22% 22%)`, borderBottom: "none", maxHeight: "84vh", overflowY: "auto", paddingBottom: 40 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Drag handle */}
@@ -188,42 +287,96 @@ function DayDetail({
           <div style={{ width: 40, height: 4, borderRadius: 2, background: "hsl(38 18% 28%)" }} />
         </div>
 
-        <div style={{ padding: "12px 20px 0" }}>
+        <div style={{ padding: "10px 20px 0" }}>
           {/* Date header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
             <div>
-              <h2 style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 17, letterSpacing: "0.08em", margin: 0 }}>{label}</h2>
-              {reports.length > 0 && (
-                <div style={{ display: "flex", gap: 16, marginTop: 6 }}>
-                  <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 12 }}>✝ {totals.salvations} Salvations</span>
-                  <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 12 }}>🙏 {totals.prayers} Prayers</span>
-                  <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12 }}>🙌 {totals.altarMembers} Members</span>
-                </div>
-              )}
+              <h2 style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 17, letterSpacing: "0.06em", margin: 0 }}>{dayLabel}</h2>
+              <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 11, marginTop: 3, letterSpacing: "0.1em" }}>
+                {isWednesday ? "Wednesday Evening Service" : "Sunday Services"}
+              </div>
             </div>
             <button onClick={onClose} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1, opacity: 0.6 }}>✕</button>
           </div>
 
-          {/* Existing entries */}
-          {reports.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-              {reports.map(r => (
-                <DayEntry key={r.id} report={r} onDelete={onDelete} />
+          {/* Service time tabs (only show if multiple) */}
+          {dayServices.length > 1 && (
+            <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+              {dayServices.map(s => (
+                <button
+                  key={s}
+                  onClick={() => handleServiceSwitch(s)}
+                  style={{
+                    padding: "7px 16px",
+                    fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em",
+                    cursor: "pointer", borderRadius: 6, transition: "all 0.2s",
+                    background: activeService === s ? "hsl(38 45% 22%)" : SURFACE,
+                    color: activeService === s ? GOLD_BRIGHT : GOLD_DIM,
+                    border: activeService === s ? "1px solid hsl(38 42% 32%)" : `1px solid ${BORDER}`,
+                  }}
+                >
+                  {s}
+                  {(() => {
+                    const k = `${dateStr}__${s}`;
+                    const count = (dayMap[k] ?? []).length;
+                    return count > 0 ? (
+                      <span style={{ marginLeft: 6, background: "hsl(38 35% 20%)", color: GOLD, borderRadius: 10, padding: "1px 6px", fontSize: 10 }}>{count}</span>
+                    ) : null;
+                  })()}
+                </button>
               ))}
             </div>
           )}
 
-          {/* Add entry */}
-          {showForm ? (
+          {/* Single service label (Wednesday) */}
+          {dayServices.length === 1 && (
+            <div style={{ marginBottom: 14, padding: "7px 14px", background: "hsl(38 45% 22%)", border: "1px solid hsl(38 42% 32%)", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>🕖 {activeService}</span>
+            </div>
+          )}
+
+          {/* Month totals for this service */}
+          {serviceReports.length > 0 && (
+            <div style={{ display: "flex", gap: 20, padding: "10px 14px", background: SURFACE, borderRadius: 8, marginBottom: 14, border: `1px solid ${BORDER}` }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{totals.salvations}</div>
+                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>Salvations</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{totals.prayers}</div>
+                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>Prayers</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{totals.altarMembers}</div>
+                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>Altar Members</div>
+              </div>
+            </div>
+          )}
+
+          {/* Campus entries for this service */}
+          {serviceReports.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+              {serviceReports.map(r => (
+                <DayEntry
+                  key={r.id}
+                  report={r}
+                  onDelete={onDelete}
+                  onSave={(id, data) => onEdit(id, activeService, data)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Add campus entry */}
+          {showAddForm ? (
             <AddEntryForm
-              date={dateStr}
               existingCampuses={existingCampuses}
-              onSave={(data) => { onSave(data); setShowForm(false); }}
-              onCancel={() => setShowForm(false)}
+              onSave={(data) => { onSave(activeService, data); setShowAddForm(false); }}
+              onCancel={() => setShowAddForm(false)}
             />
           ) : existingCampuses.length < CAMPUSES.length ? (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => setShowAddForm(true)}
               style={{ width: "100%", background: SURFACE, color: GOLD_DIM, border: `1px dashed hsl(38 22% 26%)`, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", padding: "11px 0", borderRadius: 6, cursor: "pointer", transition: "all 0.2s" }}
               onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 35% 36%)"; }}
               onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = "hsl(38 22% 26%)"; }}
@@ -237,14 +390,14 @@ function DayDetail({
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Main Page ──────────────────────────────────────────────────────────────────
 export default function AltarReportPage() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const queryKey = ["daily-altar-reports", viewYear, viewMonth + 1];
@@ -259,6 +412,7 @@ export default function AltarReportPage() {
 
   const reports = data?.reports ?? [];
   const dayMap = buildDayMap(reports);
+  const datesWithData = buildDatesWithData(reports);
 
   const goMonth = useCallback((delta: number) => {
     setSelectedDate(null);
@@ -270,7 +424,6 @@ export default function AltarReportPage() {
     });
   }, []);
 
-  // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") goMonth(-1);
@@ -281,86 +434,90 @@ export default function AltarReportPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [goMonth]);
 
-  // Calendar grid calculation
-  const firstDay = new Date(viewYear, viewMonth, 1).getDay(); // 0=Sun
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const handleSave = (data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => {
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+
+  const handleSave = (service: string, entryData: { campus: string; salvations: number; prayers: number; altarMembers: number }) => {
     if (!selectedDate) return;
     upsert.mutate(
-      { data: { date: selectedDate, ...data } },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey }) }
+      { data: { date: selectedDate, service, ...entryData } },
+      { onSuccess: invalidate }
+    );
+  };
+
+  const handleEdit = (id: number, service: string, entryData: { salvations: number; prayers: number; altarMembers: number }) => {
+    if (!selectedDate) return;
+    // Find campus for this id
+    const report = reports.find(r => r.id === id);
+    if (!report) return;
+    upsert.mutate(
+      { data: { date: selectedDate, service, campus: report.campus, ...entryData } },
+      { onSuccess: invalidate }
     );
   };
 
   const handleDelete = (id: number) => {
-    deleteMut.mutate({ id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey });
-        // If no more entries for this date, auto-close panel
-        const remaining = (dayMap[selectedDate ?? ""] ?? []).filter(r => r.id !== id);
-        if (remaining.length === 0) setSelectedDate(null);
-      }
-    });
+    deleteMut.mutate({ id }, { onSuccess: invalidate });
   };
 
-  const selectedReports = selectedDate ? (dayMap[selectedDate] ?? []) : [];
-
-  // Totals for the month
+  // Month totals
   const monthTotals = reports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
     { salvations: 0, prayers: 0, altarMembers: 0 }
   );
 
+  const selectedDayDate = selectedDate ? new Date(selectedDate + "T12:00:00") : null;
+  const selectedDayServices = selectedDayDate ? getDayServices(selectedDayDate) : null;
+
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
-      {/* Ambient glow */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 80% 60% at 50% 10%, hsl(38 30% 12% / 0.5) 0%, transparent 70%)" }} />
 
       <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", maxWidth: 700, width: "100%", margin: "0 auto", padding: "16px 16px 24px" }}>
 
         {/* Top bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <button onClick={() => navigate("/admin")} style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", opacity: 0.5 }}>← Admin</button>
           <h1 style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 14, letterSpacing: "0.3em", textTransform: "uppercase", margin: 0 }}>Altar Report</h1>
           <div style={{ width: 60 }} />
         </div>
 
-        {/* Month totals bar */}
+        {/* Month totals */}
         {reports.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 18, padding: "10px 0", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 22, fontWeight: "bold", lineHeight: 1 }}>{monthTotals.salvations}</div>
-              <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>Salvations</div>
-            </div>
-            <div style={{ width: 1, background: BORDER }} />
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 22, fontWeight: "bold", lineHeight: 1 }}>{monthTotals.prayers}</div>
-              <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>Prayers</div>
-            </div>
-            <div style={{ width: 1, background: BORDER }} />
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 22, fontWeight: "bold", lineHeight: 1 }}>{monthTotals.altarMembers}</div>
-              <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>Altar Members</div>
-            </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 16, padding: "10px 0", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
+            {[
+              { label: "Salvations", value: monthTotals.salvations, color: "hsl(130 55% 52%)" },
+              { label: "Prayers", value: monthTotals.prayers, color: "hsl(200 60% 62%)" },
+              { label: "Altar Members", value: monthTotals.altarMembers, color: GOLD },
+            ].map((s, i, arr) => (
+              <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 28 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ color: s.color, fontFamily: "Georgia, serif", fontSize: 22, fontWeight: "bold", lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>{s.label}</div>
+                </div>
+                {i < arr.length - 1 && <div style={{ width: 1, height: 28, background: BORDER }} />}
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Month navigation */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "0 4px" }}>
-          <button onClick={() => goMonth(-1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 30% 30%)"; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = BORDER; }}>‹</button>
+        {/* Month nav */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, padding: "0 4px" }}>
+          <button onClick={() => goMonth(-1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>‹</button>
           <div style={{ textAlign: "center" }}>
             <span style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 18, letterSpacing: "0.1em" }}>{MONTH_NAMES[viewMonth]}</span>
             <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 14, marginLeft: 8 }}>{viewYear}</span>
           </div>
-          <button onClick={() => goMonth(1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 30% 30%)"; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = BORDER; }}>›</button>
+          <button onClick={() => goMonth(1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>›</button>
         </div>
 
         {/* Day-of-week headers */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
-          {DAYS_OF_WEEK.map(d => (
-            <div key={d} style={{ textAlign: "center", color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", paddingBottom: 6 }}>{d}</div>
+          {DAYS_OF_WEEK.map((d, i) => (
+            <div key={d} style={{ textAlign: "center", color: (i === 0 || i === 3) ? GOLD_DIM : "hsl(38 15% 28%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", paddingBottom: 6, fontWeight: (i === 0 || i === 3) ? "bold" : "normal" }}>{d}</div>
           ))}
         </div>
 
@@ -371,25 +528,24 @@ export default function AltarReportPage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-            {/* Empty cells for first week offset */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-
-            {/* Day cells */}
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`empty-${i}`} />)}
             {Array.from({ length: daysInMonth }).map((_, idx) => {
               const day = idx + 1;
               const dateStr = toDateStr(viewYear, viewMonth, day);
-              const dayReports = dayMap[dateStr] ?? [];
-              const hasData = dayReports.length > 0;
+              const dateObj = new Date(viewYear, viewMonth, day);
+              const services = getDayServices(dateObj);
+              const isClickable = services !== null;
+              const hasData = datesWithData.has(dateStr);
               const isToday = dateStr === todayStr;
               const isSelected = dateStr === selectedDate;
-              const isWeekend = new Date(viewYear, viewMonth, day).getDay() % 6 === 0;
+              const isSunday = dateObj.getDay() === 0;
+              const isWed = dateObj.getDay() === 3;
 
               return (
                 <button
                   key={day}
-                  onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                  onClick={() => isClickable ? setSelectedDate(isSelected ? null : dateStr) : undefined}
+                  disabled={!isClickable}
                   style={{
                     position: "relative",
                     aspectRatio: "1",
@@ -398,13 +554,20 @@ export default function AltarReportPage() {
                       ? "2px solid hsl(38 55% 45%)"
                       : isToday
                         ? "1px solid hsl(38 35% 32%)"
-                        : `1px solid ${hasData ? "hsl(38 22% 22%)" : "hsl(38 12% 16%)"}`,
+                        : hasData
+                          ? "1px solid hsl(38 22% 22%)"
+                          : isClickable
+                            ? "1px solid hsl(38 16% 18%)"
+                            : "1px solid hsl(38 8% 13%)",
                     background: isSelected
                       ? "hsl(38 40% 18%)"
                       : hasData
                         ? "hsl(35 22% 15%)"
-                        : "hsl(35 18% 12%)",
-                    cursor: "pointer",
+                        : isClickable
+                          ? "hsl(35 18% 12%)"
+                          : "hsl(35 14% 10%)",
+                    cursor: isClickable ? "pointer" : "default",
+                    opacity: isClickable ? 1 : 0.3,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -413,28 +576,21 @@ export default function AltarReportPage() {
                     transition: "all 0.15s",
                     padding: 0,
                   }}
-                  onMouseOver={e => { if (!isSelected) e.currentTarget.style.background = "hsl(35 22% 17%)"; e.currentTarget.style.borderColor = "hsl(38 28% 28%)"; }}
-                  onMouseOut={e => {
-                    if (!isSelected) {
-                      e.currentTarget.style.background = hasData ? "hsl(35 22% 15%)" : "hsl(35 18% 12%)";
-                      e.currentTarget.style.borderColor = isToday ? "hsl(38 35% 32%)" : hasData ? "hsl(38 22% 22%)" : "hsl(38 12% 16%)";
-                    }
-                  }}
+                  onMouseOver={e => { if (isClickable && !isSelected) { e.currentTarget.style.background = "hsl(35 22% 17%)"; e.currentTarget.style.borderColor = "hsl(38 28% 28%)"; } }}
+                  onMouseOut={e => { if (!isSelected) { e.currentTarget.style.background = hasData ? "hsl(35 22% 15%)" : isClickable ? "hsl(35 18% 12%)" : "hsl(35 14% 10%)"; e.currentTarget.style.borderColor = isToday ? "hsl(38 35% 32%)" : hasData ? "hsl(38 22% 22%)" : isClickable ? "hsl(38 16% 18%)" : "hsl(38 8% 13%)"; } }}
                 >
                   <span style={{
                     fontFamily: "Georgia, serif",
                     fontSize: 13,
-                    fontWeight: isToday ? "bold" : "normal",
-                    color: isSelected ? GOLD_BRIGHT : isToday ? GOLD : isWeekend ? "hsl(38 40% 52%)" : "hsl(38 35% 55%)",
+                    fontWeight: isToday || isSunday || isWed ? "bold" : "normal",
+                    color: isSelected ? GOLD_BRIGHT : isToday ? GOLD : isSunday ? "hsl(38 50% 60%)" : isWed ? "hsl(200 50% 60%)" : "hsl(38 15% 30%)",
                     lineHeight: 1,
                   }}>
                     {day}
                   </span>
-
-                  {/* Data indicators */}
                   {hasData && (
                     <div style={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "center" }}>
-                      {dayReports.slice(0, 3).map((_, i) => (
+                      {Array.from({ length: Math.min((dayMap[`${dateStr}__${SUNDAY_SERVICES[0]}`] ?? dayMap[Object.keys(dayMap).find(k => k.startsWith(dateStr)) ?? ""] ?? []).length || 1, 3) }).map((_, i) => (
                         <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: isSelected ? GOLD_BRIGHT : GOLD }} />
                       ))}
                     </div>
@@ -446,25 +602,31 @@ export default function AltarReportPage() {
         )}
 
         {/* Legend */}
-        <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 16, justifyContent: "center", opacity: 0.4 }}>
+        <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 20, justifyContent: "center", opacity: 0.4 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: GOLD }} />
-            <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>Has entries</span>
+            <div style={{ width: 10, height: 10, borderRadius: 3, border: "1px solid hsl(38 16% 18%)", background: "hsl(35 18% 12%)" }} />
+            <span style={{ color: "hsl(38 50% 60%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em" }}>Sun</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, border: "1px solid hsl(38 35% 32%)", background: "hsl(35 18% 12%)" }} />
-            <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>Today</span>
+            <div style={{ width: 10, height: 10, borderRadius: 3, border: "1px solid hsl(38 16% 18%)", background: "hsl(35 18% 12%)" }} />
+            <span style={{ color: "hsl(200 50% 60%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em" }}>Wed</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: GOLD }} />
+            <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em" }}>Has entries</span>
           </div>
         </div>
       </div>
 
-      {/* Day Detail Panel */}
-      {selectedDate && (
+      {/* Day detail bottom sheet */}
+      {selectedDate && selectedDayServices && (
         <DayDetail
           dateStr={selectedDate}
-          reports={selectedReports}
+          dayServices={selectedDayServices}
+          dayMap={dayMap}
           onClose={() => setSelectedDate(null)}
           onSave={handleSave}
+          onEdit={handleEdit}
           onDelete={handleDelete}
         />
       )}

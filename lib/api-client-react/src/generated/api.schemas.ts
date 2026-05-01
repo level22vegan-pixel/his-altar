@@ -141,6 +141,7 @@ export interface DailyAltarReport {
   id: number;
   date: string;
   campus: string;
+  service: string;
   salvations: number;
   prayers: number;
   altarMembers: number;
@@ -151,6 +152,7 @@ export interface DailyAltarReport {
 export interface UpsertDailyAltarReportBody {
   date: string;
   campus: string;
+  service: string;
   salvations?: number;
   prayers?: number;
   altarMembers?: number;

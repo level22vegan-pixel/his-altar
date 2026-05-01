@@ -6,6 +6,7 @@ export const dailyAltarReportsTable = pgTable("daily_altar_reports", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),         // YYYY-MM-DD
   campus: text("campus").notNull(),
+  service: text("service").notNull().default(""),  // e.g. "8am", "10am", "12pm", "7pm"
   salvations: integer("salvations").notNull().default(0),
   prayers: integer("prayers").notNull().default(0),
   altarMembers: integer("altar_members").notNull().default(0),

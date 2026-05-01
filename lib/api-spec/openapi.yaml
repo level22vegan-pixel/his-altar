@@ -16,6 +16,8 @@ tags:
     description: Configuration operations
   - name: altar-reports
     description: Altar report operations
+  - name: daily-altar-reports
+    description: Daily altar report operations
 paths:
   /healthz:
     get:
@@ -259,6 +261,64 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ServiceReport"
+  /daily-altar-reports:
+    get:
+      operationId: listDailyAltarReports
+      tags: [daily-altar-reports]
+      summary: List daily altar reports
+      parameters:
+        - name: month
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of daily altar reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyAltarReportList"
+    post:
+      operationId: upsertDailyAltarReport
+      tags: [daily-altar-reports]
+      summary: Create or update a daily altar report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertDailyAltarReportBody"
+      responses:
+        "200":
+          description: Upserted daily altar report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyAltarReport"
+  /daily-altar-reports/{id}:
+    delete:
+      operationId: deleteDailyAltarReport
+      tags: [daily-altar-reports]
+      summary: Delete a daily altar report entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyAltarReport"
   /altar-reports:
     get:
       operationId: listAltarReports
@@ -601,5 +661,60 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AltarReport"
+      required:
+        - reports
+    DailyAltarReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        campus:
+          type: string
+        salvations:
+          type: integer
+        prayers:
+          type: integer
+        altarMembers:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - date
+        - campus
+        - salvations
+        - prayers
+        - altarMembers
+        - createdAt
+        - updatedAt
+    UpsertDailyAltarReportBody:
+      type: object
+      properties:
+        date:
+          type: string
+        campus:
+          type: string
+        salvations:
+          type: integer
+        prayers:
+          type: integer
+        altarMembers:
+          type: integer
+      required:
+        - date
+        - campus
+    DailyAltarReportList:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyAltarReport"
       required:
         - reports

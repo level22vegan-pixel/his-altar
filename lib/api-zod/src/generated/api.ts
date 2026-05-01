@@ -236,6 +236,69 @@ export const UpsertServiceReportResponse = zod.object({
 });
 
 /**
+ * @summary List daily altar reports
+ */
+export const ListDailyAltarReportsQueryParams = zod.object({
+  month: zod.coerce.number().optional(),
+  year: zod.coerce.number().optional(),
+});
+
+export const ListDailyAltarReportsResponse = zod.object({
+  reports: zod.array(
+    zod.object({
+      id: zod.number(),
+      date: zod.string(),
+      campus: zod.string(),
+      salvations: zod.number(),
+      prayers: zod.number(),
+      altarMembers: zod.number(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create or update a daily altar report
+ */
+export const UpsertDailyAltarReportBody = zod.object({
+  date: zod.string(),
+  campus: zod.string(),
+  salvations: zod.number().optional(),
+  prayers: zod.number().optional(),
+  altarMembers: zod.number().optional(),
+});
+
+export const UpsertDailyAltarReportResponse = zod.object({
+  id: zod.number(),
+  date: zod.string(),
+  campus: zod.string(),
+  salvations: zod.number(),
+  prayers: zod.number(),
+  altarMembers: zod.number(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a daily altar report entry
+ */
+export const DeleteDailyAltarReportParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteDailyAltarReportResponse = zod.object({
+  id: zod.number(),
+  date: zod.string(),
+  campus: zod.string(),
+  salvations: zod.number(),
+  prayers: zod.number(),
+  altarMembers: zod.number(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary List all altar reports
  */
 export const ListAltarReportsResponse = zod.object({

@@ -137,6 +137,29 @@ export interface AltarReportList {
   reports: AltarReport[];
 }
 
+export interface DailyAltarReport {
+  id: number;
+  date: string;
+  campus: string;
+  salvations: number;
+  prayers: number;
+  altarMembers: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpsertDailyAltarReportBody {
+  date: string;
+  campus: string;
+  salvations?: number;
+  prayers?: number;
+  altarMembers?: number;
+}
+
+export interface DailyAltarReportList {
+  reports: DailyAltarReport[];
+}
+
 export type ListWorkersParams = {
   category?: string;
   campus?: string;
@@ -150,4 +173,9 @@ export type ListCheckInsParams = {
 
 export type ListServiceReportsParams = {
   campus?: string;
+};
+
+export type ListDailyAltarReportsParams = {
+  month?: number;
+  year?: number;
 };

@@ -24,8 +24,11 @@ import type {
   CreateAltarReportBody,
   CreateCheckInBody,
   CreateWorkerBody,
+  DailyAltarReport,
+  DailyAltarReportList,
   HealthStatus,
   ListCheckInsParams,
+  ListDailyAltarReportsParams,
   ListServiceReportsParams,
   ListWorkersParams,
   LoginCodeConfig,
@@ -34,6 +37,7 @@ import type {
   ServiceReportList,
   UpdateLoginCodeBody,
   UpdateWorkerBody,
+  UpsertDailyAltarReportBody,
   UpsertServiceReportBody,
   VerifyLoginBody,
   Worker,
@@ -1171,6 +1175,280 @@ export const useUpsertServiceReport = <
   TContext
 > => {
   return useMutation(getUpsertServiceReportMutationOptions(options));
+};
+
+/**
+ * @summary List daily altar reports
+ */
+export const getListDailyAltarReportsUrl = (
+  params?: ListDailyAltarReportsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/daily-altar-reports?${stringifiedParams}`
+    : `/api/daily-altar-reports`;
+};
+
+export const listDailyAltarReports = async (
+  params?: ListDailyAltarReportsParams,
+  options?: RequestInit,
+): Promise<DailyAltarReportList> => {
+  return customFetch<DailyAltarReportList>(
+    getListDailyAltarReportsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListDailyAltarReportsQueryKey = (
+  params?: ListDailyAltarReportsParams,
+) => {
+  return [`/api/daily-altar-reports`, ...(params ? [params] : [])] as const;
+};
+
+export const getListDailyAltarReportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDailyAltarReports>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListDailyAltarReportsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDailyAltarReports>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListDailyAltarReportsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listDailyAltarReports>>
+  > = ({ signal }) =>
+    listDailyAltarReports(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDailyAltarReports>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListDailyAltarReportsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDailyAltarReports>>
+>;
+export type ListDailyAltarReportsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List daily altar reports
+ */
+
+export function useListDailyAltarReports<
+  TData = Awaited<ReturnType<typeof listDailyAltarReports>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListDailyAltarReportsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDailyAltarReports>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDailyAltarReportsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update a daily altar report
+ */
+export const getUpsertDailyAltarReportUrl = () => {
+  return `/api/daily-altar-reports`;
+};
+
+export const upsertDailyAltarReport = async (
+  upsertDailyAltarReportBody: UpsertDailyAltarReportBody,
+  options?: RequestInit,
+): Promise<DailyAltarReport> => {
+  return customFetch<DailyAltarReport>(getUpsertDailyAltarReportUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(upsertDailyAltarReportBody),
+  });
+};
+
+export const getUpsertDailyAltarReportMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertDailyAltarReport>>,
+    TError,
+    { data: BodyType<UpsertDailyAltarReportBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof upsertDailyAltarReport>>,
+  TError,
+  { data: BodyType<UpsertDailyAltarReportBody> },
+  TContext
+> => {
+  const mutationKey = ["upsertDailyAltarReport"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof upsertDailyAltarReport>>,
+    { data: BodyType<UpsertDailyAltarReportBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return upsertDailyAltarReport(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpsertDailyAltarReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof upsertDailyAltarReport>>
+>;
+export type UpsertDailyAltarReportMutationBody =
+  BodyType<UpsertDailyAltarReportBody>;
+export type UpsertDailyAltarReportMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update a daily altar report
+ */
+export const useUpsertDailyAltarReport = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertDailyAltarReport>>,
+    TError,
+    { data: BodyType<UpsertDailyAltarReportBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof upsertDailyAltarReport>>,
+  TError,
+  { data: BodyType<UpsertDailyAltarReportBody> },
+  TContext
+> => {
+  return useMutation(getUpsertDailyAltarReportMutationOptions(options));
+};
+
+/**
+ * @summary Delete a daily altar report entry
+ */
+export const getDeleteDailyAltarReportUrl = (id: number) => {
+  return `/api/daily-altar-reports/${id}`;
+};
+
+export const deleteDailyAltarReport = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DailyAltarReport> => {
+  return customFetch<DailyAltarReport>(getDeleteDailyAltarReportUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDailyAltarReportMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDailyAltarReport>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDailyAltarReport>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDailyAltarReport"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDailyAltarReport>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDailyAltarReport(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDailyAltarReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDailyAltarReport>>
+>;
+
+export type DeleteDailyAltarReportMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a daily altar report entry
+ */
+export const useDeleteDailyAltarReport = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDailyAltarReport>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDailyAltarReport>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDailyAltarReportMutationOptions(options));
 };
 
 /**

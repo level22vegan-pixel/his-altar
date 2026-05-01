@@ -32,6 +32,46 @@ export interface UpdateLoginCodeBody {
   adminPassword: string;
 }
 
+export interface Worker {
+  id: number;
+  name: string;
+  role?: string;
+  category: string;
+  photoUrl?: string;
+  createdAt: string;
+}
+
+export interface CreateWorkerBody {
+  name: string;
+  role?: string;
+  category: string;
+  photoUrl?: string;
+}
+
+export interface WorkerList {
+  workers: Worker[];
+}
+
+export interface CheckIn {
+  id: number;
+  workerId: number;
+  campus: string;
+  service: string;
+  serviceDate: string;
+  checkedInAt: string;
+}
+
+export interface CreateCheckInBody {
+  workerId: number;
+  campus: string;
+  service: string;
+  serviceDate: string;
+}
+
+export interface CheckInList {
+  checkIns: CheckIn[];
+}
+
 export interface AltarReport {
   id: number;
   name: string;
@@ -57,3 +97,13 @@ export interface CreateAltarReportBody {
 export interface AltarReportList {
   reports: AltarReport[];
 }
+
+export type ListWorkersParams = {
+  category?: string;
+};
+
+export type ListCheckInsParams = {
+  campus: string;
+  service: string;
+  serviceDate: string;
+};

@@ -80,6 +80,122 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginCodeConfig"
+  /workers:
+    get:
+      operationId: listWorkers
+      tags: [workers]
+      summary: List all workers
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of workers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerList"
+    post:
+      operationId: createWorker
+      tags: [workers]
+      summary: Create a new worker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkerBody"
+      responses:
+        "201":
+          description: Created worker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+  /workers/{id}:
+    delete:
+      operationId: deleteWorker
+      tags: [workers]
+      summary: Delete a worker
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted worker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+  /check-ins:
+    get:
+      operationId: listCheckIns
+      tags: [check-ins]
+      summary: List check-ins for a session
+      parameters:
+        - name: campus
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: serviceDate
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of check-ins
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInList"
+    post:
+      operationId: createCheckIn
+      tags: [check-ins]
+      summary: Check in a worker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCheckInBody"
+      responses:
+        "201":
+          description: Created check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckIn"
+  /check-ins/{id}:
+    delete:
+      operationId: deleteCheckIn
+      tags: [check-ins]
+      summary: Remove a check-in
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckIn"
   /altar-reports:
     get:
       operationId: listAltarReports
@@ -184,6 +300,98 @@ components:
       required:
         - code
         - adminPassword
+    Worker:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        category:
+          type: string
+        photoUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - category
+        - createdAt
+    CreateWorkerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        category:
+          type: string
+        photoUrl:
+          type: string
+      required:
+        - name
+        - category
+    WorkerList:
+      type: object
+      properties:
+        workers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Worker"
+      required:
+        - workers
+    CheckIn:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        campus:
+          type: string
+        service:
+          type: string
+        serviceDate:
+          type: string
+        checkedInAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - workerId
+        - campus
+        - service
+        - serviceDate
+        - checkedInAt
+    CreateCheckInBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        campus:
+          type: string
+        service:
+          type: string
+        serviceDate:
+          type: string
+      required:
+        - workerId
+        - campus
+        - service
+        - serviceDate
+    CheckInList:
+      type: object
+      properties:
+        checkIns:
+          type: array
+          items:
+            $ref: "#/components/schemas/CheckIn"
+      required:
+        - checkIns
     AltarReport:
       type: object
       properties:

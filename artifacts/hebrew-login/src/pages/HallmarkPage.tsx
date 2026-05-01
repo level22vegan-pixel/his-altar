@@ -46,6 +46,7 @@ export default function HallmarkPage() {
           {SERVICES.map((service) => (
             <button
               key={service}
+              onClick={() => navigate(`/checkin?campus=HALLMARK&service=${encodeURIComponent(service)}`)}
               className="campus-btn py-4 px-6 text-sm uppercase rounded w-full"
               style={{
                 background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",

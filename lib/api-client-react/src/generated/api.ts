@@ -19,12 +19,20 @@ import type {
 import type {
   AltarReport,
   AltarReportList,
+  CheckIn,
+  CheckInList,
   CreateAltarReportBody,
+  CreateCheckInBody,
+  CreateWorkerBody,
   HealthStatus,
+  ListCheckInsParams,
+  ListWorkersParams,
   LoginCodeConfig,
   LoginResult,
   UpdateLoginCodeBody,
   VerifyLoginBody,
+  Worker,
+  WorkerList,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -360,6 +368,534 @@ export const useUpdateLoginCode = <
   TContext
 > => {
   return useMutation(getUpdateLoginCodeMutationOptions(options));
+};
+
+/**
+ * @summary List all workers
+ */
+export const getListWorkersUrl = (params?: ListWorkersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/workers?${stringifiedParams}`
+    : `/api/workers`;
+};
+
+export const listWorkers = async (
+  params?: ListWorkersParams,
+  options?: RequestInit,
+): Promise<WorkerList> => {
+  return customFetch<WorkerList>(getListWorkersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListWorkersQueryKey = (params?: ListWorkersParams) => {
+  return [`/api/workers`, ...(params ? [params] : [])] as const;
+};
+
+export const getListWorkersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listWorkers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWorkersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWorkers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListWorkersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkers>>> = ({
+    signal,
+  }) => listWorkers(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listWorkers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListWorkersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listWorkers>>
+>;
+export type ListWorkersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all workers
+ */
+
+export function useListWorkers<
+  TData = Awaited<ReturnType<typeof listWorkers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListWorkersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listWorkers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListWorkersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new worker
+ */
+export const getCreateWorkerUrl = () => {
+  return `/api/workers`;
+};
+
+export const createWorker = async (
+  createWorkerBody: CreateWorkerBody,
+  options?: RequestInit,
+): Promise<Worker> => {
+  return customFetch<Worker>(getCreateWorkerUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createWorkerBody),
+  });
+};
+
+export const getCreateWorkerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWorker>>,
+    TError,
+    { data: BodyType<CreateWorkerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createWorker>>,
+  TError,
+  { data: BodyType<CreateWorkerBody> },
+  TContext
+> => {
+  const mutationKey = ["createWorker"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createWorker>>,
+    { data: BodyType<CreateWorkerBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createWorker(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateWorkerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createWorker>>
+>;
+export type CreateWorkerMutationBody = BodyType<CreateWorkerBody>;
+export type CreateWorkerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new worker
+ */
+export const useCreateWorker = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWorker>>,
+    TError,
+    { data: BodyType<CreateWorkerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createWorker>>,
+  TError,
+  { data: BodyType<CreateWorkerBody> },
+  TContext
+> => {
+  return useMutation(getCreateWorkerMutationOptions(options));
+};
+
+/**
+ * @summary Delete a worker
+ */
+export const getDeleteWorkerUrl = (id: number) => {
+  return `/api/workers/${id}`;
+};
+
+export const deleteWorker = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Worker> => {
+  return customFetch<Worker>(getDeleteWorkerUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteWorkerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteWorker>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteWorker>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteWorker"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteWorker>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteWorker(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteWorkerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteWorker>>
+>;
+
+export type DeleteWorkerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a worker
+ */
+export const useDeleteWorker = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteWorker>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteWorker>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteWorkerMutationOptions(options));
+};
+
+/**
+ * @summary List check-ins for a session
+ */
+export const getListCheckInsUrl = (params: ListCheckInsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/check-ins?${stringifiedParams}`
+    : `/api/check-ins`;
+};
+
+export const listCheckIns = async (
+  params: ListCheckInsParams,
+  options?: RequestInit,
+): Promise<CheckInList> => {
+  return customFetch<CheckInList>(getListCheckInsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCheckInsQueryKey = (params?: ListCheckInsParams) => {
+  return [`/api/check-ins`, ...(params ? [params] : [])] as const;
+};
+
+export const getListCheckInsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCheckIns>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListCheckInsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listCheckIns>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListCheckInsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listCheckIns>>> = ({
+    signal,
+  }) => listCheckIns(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listCheckIns>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListCheckInsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listCheckIns>>
+>;
+export type ListCheckInsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List check-ins for a session
+ */
+
+export function useListCheckIns<
+  TData = Awaited<ReturnType<typeof listCheckIns>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListCheckInsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listCheckIns>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListCheckInsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Check in a worker
+ */
+export const getCreateCheckInUrl = () => {
+  return `/api/check-ins`;
+};
+
+export const createCheckIn = async (
+  createCheckInBody: CreateCheckInBody,
+  options?: RequestInit,
+): Promise<CheckIn> => {
+  return customFetch<CheckIn>(getCreateCheckInUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createCheckInBody),
+  });
+};
+
+export const getCreateCheckInMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCheckIn>>,
+    TError,
+    { data: BodyType<CreateCheckInBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createCheckIn>>,
+  TError,
+  { data: BodyType<CreateCheckInBody> },
+  TContext
+> => {
+  const mutationKey = ["createCheckIn"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createCheckIn>>,
+    { data: BodyType<CreateCheckInBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createCheckIn(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCheckInMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createCheckIn>>
+>;
+export type CreateCheckInMutationBody = BodyType<CreateCheckInBody>;
+export type CreateCheckInMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Check in a worker
+ */
+export const useCreateCheckIn = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCheckIn>>,
+    TError,
+    { data: BodyType<CreateCheckInBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createCheckIn>>,
+  TError,
+  { data: BodyType<CreateCheckInBody> },
+  TContext
+> => {
+  return useMutation(getCreateCheckInMutationOptions(options));
+};
+
+/**
+ * @summary Remove a check-in
+ */
+export const getDeleteCheckInUrl = (id: number) => {
+  return `/api/check-ins/${id}`;
+};
+
+export const deleteCheckIn = async (
+  id: number,
+  options?: RequestInit,
+): Promise<CheckIn> => {
+  return customFetch<CheckIn>(getDeleteCheckInUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteCheckInMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteCheckIn>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteCheckIn>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteCheckIn"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteCheckIn>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteCheckIn(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteCheckInMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteCheckIn>>
+>;
+
+export type DeleteCheckInMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove a check-in
+ */
+export const useDeleteCheckIn = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteCheckIn>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteCheckIn>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteCheckInMutationOptions(options));
 };
 
 /**

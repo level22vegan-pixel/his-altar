@@ -60,6 +60,100 @@ export const UpdateLoginCodeResponse = zod.object({
 });
 
 /**
+ * @summary List all workers
+ */
+export const ListWorkersQueryParams = zod.object({
+  category: zod.coerce.string().optional(),
+});
+
+export const ListWorkersResponse = zod.object({
+  workers: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      role: zod.string().optional(),
+      category: zod.string(),
+      photoUrl: zod.string().optional(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create a new worker
+ */
+export const CreateWorkerBody = zod.object({
+  name: zod.string(),
+  role: zod.string().optional(),
+  category: zod.string(),
+  photoUrl: zod.string().optional(),
+});
+
+/**
+ * @summary Delete a worker
+ */
+export const DeleteWorkerParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteWorkerResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  role: zod.string().optional(),
+  category: zod.string(),
+  photoUrl: zod.string().optional(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List check-ins for a session
+ */
+export const ListCheckInsQueryParams = zod.object({
+  campus: zod.coerce.string(),
+  service: zod.coerce.string(),
+  serviceDate: zod.coerce.string(),
+});
+
+export const ListCheckInsResponse = zod.object({
+  checkIns: zod.array(
+    zod.object({
+      id: zod.number(),
+      workerId: zod.number(),
+      campus: zod.string(),
+      service: zod.string(),
+      serviceDate: zod.string(),
+      checkedInAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Check in a worker
+ */
+export const CreateCheckInBody = zod.object({
+  workerId: zod.number(),
+  campus: zod.string(),
+  service: zod.string(),
+  serviceDate: zod.string(),
+});
+
+/**
+ * @summary Remove a check-in
+ */
+export const DeleteCheckInParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteCheckInResponse = zod.object({
+  id: zod.number(),
+  workerId: zod.number(),
+  campus: zod.string(),
+  service: zod.string(),
+  serviceDate: zod.string(),
+  checkedInAt: zod.coerce.date(),
+});
+
+/**
  * @summary List all altar reports
  */
 export const ListAltarReportsResponse = zod.object({

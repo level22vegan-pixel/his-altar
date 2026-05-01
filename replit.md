@@ -32,9 +32,13 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - **Preview path**: `/`
 - **Purpose**: A rustic Hebrew alphabet login page where users click letters in sequence to authenticate
 - **Pages**:
-  - `/` — Login page: all 22 Hebrew letters displayed, users click in order then press Enter
-  - `/home` — Post-login landing page with "Select Campus" button
-  - `/admin` — Admin panel to update the login sequence (password protected)
+  - `/` — Login page: all 22 Hebrew letters displayed, users click in order then press Enter. ת held 3s → admin access
+  - `/home` — Post-login landing page with "Select Campus" button (6 campuses)
+  - `/campus/hallmark` — Hallmark campus page with 4 service time buttons
+  - `/checkin?campus=X&service=Y` — Check-in page: 3-tab slider (Roster | Active | Alt)
+  - `/admin` — Admin panel: Altar Report, Roster Manager, login sequence editor
+  - `/admin/altar-report` — Log and export altar responses (PDF/Excel)
+  - `/admin/roster` — Add/remove master and alt roster workers
 
 ### API Server (`artifacts/api-server`)
 - **Preview path**: `/api`
@@ -42,6 +46,13 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
   - `POST /api/auth/verify` — verify a submitted letter sequence
   - `GET /api/config/login-code` — get current login code (admin)
   - `PUT /api/config/login-code` — update login code (requires admin password)
+  - `GET /api/workers?category=master|alt` — list roster workers
+  - `POST /api/workers` — add a worker `{ name, role, category, photoUrl }`
+  - `DELETE /api/workers/:id` — remove a worker
+  - `GET /api/check-ins?campus=X&service=Y&serviceDate=Z` — get check-ins for a session
+  - `POST /api/check-ins` — check in a worker `{ workerId, campus, service, serviceDate }`
+  - `DELETE /api/check-ins/:id` — check out a worker
+  - `GET/POST/DELETE /api/altar-reports` — altar response entries
 
 ## Database Schema
 

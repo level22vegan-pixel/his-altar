@@ -14,3 +14,47 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Verifies that the submitted number sequence matches the configured login code
+ * @summary Verify login sequence
+ */
+export const VerifyLoginBody = zod.object({
+  sequence: zod
+    .array(zod.number())
+    .describe("Array of letter numbers the user clicked in order"),
+});
+
+export const VerifyLoginResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+});
+
+/**
+ * Returns the current login code (admin use only)
+ * @summary Get current login code
+ */
+export const GetLoginCodeResponse = zod.object({
+  code: zod
+    .array(zod.number())
+    .describe("The ordered sequence of letter numbers that grant access"),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * Updates the login code sequence
+ * @summary Update login code
+ */
+export const UpdateLoginCodeBody = zod.object({
+  code: zod.array(zod.number()).describe("New sequence of letter numbers"),
+  adminPassword: zod
+    .string()
+    .describe("Admin password to authorize the change"),
+});
+
+export const UpdateLoginCodeResponse = zod.object({
+  code: zod
+    .array(zod.number())
+    .describe("The ordered sequence of letter numbers that grant access"),
+  updatedAt: zod.coerce.date(),
+});

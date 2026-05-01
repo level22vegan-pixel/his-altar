@@ -5,18 +5,27 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  HealthStatus,
+  LoginCodeConfig,
+  LoginResult,
+  UpdateLoginCodeBody,
+  VerifyLoginBody,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -99,3 +108,253 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Verifies that the submitted number sequence matches the configured login code
+ * @summary Verify login sequence
+ */
+export const getVerifyLoginUrl = () => {
+  return `/api/auth/verify`;
+};
+
+export const verifyLogin = async (
+  verifyLoginBody: VerifyLoginBody,
+  options?: RequestInit,
+): Promise<LoginResult> => {
+  return customFetch<LoginResult>(getVerifyLoginUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(verifyLoginBody),
+  });
+};
+
+export const getVerifyLoginMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyLogin>>,
+    TError,
+    { data: BodyType<VerifyLoginBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyLogin>>,
+  TError,
+  { data: BodyType<VerifyLoginBody> },
+  TContext
+> => {
+  const mutationKey = ["verifyLogin"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyLogin>>,
+    { data: BodyType<VerifyLoginBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return verifyLogin(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyLogin>>
+>;
+export type VerifyLoginMutationBody = BodyType<VerifyLoginBody>;
+export type VerifyLoginMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Verify login sequence
+ */
+export const useVerifyLogin = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyLogin>>,
+    TError,
+    { data: BodyType<VerifyLoginBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyLogin>>,
+  TError,
+  { data: BodyType<VerifyLoginBody> },
+  TContext
+> => {
+  return useMutation(getVerifyLoginMutationOptions(options));
+};
+
+/**
+ * Returns the current login code (admin use only)
+ * @summary Get current login code
+ */
+export const getGetLoginCodeUrl = () => {
+  return `/api/config/login-code`;
+};
+
+export const getLoginCode = async (
+  options?: RequestInit,
+): Promise<LoginCodeConfig> => {
+  return customFetch<LoginCodeConfig>(getGetLoginCodeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetLoginCodeQueryKey = () => {
+  return [`/api/config/login-code`] as const;
+};
+
+export const getGetLoginCodeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLoginCode>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getLoginCode>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetLoginCodeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLoginCode>>> = ({
+    signal,
+  }) => getLoginCode({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLoginCode>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetLoginCodeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getLoginCode>>
+>;
+export type GetLoginCodeQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get current login code
+ */
+
+export function useGetLoginCode<
+  TData = Awaited<ReturnType<typeof getLoginCode>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getLoginCode>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLoginCodeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Updates the login code sequence
+ * @summary Update login code
+ */
+export const getUpdateLoginCodeUrl = () => {
+  return `/api/config/login-code`;
+};
+
+export const updateLoginCode = async (
+  updateLoginCodeBody: UpdateLoginCodeBody,
+  options?: RequestInit,
+): Promise<LoginCodeConfig> => {
+  return customFetch<LoginCodeConfig>(getUpdateLoginCodeUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateLoginCodeBody),
+  });
+};
+
+export const getUpdateLoginCodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateLoginCode>>,
+    TError,
+    { data: BodyType<UpdateLoginCodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateLoginCode>>,
+  TError,
+  { data: BodyType<UpdateLoginCodeBody> },
+  TContext
+> => {
+  const mutationKey = ["updateLoginCode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateLoginCode>>,
+    { data: BodyType<UpdateLoginCodeBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateLoginCode(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateLoginCodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateLoginCode>>
+>;
+export type UpdateLoginCodeMutationBody = BodyType<UpdateLoginCodeBody>;
+export type UpdateLoginCodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update login code
+ */
+export const useUpdateLoginCode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateLoginCode>>,
+    TError,
+    { data: BodyType<UpdateLoginCodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateLoginCode>>,
+  TError,
+  { data: BodyType<UpdateLoginCodeBody> },
+  TContext
+> => {
+  return useMutation(getUpdateLoginCodeMutationOptions(options));
+};

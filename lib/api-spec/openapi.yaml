@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: config
+    description: Configuration operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/verify:
+    post:
+      operationId: verifyLogin
+      tags: [auth]
+      summary: Verify login sequence
+      description: Verifies that the submitted number sequence matches the configured login code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyLoginBody"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+  /config/login-code:
+    get:
+      operationId: getLoginCode
+      tags: [config]
+      summary: Get current login code
+      description: Returns the current login code (admin use only)
+      responses:
+        "200":
+          description: Current login code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginCodeConfig"
+    put:
+      operationId: updateLoginCode
+      tags: [config]
+      summary: Update login code
+      description: Updates the login code sequence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLoginCodeBody"
+      responses:
+        "200":
+          description: Updated login code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginCodeConfig"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +87,51 @@ components:
           type: string
       required:
         - status
-
+    VerifyLoginBody:
+      type: object
+      properties:
+        sequence:
+          type: array
+          items:
+            type: integer
+          description: Array of letter numbers the user clicked in order
+      required:
+        - sequence
+    LoginResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+    LoginCodeConfig:
+      type: object
+      properties:
+        code:
+          type: array
+          items:
+            type: integer
+          description: The ordered sequence of letter numbers that grant access
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - code
+        - updatedAt
+    UpdateLoginCodeBody:
+      type: object
+      properties:
+        code:
+          type: array
+          items:
+            type: integer
+          description: New sequence of letter numbers
+        adminPassword:
+          type: string
+          description: Admin password to authorize the change
+      required:
+        - code
+        - adminPassword

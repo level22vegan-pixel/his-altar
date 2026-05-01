@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Hebrew Login Portal"
+version = "1.0.0"
+id = "artifacts/hebrew-login"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24875
+
+[services.development]
+run = "pnpm --filter @workspace/hebrew-login run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hebrew-login", "run", "build" ]
+publicDir = "artifacts/hebrew-login/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24875"
+BASE_PATH = "/"

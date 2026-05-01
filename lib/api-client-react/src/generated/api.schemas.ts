@@ -8,3 +8,26 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface VerifyLoginBody {
+  /** Array of letter numbers the user clicked in order */
+  sequence: number[];
+}
+
+export interface LoginResult {
+  success: boolean;
+  message: string;
+}
+
+export interface LoginCodeConfig {
+  /** The ordered sequence of letter numbers that grant access */
+  code: number[];
+  updatedAt: string;
+}
+
+export interface UpdateLoginCodeBody {
+  /** New sequence of letter numbers */
+  code: number[];
+  /** Admin password to authorize the change */
+  adminPassword: string;
+}

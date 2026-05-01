@@ -97,6 +97,7 @@ export default function CheckInPage() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [loadingWorkerId, setLoadingWorkerId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
 
   const queryClient = useQueryClient();
   const checkInsKey = ["checkIns", campus, service, today];
@@ -154,6 +155,8 @@ export default function CheckInPage() {
   };
 
   const activeWorkers = [...masterWorkers, ...altWorkers].filter(w => checkedInIds.has(w.id));
+  const q = search.trim().toLowerCase();
+  const filter = (workers: Worker[]) => q ? workers.filter(w => w.name.toLowerCase().includes(q)) : workers;
 
   function renderGrid(workers: Worker[], showCheckIn: boolean) {
     if (workers.length === 0) {
@@ -233,6 +236,32 @@ export default function CheckInPage() {
         ))}
       </div>
 
+      {/* Search bar */}
+      <div className="relative z-10 px-4 py-2" style={{ borderBottom: "1px solid hsl(38 15% 18%)" }}>
+        <div style={{ position: "relative" }}>
+          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "hsl(38 28% 38%)", fontSize: 13, pointerEvents: "none" }}>🔍</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name..."
+            style={{
+              width: "100%", paddingLeft: 32, paddingRight: search ? 32 : 10, paddingTop: 7, paddingBottom: 7,
+              background: "hsl(35 18% 11%)", border: "1px solid hsl(38 18% 22%)",
+              borderRadius: 6, color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif", fontSize: 13,
+              outline: "none", boxSizing: "border-box",
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "hsl(38 25% 42%)", fontSize: 14, lineHeight: 1 }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Sliding panels */}
       <div
         className="relative z-10 flex-1 overflow-hidden"
@@ -253,7 +282,7 @@ export default function CheckInPage() {
             <p style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
               Master Roster — tap to check in
             </p>
-            {renderGrid(masterWorkers, true)}
+            {renderGrid(filter(masterWorkers), true)}
           </div>
 
           {/* Panel 1: Active */}
@@ -261,7 +290,7 @@ export default function CheckInPage() {
             <p style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
               Active — tap to check out
             </p>
-            {renderGrid(activeWorkers, false)}
+            {renderGrid(filter(activeWorkers), false)}
           </div>
 
           {/* Panel 2: Alt */}
@@ -269,7 +298,7 @@ export default function CheckInPage() {
             <p style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
               Alt — tap to check in
             </p>
-            {renderGrid(altWorkers, true)}
+            {renderGrid(filter(altWorkers), true)}
           </div>
         </div>
       </div>

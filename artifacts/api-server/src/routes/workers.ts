@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, workersTable } from "@workspace/db";
-import { CreateWorkerBody } from "@workspace/api-zod";
+import { CreateWorkerBody, UpdateWorkerBody } from "@workspace/api-zod";
 import { eq, desc } from "drizzle-orm";
 
 const router = Router();
@@ -31,6 +31,30 @@ router.post("/", async (req, res) => {
     res.status(201).json(toDto(inserted[0]));
   } catch (err) {
     req.log.error({ err }, "Error creating worker");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) { res.status(400).json({ message: "Invalid id" }); return; }
+    const parsed = UpdateWorkerBody.safeParse(req.body);
+    if (!parsed.success) { res.status(400).json({ message: "Invalid request" }); return; }
+    const { name, role, photoUrl } = parsed.data;
+    const updated = await db
+      .update(workersTable)
+      .set({
+        ...(name !== undefined && { name }),
+        ...(role !== undefined && { role }),
+        ...(photoUrl !== undefined && { photoUrl }),
+      })
+      .where(eq(workersTable.id, id))
+      .returning();
+    if (!updated.length) { res.status(404).json({ message: "Not found" }); return; }
+    res.json(toDto(updated[0]));
+  } catch (err) {
+    req.log.error({ err }, "Error updating worker");
     res.status(500).json({ message: "Server error" });
   }
 });

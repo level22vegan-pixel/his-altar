@@ -116,6 +116,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/Worker"
   /workers/{id}:
+    put:
+      operationId: updateWorker
+      tags: [workers]
+      summary: Update a worker
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkerBody"
+      responses:
+        "200":
+          description: Updated worker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
     delete:
       operationId: deleteWorker
       tags: [workers]
@@ -370,6 +393,15 @@ components:
       required:
         - name
         - category
+    UpdateWorkerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        photoUrl:
+          type: string
     WorkerList:
       type: object
       properties:

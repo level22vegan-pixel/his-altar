@@ -48,6 +48,12 @@ export interface CreateWorkerBody {
   photoUrl?: string;
 }
 
+export interface UpdateWorkerBody {
+  name?: string;
+  role?: string;
+  photoUrl?: string;
+}
+
 export interface WorkerList {
   workers: Worker[];
 }

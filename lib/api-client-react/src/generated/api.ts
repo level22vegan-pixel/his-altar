@@ -33,6 +33,7 @@ import type {
   ServiceReport,
   ServiceReportList,
   UpdateLoginCodeBody,
+  UpdateWorkerBody,
   UpsertServiceReportBody,
   VerifyLoginBody,
   Worker,
@@ -552,6 +553,93 @@ export const useCreateWorker = <
   TContext
 > => {
   return useMutation(getCreateWorkerMutationOptions(options));
+};
+
+/**
+ * @summary Update a worker
+ */
+export const getUpdateWorkerUrl = (id: number) => {
+  return `/api/workers/${id}`;
+};
+
+export const updateWorker = async (
+  id: number,
+  updateWorkerBody: UpdateWorkerBody,
+  options?: RequestInit,
+): Promise<Worker> => {
+  return customFetch<Worker>(getUpdateWorkerUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateWorkerBody),
+  });
+};
+
+export const getUpdateWorkerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateWorker>>,
+    TError,
+    { id: number; data: BodyType<UpdateWorkerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateWorker>>,
+  TError,
+  { id: number; data: BodyType<UpdateWorkerBody> },
+  TContext
+> => {
+  const mutationKey = ["updateWorker"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateWorker>>,
+    { id: number; data: BodyType<UpdateWorkerBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateWorker(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateWorkerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateWorker>>
+>;
+export type UpdateWorkerMutationBody = BodyType<UpdateWorkerBody>;
+export type UpdateWorkerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a worker
+ */
+export const useUpdateWorker = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateWorker>>,
+    TError,
+    { id: number; data: BodyType<UpdateWorkerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateWorker>>,
+  TError,
+  { id: number; data: BodyType<UpdateWorkerBody> },
+  TContext
+> => {
+  return useMutation(getUpdateWorkerMutationOptions(options));
 };
 
 /**

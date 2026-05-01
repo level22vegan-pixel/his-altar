@@ -90,6 +90,28 @@ export const CreateWorkerBody = zod.object({
 });
 
 /**
+ * @summary Update a worker
+ */
+export const UpdateWorkerParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateWorkerBody = zod.object({
+  name: zod.string().optional(),
+  role: zod.string().optional(),
+  photoUrl: zod.string().optional(),
+});
+
+export const UpdateWorkerResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  role: zod.string().optional(),
+  category: zod.string(),
+  photoUrl: zod.string().optional(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
  * @summary Delete a worker
  */
 export const DeleteWorkerParams = zod.object({

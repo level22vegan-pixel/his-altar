@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 const CAMPUSES = [
   "HALLMARK",
@@ -69,22 +69,28 @@ export default function HomePage() {
               Choose Your Campus
             </p>
             <div className="grid grid-cols-2 gap-3 w-full">
-              {CAMPUSES.map((campus) => (
-                <button
-                  key={campus}
-                  className="campus-btn py-4 px-4 text-sm uppercase rounded"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",
-                    color: "hsl(38 65% 68%)",
-                    border: "1px solid hsl(38 35% 30%)",
-                    fontFamily: "Georgia, serif",
-                    letterSpacing: "0.2em",
-                    boxShadow: "0 2px 12px hsl(38 40% 15% / 0.4), inset 0 1px 0 hsl(38 45% 35% / 0.15)",
-                  }}
-                >
-                  {campus}
-                </button>
-              ))}
+              {CAMPUSES.map((campus) => {
+                const href = campus === "HALLMARK" ? "/campus/hallmark" : undefined;
+                const btnStyle = {
+                  background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",
+                  color: "hsl(38 65% 68%)",
+                  border: "1px solid hsl(38 35% 30%)",
+                  fontFamily: "Georgia, serif",
+                  letterSpacing: "0.2em",
+                  boxShadow: "0 2px 12px hsl(38 40% 15% / 0.4), inset 0 1px 0 hsl(38 45% 35% / 0.15)",
+                };
+                return href ? (
+                  <Link key={campus} href={href}>
+                    <button className="campus-btn py-4 px-4 text-sm uppercase rounded w-full" style={btnStyle}>
+                      {campus}
+                    </button>
+                  </Link>
+                ) : (
+                  <button key={campus} className="campus-btn py-4 px-4 text-sm uppercase rounded" style={btnStyle}>
+                    {campus}
+                  </button>
+                );
+              })}
             </div>
             <button
               onClick={() => setShowCampuses(false)}

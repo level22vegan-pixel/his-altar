@@ -7,8 +7,8 @@ const router = Router();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin1234";
 
-// YESHUA (ישוע): י(10) → ש(21) → ו(6) → ע(16)
-const YESHUA_DEFAULT = [10, 21, 6, 16];
+// YESHUA: י(10) → ו(6) → ע(16) → ש(21)
+const YESHUA_DEFAULT = [10, 6, 16, 21];
 
 async function ensureDefaultConfig() {
   const rows = await db.select().from(loginConfigTable).limit(1);

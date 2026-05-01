@@ -149,7 +149,7 @@ export default function LoginPage() {
         </div>
 
         {/* Progress dots */}
-        <div className="flex gap-2 mt-2 mb-4">
+        <div className="flex gap-2 mt-2 mb-4" style={{ direction: "rtl" }}>
           {Array.from({ length: dotCount }).map((_, i) => (
             <span
               key={i}

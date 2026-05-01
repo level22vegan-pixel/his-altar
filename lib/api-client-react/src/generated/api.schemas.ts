@@ -72,6 +72,36 @@ export interface CheckInList {
   checkIns: CheckIn[];
 }
 
+export interface ServiceReport {
+  id: number;
+  campus: string;
+  service: string;
+  serviceDate: string;
+  totalEntries: number;
+  servants: number;
+  salvations: number;
+  prayers: number;
+  family: number;
+  notes?: string;
+  updatedAt: string;
+}
+
+export interface UpsertServiceReportBody {
+  campus: string;
+  service: string;
+  serviceDate: string;
+  totalEntries?: number;
+  servants?: number;
+  salvations?: number;
+  prayers?: number;
+  family?: number;
+  notes?: string;
+}
+
+export interface ServiceReportList {
+  reports: ServiceReport[];
+}
+
 export interface AltarReport {
   id: number;
   name: string;
@@ -106,4 +136,8 @@ export type ListCheckInsParams = {
   campus: string;
   service: string;
   serviceDate: string;
+};
+
+export type ListServiceReportsParams = {
+  campus?: string;
 };

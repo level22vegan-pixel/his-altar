@@ -154,6 +154,60 @@ export const DeleteCheckInResponse = zod.object({
 });
 
 /**
+ * @summary List service reports
+ */
+export const ListServiceReportsQueryParams = zod.object({
+  campus: zod.coerce.string().optional(),
+});
+
+export const ListServiceReportsResponse = zod.object({
+  reports: zod.array(
+    zod.object({
+      id: zod.number(),
+      campus: zod.string(),
+      service: zod.string(),
+      serviceDate: zod.string(),
+      totalEntries: zod.number(),
+      servants: zod.number(),
+      salvations: zod.number(),
+      prayers: zod.number(),
+      family: zod.number(),
+      notes: zod.string().optional(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create or update a service report
+ */
+export const UpsertServiceReportBody = zod.object({
+  campus: zod.string(),
+  service: zod.string(),
+  serviceDate: zod.string(),
+  totalEntries: zod.number().optional(),
+  servants: zod.number().optional(),
+  salvations: zod.number().optional(),
+  prayers: zod.number().optional(),
+  family: zod.number().optional(),
+  notes: zod.string().optional(),
+});
+
+export const UpsertServiceReportResponse = zod.object({
+  id: zod.number(),
+  campus: zod.string(),
+  service: zod.string(),
+  serviceDate: zod.string(),
+  totalEntries: zod.number(),
+  servants: zod.number(),
+  salvations: zod.number(),
+  prayers: zod.number(),
+  family: zod.number(),
+  notes: zod.string().optional(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary List all altar reports
  */
 export const ListAltarReportsResponse = zod.object({

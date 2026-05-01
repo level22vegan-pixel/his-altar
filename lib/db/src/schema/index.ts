@@ -21,3 +21,4 @@ export * from "./loginConfig";
 export * from "./altarReports";
 export * from "./workers";
 export * from "./checkIns";
+export * from "./serviceReports";

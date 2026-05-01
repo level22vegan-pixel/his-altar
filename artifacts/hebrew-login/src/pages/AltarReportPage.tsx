@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useListAltarReports, useCreateAltarReport, useDeleteAltarReport } from "@workspace/api-client-react";
+import { useListAltarReports, useCreateAltarReport, useDeleteAltarReport, useListServiceReports } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
@@ -54,6 +54,7 @@ export default function AltarReportPage() {
   const [successMsg, setSuccessMsg] = useState("");
 
   const { data, isLoading } = useListAltarReports({ query: { queryKey: ["altarReports"] } });
+  const { data: srData } = useListServiceReports({}, { query: { queryKey: ["serviceReports"] } });
   const createMutation = useCreateAltarReport();
   const deleteMutation = useDeleteAltarReport();
 
@@ -171,20 +172,38 @@ export default function AltarReportPage() {
           </div>
         </div>
 
-        {/* Stats bar */}
-        <div className="flex gap-4 mb-6">
-          {[
-            { label: "Total Entries", value: reports.length },
-            { label: "Salvations", value: reports.filter(r => r.responseType === "Salvation").length },
-            { label: "Rededications", value: reports.filter(r => r.responseType === "Rededication").length },
-            { label: "Prayer Requests", value: reports.filter(r => r.responseType === "Prayer Request").length },
-          ].map(stat => (
-            <div key={stat.label} className="flex-1 rounded p-3 text-center" style={{ background: "hsl(35 20% 13%)", border: "1px solid hsl(38 18% 20%)" }}>
-              <div className="text-xl font-bold mb-0.5" style={{ color: "hsl(38 70% 62%)", fontFamily: "Georgia, serif" }}>{stat.value}</div>
-              <div className="text-xs uppercase tracking-widest" style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: "9px", letterSpacing: "0.15em" }}>{stat.label}</div>
+        {/* Service Report stat buttons */}
+        {(() => {
+          const serviceReports = srData?.reports ?? [];
+          const totals = serviceReports.reduce(
+            (acc, r) => ({ totalEntries: acc.totalEntries + r.totalEntries, servants: acc.servants + r.servants, salvations: acc.salvations + r.salvations, prayers: acc.prayers + r.prayers, family: acc.family + r.family }),
+            { totalEntries: 0, servants: 0, salvations: 0, prayers: 0, family: 0 }
+          );
+          const stats = [
+            { key: "totalEntries", label: "Total Entries", value: reports.length, icon: "📋", color: "hsl(38 55% 28%)", light: "hsl(38 70% 65%)" },
+            { key: "servants", label: "Servants", value: totals.servants, icon: "🙌", color: "hsl(200 40% 22%)", light: "hsl(200 60% 65%)" },
+            { key: "salvations", label: "Salvations", value: totals.salvations, icon: "✝", color: "hsl(130 35% 18%)", light: "hsl(130 55% 60%)" },
+            { key: "prayers", label: "Prayers", value: totals.prayers, icon: "🙏", color: "hsl(280 28% 20%)", light: "hsl(280 50% 65%)" },
+            { key: "family", label: "Family", value: totals.family, icon: "👨‍👩‍👧", color: "hsl(0 30% 20%)", light: "hsl(0 55% 65%)" },
+          ];
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 24 }}>
+              {stats.map(stat => (
+                <button
+                  key={stat.key}
+                  onClick={() => navigate(`/admin/service-report?category=${stat.key}`)}
+                  style={{ background: "hsl(35 20% 13%)", border: "1px solid hsl(38 18% 20%)", borderRadius: 6, padding: "10px 4px", cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
+                  onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = stat.color; }}
+                  onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = "hsl(35 20% 13%)"; }}
+                >
+                  <span style={{ fontSize: 15 }}>{stat.icon}</span>
+                  <span style={{ color: stat.light, fontFamily: "Georgia, serif", fontSize: 20, fontWeight: "bold", lineHeight: 1 }}>{stat.value}</span>
+                  <span style={{ color: "hsl(38 22% 38%)", fontFamily: "Georgia, serif", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", lineHeight: 1.2, textAlign: "center" }}>{stat.label}</span>
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         {/* Add entry button */}
         <div className="mb-5">

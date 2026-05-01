@@ -196,6 +196,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckIn"
+  /service-reports:
+    get:
+      operationId: listServiceReports
+      tags: [service-reports]
+      summary: List service reports
+      parameters:
+        - name: campus
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of service reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceReportList"
+    post:
+      operationId: upsertServiceReport
+      tags: [service-reports]
+      summary: Create or update a service report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertServiceReportBody"
+      responses:
+        "200":
+          description: Upserted service report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceReport"
   /altar-reports:
     get:
       operationId: listAltarReports
@@ -392,6 +427,77 @@ components:
             $ref: "#/components/schemas/CheckIn"
       required:
         - checkIns
+    ServiceReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        campus:
+          type: string
+        service:
+          type: string
+        serviceDate:
+          type: string
+        totalEntries:
+          type: integer
+        servants:
+          type: integer
+        salvations:
+          type: integer
+        prayers:
+          type: integer
+        family:
+          type: integer
+        notes:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - campus
+        - service
+        - serviceDate
+        - totalEntries
+        - servants
+        - salvations
+        - prayers
+        - family
+        - updatedAt
+    UpsertServiceReportBody:
+      type: object
+      properties:
+        campus:
+          type: string
+        service:
+          type: string
+        serviceDate:
+          type: string
+        totalEntries:
+          type: integer
+        servants:
+          type: integer
+        salvations:
+          type: integer
+        prayers:
+          type: integer
+        family:
+          type: integer
+        notes:
+          type: string
+      required:
+        - campus
+        - service
+        - serviceDate
+    ServiceReportList:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceReport"
+      required:
+        - reports
     AltarReport:
       type: object
       properties:

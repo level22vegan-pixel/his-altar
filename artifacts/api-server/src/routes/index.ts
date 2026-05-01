@@ -5,6 +5,7 @@ import { configRouter } from "./config";
 import { altarReportsRouter } from "./altarReports";
 import { workersRouter } from "./workers";
 import { checkInsRouter } from "./checkIns";
+import { serviceReportsRouter } from "./serviceReports";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use("/config", configRouter);
 router.use("/altar-reports", altarReportsRouter);
 router.use("/workers", workersRouter);
 router.use("/check-ins", checkInsRouter);
+router.use("/service-reports", serviceReportsRouter);
 
 export default router;

@@ -9,6 +9,7 @@ import HallmarkPage from "@/pages/HallmarkPage";
 import AltarReportPage from "@/pages/AltarReportPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
+import ServiceReportPage from "@/pages/ServiceReportPage";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/admin/altar-report" component={AltarReportPage} />
       <Route path="/admin/roster" component={RosterManagerPage} />
       <Route path="/checkin" component={CheckInPage} />
+      <Route path="/admin/service-report" component={ServiceReportPage} />
       <Route component={NotFound} />
     </Switch>
   );

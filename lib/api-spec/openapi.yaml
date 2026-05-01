@@ -14,6 +14,8 @@ tags:
     description: Authentication operations
   - name: config
     description: Configuration operations
+  - name: altar-reports
+    description: Altar report operations
 paths:
   /healthz:
     get:
@@ -78,6 +80,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginCodeConfig"
+  /altar-reports:
+    get:
+      operationId: listAltarReports
+      tags: [altar-reports]
+      summary: List all altar reports
+      responses:
+        "200":
+          description: List of altar reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AltarReportList"
+    post:
+      operationId: createAltarReport
+      tags: [altar-reports]
+      summary: Create a new altar report entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAltarReportBody"
+      responses:
+        "201":
+          description: Created altar report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AltarReport"
+  /altar-reports/{id}:
+    delete:
+      operationId: deleteAltarReport
+      tags: [altar-reports]
+      summary: Delete an altar report entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AltarReport"
 components:
   schemas:
     HealthStatus:
@@ -135,3 +184,63 @@ components:
       required:
         - code
         - adminPassword
+    AltarReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        campus:
+          type: string
+        service:
+          type: string
+        responseType:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - campus
+        - service
+        - responseType
+        - createdAt
+    CreateAltarReportBody:
+      type: object
+      properties:
+        name:
+          type: string
+        campus:
+          type: string
+        service:
+          type: string
+        responseType:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        notes:
+          type: string
+      required:
+        - name
+        - campus
+        - service
+        - responseType
+    AltarReportList:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/AltarReport"
+      required:
+        - reports

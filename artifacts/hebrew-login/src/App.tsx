@@ -6,6 +6,7 @@ import LoginPage from "@/pages/LoginPage";
 import HomePage from "@/pages/HomePage";
 import AdminPage from "@/pages/AdminPage";
 import HallmarkPage from "@/pages/HallmarkPage";
+import AltarReportPage from "@/pages/AltarReportPage";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/home" component={HomePage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/campus/hallmark" component={HallmarkPage} />
+      <Route path="/admin/altar-report" component={AltarReportPage} />
       <Route component={NotFound} />
     </Switch>
   );

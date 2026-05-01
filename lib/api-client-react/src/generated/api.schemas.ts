@@ -31,3 +31,29 @@ export interface UpdateLoginCodeBody {
   /** Admin password to authorize the change */
   adminPassword: string;
 }
+
+export interface AltarReport {
+  id: number;
+  name: string;
+  campus: string;
+  service: string;
+  responseType: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CreateAltarReportBody {
+  name: string;
+  campus: string;
+  service: string;
+  responseType: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+}
+
+export interface AltarReportList {
+  reports: AltarReport[];
+}

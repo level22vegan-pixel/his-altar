@@ -58,3 +58,54 @@ export const UpdateLoginCodeResponse = zod.object({
     .describe("The ordered sequence of letter numbers that grant access"),
   updatedAt: zod.coerce.date(),
 });
+
+/**
+ * @summary List all altar reports
+ */
+export const ListAltarReportsResponse = zod.object({
+  reports: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      campus: zod.string(),
+      service: zod.string(),
+      responseType: zod.string(),
+      phone: zod.string().optional(),
+      email: zod.string().optional(),
+      notes: zod.string().optional(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create a new altar report entry
+ */
+export const CreateAltarReportBody = zod.object({
+  name: zod.string(),
+  campus: zod.string(),
+  service: zod.string(),
+  responseType: zod.string(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Delete an altar report entry
+ */
+export const DeleteAltarReportParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteAltarReportResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  campus: zod.string(),
+  service: zod.string(),
+  responseType: zod.string(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  notes: zod.string().optional(),
+  createdAt: zod.coerce.date(),
+});

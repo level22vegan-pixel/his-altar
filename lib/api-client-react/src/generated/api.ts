@@ -17,6 +17,9 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AltarReport,
+  AltarReportList,
+  CreateAltarReportBody,
   HealthStatus,
   LoginCodeConfig,
   LoginResult,
@@ -357,4 +360,249 @@ export const useUpdateLoginCode = <
   TContext
 > => {
   return useMutation(getUpdateLoginCodeMutationOptions(options));
+};
+
+/**
+ * @summary List all altar reports
+ */
+export const getListAltarReportsUrl = () => {
+  return `/api/altar-reports`;
+};
+
+export const listAltarReports = async (
+  options?: RequestInit,
+): Promise<AltarReportList> => {
+  return customFetch<AltarReportList>(getListAltarReportsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAltarReportsQueryKey = () => {
+  return [`/api/altar-reports`] as const;
+};
+
+export const getListAltarReportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAltarReports>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listAltarReports>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAltarReportsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAltarReports>>
+  > = ({ signal }) => listAltarReports({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAltarReports>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAltarReportsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAltarReports>>
+>;
+export type ListAltarReportsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all altar reports
+ */
+
+export function useListAltarReports<
+  TData = Awaited<ReturnType<typeof listAltarReports>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listAltarReports>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAltarReportsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new altar report entry
+ */
+export const getCreateAltarReportUrl = () => {
+  return `/api/altar-reports`;
+};
+
+export const createAltarReport = async (
+  createAltarReportBody: CreateAltarReportBody,
+  options?: RequestInit,
+): Promise<AltarReport> => {
+  return customFetch<AltarReport>(getCreateAltarReportUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createAltarReportBody),
+  });
+};
+
+export const getCreateAltarReportMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAltarReport>>,
+    TError,
+    { data: BodyType<CreateAltarReportBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAltarReport>>,
+  TError,
+  { data: BodyType<CreateAltarReportBody> },
+  TContext
+> => {
+  const mutationKey = ["createAltarReport"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAltarReport>>,
+    { data: BodyType<CreateAltarReportBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAltarReport(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAltarReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAltarReport>>
+>;
+export type CreateAltarReportMutationBody = BodyType<CreateAltarReportBody>;
+export type CreateAltarReportMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new altar report entry
+ */
+export const useCreateAltarReport = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAltarReport>>,
+    TError,
+    { data: BodyType<CreateAltarReportBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createAltarReport>>,
+  TError,
+  { data: BodyType<CreateAltarReportBody> },
+  TContext
+> => {
+  return useMutation(getCreateAltarReportMutationOptions(options));
+};
+
+/**
+ * @summary Delete an altar report entry
+ */
+export const getDeleteAltarReportUrl = (id: number) => {
+  return `/api/altar-reports/${id}`;
+};
+
+export const deleteAltarReport = async (
+  id: number,
+  options?: RequestInit,
+): Promise<AltarReport> => {
+  return customFetch<AltarReport>(getDeleteAltarReportUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAltarReportMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAltarReport>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAltarReport>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteAltarReport"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAltarReport>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteAltarReport(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAltarReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAltarReport>>
+>;
+
+export type DeleteAltarReportMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete an altar report entry
+ */
+export const useDeleteAltarReport = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAltarReport>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAltarReport>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteAltarReportMutationOptions(options));
 };

@@ -90,11 +90,24 @@ export default function AdminPage() {
           Admin Panel
         </h1>
         <p
-          className="text-xs text-center mb-8 tracking-widest uppercase opacity-60"
+          className="text-xs text-center mb-6 tracking-widest uppercase opacity-60"
           style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}
         >
-          Update the login sequence
+          Manage settings &amp; tools
         </p>
+
+        {/* Tools section */}
+        <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
+          <p className="text-xs uppercase tracking-widest mb-3 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Tools</p>
+          <button
+            onClick={() => navigate("/admin/altar-report")}
+            className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+          >
+            <span>Altar Report</span>
+            <span style={{ opacity: 0.5 }}>→</span>
+          </button>
+        </div>
 
         {/* Current code */}
         <div

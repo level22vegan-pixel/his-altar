@@ -7,6 +7,7 @@ export const workersTable = pgTable("workers", {
   name: text("name").notNull(),
   role: text("role"),
   category: text("category").notNull(), // 'master' | 'alt'
+  campus: text("campus").notNull().default(""),
   photoUrl: text("photo_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

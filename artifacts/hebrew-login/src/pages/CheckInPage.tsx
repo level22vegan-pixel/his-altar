@@ -102,8 +102,8 @@ export default function CheckInPage() {
   const queryClient = useQueryClient();
   const checkInsKey = ["checkIns", campus, service, today];
 
-  const { data: masterData } = useListWorkers({ category: "master" }, { query: { queryKey: ["workers-master"] } });
-  const { data: altData } = useListWorkers({ category: "alt" }, { query: { queryKey: ["workers-alt"] } });
+  const { data: masterData } = useListWorkers({ category: "master", campus }, { query: { queryKey: ["workers-master", campus] } });
+  const { data: altData } = useListWorkers({ category: "alt", campus }, { query: { queryKey: ["workers-alt", campus] } });
   const { data: checkInsData } = useListCheckIns(
     { campus, service, serviceDate: today },
     { query: { queryKey: checkInsKey } }

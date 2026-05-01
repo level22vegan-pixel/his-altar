@@ -64,6 +64,7 @@ export const UpdateLoginCodeResponse = zod.object({
  */
 export const ListWorkersQueryParams = zod.object({
   category: zod.coerce.string().optional(),
+  campus: zod.coerce.string().optional(),
 });
 
 export const ListWorkersResponse = zod.object({
@@ -73,6 +74,7 @@ export const ListWorkersResponse = zod.object({
       name: zod.string(),
       role: zod.string().optional(),
       category: zod.string(),
+      campus: zod.string(),
       photoUrl: zod.string().optional(),
       createdAt: zod.coerce.date(),
     }),
@@ -86,6 +88,7 @@ export const CreateWorkerBody = zod.object({
   name: zod.string(),
   role: zod.string().optional(),
   category: zod.string(),
+  campus: zod.string(),
   photoUrl: zod.string().optional(),
 });
 
@@ -99,6 +102,7 @@ export const UpdateWorkerParams = zod.object({
 export const UpdateWorkerBody = zod.object({
   name: zod.string().optional(),
   role: zod.string().optional(),
+  campus: zod.string().optional(),
   photoUrl: zod.string().optional(),
 });
 
@@ -107,6 +111,7 @@ export const UpdateWorkerResponse = zod.object({
   name: zod.string(),
   role: zod.string().optional(),
   category: zod.string(),
+  campus: zod.string(),
   photoUrl: zod.string().optional(),
   createdAt: zod.coerce.date(),
 });
@@ -123,6 +128,7 @@ export const DeleteWorkerResponse = zod.object({
   name: zod.string(),
   role: zod.string().optional(),
   category: zod.string(),
+  campus: zod.string(),
   photoUrl: zod.string().optional(),
   createdAt: zod.coerce.date(),
 });

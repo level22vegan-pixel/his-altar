@@ -1,17 +1,23 @@
 import { Router } from "express";
 import { db, workersTable } from "@workspace/db";
 import { CreateWorkerBody, UpdateWorkerBody } from "@workspace/api-zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
   try {
     const category = req.query.category as string | undefined;
-    const query = db.select().from(workersTable).orderBy(workersTable.name);
-    const rows = category
-      ? await db.select().from(workersTable).where(eq(workersTable.category, category)).orderBy(workersTable.name)
+    const campus = req.query.campus as string | undefined;
+
+    const conditions = [];
+    if (category) conditions.push(eq(workersTable.category, category));
+    if (campus) conditions.push(eq(workersTable.campus, campus));
+
+    const rows = conditions.length
+      ? await db.select().from(workersTable).where(and(...conditions)).orderBy(workersTable.name)
       : await db.select().from(workersTable).orderBy(workersTable.name);
+
     res.json({ workers: rows.map(toDto) });
   } catch (err) {
     req.log.error({ err }, "Error listing workers");
@@ -26,8 +32,11 @@ router.post("/", async (req, res) => {
       res.status(400).json({ message: "Invalid request" });
       return;
     }
-    const { name, role, category, photoUrl } = parsed.data;
-    const inserted = await db.insert(workersTable).values({ name, role: role ?? null, category, photoUrl: photoUrl ?? null }).returning();
+    const { name, role, category, campus, photoUrl } = parsed.data;
+    const inserted = await db
+      .insert(workersTable)
+      .values({ name, role: role ?? null, category, campus, photoUrl: photoUrl ?? null })
+      .returning();
     res.status(201).json(toDto(inserted[0]));
   } catch (err) {
     req.log.error({ err }, "Error creating worker");
@@ -41,12 +50,13 @@ router.put("/:id", async (req, res) => {
     if (isNaN(id)) { res.status(400).json({ message: "Invalid id" }); return; }
     const parsed = UpdateWorkerBody.safeParse(req.body);
     if (!parsed.success) { res.status(400).json({ message: "Invalid request" }); return; }
-    const { name, role, photoUrl } = parsed.data;
+    const { name, role, campus, photoUrl } = parsed.data;
     const updated = await db
       .update(workersTable)
       .set({
         ...(name !== undefined && { name }),
         ...(role !== undefined && { role }),
+        ...(campus !== undefined && { campus }),
         ...(photoUrl !== undefined && { photoUrl }),
       })
       .where(eq(workersTable.id, id))
@@ -78,6 +88,7 @@ function toDto(w: typeof workersTable.$inferSelect) {
     name: w.name,
     role: w.role ?? undefined,
     category: w.category,
+    campus: w.campus,
     photoUrl: w.photoUrl ?? undefined,
     createdAt: w.createdAt.toISOString(),
   };

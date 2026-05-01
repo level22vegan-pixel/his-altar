@@ -37,6 +37,7 @@ export interface Worker {
   name: string;
   role?: string;
   category: string;
+  campus: string;
   photoUrl?: string;
   createdAt: string;
 }
@@ -45,12 +46,14 @@ export interface CreateWorkerBody {
   name: string;
   role?: string;
   category: string;
+  campus: string;
   photoUrl?: string;
 }
 
 export interface UpdateWorkerBody {
   name?: string;
   role?: string;
+  campus?: string;
   photoUrl?: string;
 }
 
@@ -136,6 +139,7 @@ export interface AltarReportList {
 
 export type ListWorkersParams = {
   category?: string;
+  campus?: string;
 };
 
 export type ListCheckInsParams = {

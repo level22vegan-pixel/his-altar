@@ -91,6 +91,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: campus
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: List of workers
@@ -369,6 +374,8 @@ components:
           type: string
         category:
           type: string
+        campus:
+          type: string
         photoUrl:
           type: string
         createdAt:
@@ -378,6 +385,7 @@ components:
         - id
         - name
         - category
+        - campus
         - createdAt
     CreateWorkerBody:
       type: object
@@ -388,17 +396,22 @@ components:
           type: string
         category:
           type: string
+        campus:
+          type: string
         photoUrl:
           type: string
       required:
         - name
         - category
+        - campus
     UpdateWorkerBody:
       type: object
       properties:
         name:
           type: string
         role:
+          type: string
+        campus:
           type: string
         photoUrl:
           type: string

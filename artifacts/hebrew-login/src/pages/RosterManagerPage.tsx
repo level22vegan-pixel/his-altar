@@ -76,6 +76,7 @@ export default function RosterManagerPage() {
 
   const frontCamRef = useRef<HTMLInputElement>(null);
   const backCamRef = useRef<HTMLInputElement>(null);
+  const libraryRef = useRef<HTMLInputElement>(null);
 
   const { data: masterData, isLoading: masterLoading } = useListWorkers({ category: "master" }, { query: { queryKey: ["workers-master"] } });
   const { data: altData, isLoading: altLoading } = useListWorkers({ category: "alt" }, { query: { queryKey: ["workers-alt"] } });
@@ -156,9 +157,10 @@ export default function RosterManagerPage() {
     <div className="relative min-h-screen w-full" style={{ background: "hsl(35 20% 9%)" }}>
       <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 40%, hsl(30 18% 5% / 0.7) 100%)" }} />
 
-      {/* Hidden camera inputs */}
+      {/* Hidden file inputs */}
       <input ref={frontCamRef} type="file" accept="image/*" capture="user" style={{ display: "none" }} onChange={handleCapture} />
       <input ref={backCamRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={handleCapture} />
+      <input ref={libraryRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleCapture} />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-10">
         <button onClick={() => navigate("/admin")} style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.2em", background: "none", border: "none", cursor: "pointer", textTransform: "uppercase", opacity: 0.5, marginBottom: 28, display: "block" }}>← Admin</button>
@@ -227,9 +229,14 @@ export default function RosterManagerPage() {
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
                     {/* Camera buttons */}
                     {!cameraOpen ? (
-                      <button onClick={() => setCameraOpen(true)} style={{ background: "hsl(35 22% 16%)", border: "1px solid hsl(38 20% 24%)", color: "hsl(38 50% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", padding: "7px 10px", borderRadius: 4, cursor: "pointer", textAlign: "left" }}>
-                        📷 Take Photo
-                      </button>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => setCameraOpen(true)} style={{ flex: 1, background: "hsl(35 22% 16%)", border: "1px solid hsl(38 20% 24%)", color: "hsl(38 50% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", padding: "7px 10px", borderRadius: 4, cursor: "pointer" }}>
+                          📷 Camera
+                        </button>
+                        <button onClick={() => libraryRef.current?.click()} style={{ flex: 1, background: "hsl(38 28% 16%)", border: "1px solid hsl(38 22% 24%)", color: "hsl(38 55% 60%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", padding: "7px 10px", borderRadius: 4, cursor: "pointer" }}>
+                          🖼️ Library
+                        </button>
+                      </div>
                     ) : (
                       <div style={{ display: "flex", gap: 6 }}>
                         <button onClick={() => { setCameraOpen(false); frontCamRef.current?.click(); }} style={{ flex: 1, background: "hsl(200 28% 16%)", border: "1px solid hsl(200 22% 24%)", color: "hsl(200 60% 65%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em", padding: "7px 8px", borderRadius: 4, cursor: "pointer" }}>

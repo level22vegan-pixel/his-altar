@@ -1,9 +1,83 @@
 import { Router } from "express";
 import { db, checkInsTable, workersTable } from "@workspace/db";
 import { CreateCheckInBody } from "@workspace/api-zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
+
+const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
 const router = Router();
+
+// Returns all active members for a service — checked-in workers if available,
+// falling back to the active (non-on-hold) roster per campus.
+router.get("/roster", async (req, res) => {
+  try {
+    const { serviceDate, service } = req.query as Record<string, string>;
+    if (!serviceDate || !service) {
+      res.status(400).json({ message: "serviceDate and service are required" });
+      return;
+    }
+
+    // Get all check-ins for this service across every campus, joined with worker data
+    const checkIns = await db
+      .select({
+        checkInId: checkInsTable.id,
+        campus: checkInsTable.campus,
+        workerId: checkInsTable.workerId,
+        workerName: workersTable.name,
+        workerRole: workersTable.role,
+        workerCategory: workersTable.category,
+      })
+      .from(checkInsTable)
+      .leftJoin(workersTable, eq(checkInsTable.workerId, workersTable.id))
+      .where(
+        and(
+          eq(checkInsTable.serviceDate, serviceDate),
+          eq(checkInsTable.service, service)
+        )
+      );
+
+    // Group check-ins by campus
+    const byCheckIn: Record<string, typeof checkIns> = {};
+    for (const ci of checkIns) {
+      if (!byCheckIn[ci.campus]) byCheckIn[ci.campus] = [];
+      byCheckIn[ci.campus].push(ci);
+    }
+
+    // For campuses with no check-ins, fall back to active roster
+    const allWorkers = await db
+      .select()
+      .from(workersTable)
+      .where(ne(workersTable.onHold, true));
+
+    const byRoster: Record<string, typeof allWorkers> = {};
+    for (const w of allWorkers) {
+      if (!byRoster[w.campus]) byRoster[w.campus] = [];
+      byRoster[w.campus].push(w);
+    }
+
+    const campuses = CAMPUSES.map(campus => {
+      const ci = byCheckIn[campus];
+      if (ci && ci.length > 0) {
+        return {
+          campus,
+          source: "checkins" as const,
+          members: ci.map(c => ({ name: c.workerName ?? "Unknown", role: c.workerRole ?? "", category: c.workerCategory ?? "" })),
+        };
+      }
+      const roster = byRoster[campus] ?? [];
+      return {
+        campus,
+        source: "roster" as const,
+        members: roster.map(w => ({ name: w.name, role: w.role ?? "", category: w.category })),
+      };
+    });
+
+    res.json({ campuses });
+  } catch (err) {
+    req.log.error({ err }, "Error fetching service roster");
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 router.get("/", async (req, res) => {
   try {

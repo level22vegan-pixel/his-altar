@@ -98,6 +98,21 @@ export const SetCampusPasswordResponse = zod.object({
 });
 
 /**
+ * Returns a log of all campus password changes (master admin only)
+ * @summary Get password change history
+ */
+export const GetPasswordHistoryResponse = zod.object({
+  entries: zod.array(
+    zod.object({
+      id: zod.number(),
+      campus: zod.string(),
+      role: zod.string(),
+      changedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
  * @summary Verify a campus login password
  */
 export const VerifyCampusPasswordBody = zod.object({

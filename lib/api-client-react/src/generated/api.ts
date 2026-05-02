@@ -36,6 +36,7 @@ import type {
   ListWorkersParams,
   LoginCodeConfig,
   LoginResult,
+  PasswordHistoryList,
   SaveServiceNotesBody,
   ServiceNotes,
   ServiceReport,
@@ -547,6 +548,82 @@ export const useSetCampusPassword = <
 > => {
   return useMutation(getSetCampusPasswordMutationOptions(options));
 };
+
+/**
+ * Returns a log of all campus password changes (master admin only)
+ * @summary Get password change history
+ */
+export const getGetPasswordHistoryUrl = () => {
+  return `/api/campus-passwords/history`;
+};
+
+export const getPasswordHistory = async (
+  options?: RequestInit,
+): Promise<PasswordHistoryList> => {
+  return customFetch<PasswordHistoryList>(getGetPasswordHistoryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPasswordHistoryQueryKey = () => {
+  return [`/api/campus-passwords/history`] as const;
+};
+
+export const getGetPasswordHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPasswordHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPasswordHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPasswordHistoryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPasswordHistory>>
+  > = ({ signal }) => getPasswordHistory({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPasswordHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPasswordHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPasswordHistory>>
+>;
+export type GetPasswordHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get password change history
+ */
+
+export function useGetPasswordHistory<
+  TData = Awaited<ReturnType<typeof getPasswordHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPasswordHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPasswordHistoryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Verify a campus login password

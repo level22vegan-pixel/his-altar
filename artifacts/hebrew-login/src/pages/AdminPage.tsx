@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword } from "@workspace/api-client-react";
+import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword, useGetPasswordHistory } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 
@@ -174,6 +174,74 @@ function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
   );
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  lead: "Lead",
+  deputy_lead: "Deputy Lead",
+};
+
+function PasswordHistoryPanel() {
+  const { data, isLoading } = useGetPasswordHistory({ query: { queryKey: ["password-history"] } });
+  const entries = data?.entries ?? [];
+
+  return (
+    <div
+      className="mt-8 p-4 rounded border"
+      style={{ background: "hsl(35 18% 11%)", borderColor: "hsl(38 15% 20%)" }}
+    >
+      <p
+        className="text-xs uppercase tracking-widest mb-1 opacity-60"
+        style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}
+      >
+        Password Change Log
+      </p>
+      <p style={{ color: "hsl(38 22% 36%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em", marginBottom: 14 }}>
+        Every time a campus sequence is set or updated, it is recorded here.
+      </p>
+      {isLoading ? (
+        <p style={{ color: "hsl(38 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>Loading...</p>
+      ) : entries.length === 0 ? (
+        <p style={{ color: "hsl(38 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>No changes recorded yet.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {entries.map((entry) => {
+            const date = new Date(entry.changedAt);
+            const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+            return (
+              <div
+                key={entry.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 12px",
+                  background: "hsl(35 18% 14%)",
+                  border: "1px solid hsl(38 15% 20%)",
+                  borderRadius: 6,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 55% 62%)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                    {entry.campus}
+                  </span>
+                  <span style={{ color: "hsl(38 20% 38%)", margin: "0 6px", fontSize: 10 }}>·</span>
+                  <span style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 46%)", letterSpacing: "0.08em" }}>
+                    {ROLE_LABELS[entry.role] ?? entry.role}
+                  </span>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 28% 42%)", letterSpacing: "0.06em" }}>{dateStr}</div>
+                  <div style={{ fontFamily: "Georgia, serif", fontSize: 9, color: "hsl(38 20% 34%)", letterSpacing: "0.06em" }}>{timeStr}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [, navigate] = useLocation();
   const [adminPassword, setAdminPassword] = useState("");
@@ -294,7 +362,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Master-only: current code + editor */}
+        {/* Master-only: current code + editor + history */}
         {!isLead && (
           <>
             <div
@@ -453,6 +521,8 @@ export default function AdminPage() {
                 {message.text}
               </p>
             )}
+
+            <PasswordHistoryPanel />
           </>
         )}
       </div>

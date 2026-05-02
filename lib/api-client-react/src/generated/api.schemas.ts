@@ -207,6 +207,17 @@ export interface VerifyCampusPasswordBody {
   password: string;
 }
 
+export interface PasswordHistoryEntry {
+  id: number;
+  campus: string;
+  role: string;
+  changedAt: string;
+}
+
+export interface PasswordHistoryList {
+  entries: PasswordHistoryEntry[];
+}
+
 export interface VerifyCampusPasswordResponse {
   valid: boolean;
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, campusPasswordsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, campusPasswordsTable, passwordHistoryTable } from "@workspace/db";
+import { eq, and, desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -24,7 +24,25 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Set campus password — sequence stored as JSON string
+router.get("/history", async (req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(passwordHistoryTable)
+      .orderBy(desc(passwordHistoryTable.changedAt));
+    const entries = rows.map(r => ({
+      id: r.id,
+      campus: r.campus,
+      role: r.role,
+      changedAt: r.changedAt.toISOString(),
+    }));
+    res.json({ entries });
+  } catch (err) {
+    req.log.error({ err }, "Error fetching password history");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     const { campus, role, sequence, adminPassword } = req.body;
@@ -44,6 +62,7 @@ router.post("/", async (req, res) => {
         target: [campusPasswordsTable.campus, campusPasswordsTable.role],
         set: { password },
       });
+    await db.insert(passwordHistoryTable).values({ campus, role });
     res.json({ campus, role, hasPassword: true });
   } catch (err) {
     req.log.error({ err }, "Error setting campus password");

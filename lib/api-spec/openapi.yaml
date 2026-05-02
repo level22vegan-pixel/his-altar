@@ -111,6 +111,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CampusPasswordEntry"
+  /campus-passwords/history:
+    get:
+      operationId: getPasswordHistory
+      tags: [campus-passwords]
+      summary: Get password change history
+      description: Returns a log of all campus password changes (master admin only)
+      responses:
+        "200":
+          description: Password history entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordHistoryList"
   /campus-passwords/verify:
     post:
       operationId: verifyCampusPassword
@@ -909,6 +922,32 @@ components:
         - campus
         - role
         - password
+    PasswordHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        campus:
+          type: string
+        role:
+          type: string
+        changedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - campus
+        - role
+        - changedAt
+    PasswordHistoryList:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/PasswordHistoryEntry"
+      required:
+        - entries
     VerifyCampusPasswordResponse:
       type: object
       properties:

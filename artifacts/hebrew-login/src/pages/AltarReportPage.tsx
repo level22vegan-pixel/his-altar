@@ -15,8 +15,32 @@ const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-const SUNDAY_SERVICES = ["8am", "10am", "12pm"];
+// Per-campus service times — Sunday and Wednesday
+const CAMPUS_SERVICES: Record<string, { sunday: string[]; wednesday: string[] }> = {
+  HALLMARK:  { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
+  ARROWHEAD: { sunday: ["10am", "12pm"],        wednesday: ["7pm"] },
+  RIVERSIDE: { sunday: ["10am", "12pm"],        wednesday: [] },
+  POMONA:    { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
+  LA:        { sunday: ["8am", "9am"],          wednesday: ["7pm"] },
+  ARIZONA:   { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
+};
+
+// Ordered union of all campus Sunday times
+const SUNDAY_SERVICES = ["8am", "9am", "10am", "11am", "12pm"];
 const WEDNESDAY_SERVICES = ["7pm"];
+
+// Which campuses hold each service slot
+function campusesForSlot(service: string): string[] {
+  if (service === "7pm") {
+    return CAMPUSES.filter(c => CAMPUS_SERVICES[c]?.wednesday.includes(service));
+  }
+  return CAMPUSES.filter(c => CAMPUS_SERVICES[c]?.sunday.includes(service));
+}
+
+// Full check-in service name (as stored in DB from campus pages)
+function checkInServiceName(slot: string): string {
+  return slot === "7pm" ? "Wednesday 7pm" : `Sunday ${slot}`;
+}
 
 function getDayServices(date: Date): string[] | null {
   const dow = date.getDay();
@@ -314,18 +338,20 @@ function AddEntryForm({
   onSave: (data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onCancel: () => void;
 }) {
-  const available = CAMPUSES.filter(c => !existingCampuses.includes(c));
+  const slotCampuses = campusesForSlot(service);
+  const available = slotCampuses.filter(c => !existingCampuses.includes(c));
   const [campus, setCampus] = useState(available[0] ?? "");
   const [salvations, setSalvations] = useState("0");
   const [prayers, setPrayers] = useState("0");
   const [altarMembers, setAltarMembers] = useState("0");
   const [altarSource, setAltarSource] = useState<"checkins" | null>(null);
 
-  // Auto-fill altar members from check-ins for this exact campus + service + date
+  // Auto-fill altar members from check-ins — map slot name to stored service name
+  const fullServiceName = checkInServiceName(service);
   useEffect(() => {
     if (!campus) return;
     setAltarSource(null);
-    fetch(`/api/check-ins?campus=${encodeURIComponent(campus)}&service=${encodeURIComponent(service)}&serviceDate=${encodeURIComponent(dateStr)}`)
+    fetch(`/api/check-ins?campus=${encodeURIComponent(campus)}&service=${encodeURIComponent(fullServiceName)}&serviceDate=${encodeURIComponent(dateStr)}`)
       .then(r => r.json())
       .then(data => {
         const count = data?.checkIns?.length ?? 0;
@@ -333,7 +359,7 @@ function AddEntryForm({
         setAltarSource(count > 0 ? "checkins" : null);
       })
       .catch(() => {});
-  }, [campus, service, dateStr]);
+  }, [campus, fullServiceName, dateStr]);
 
   if (available.length === 0) {
     return (
@@ -529,7 +555,7 @@ function ServiceSection({
           onSave={(data) => { onSave(service, data); setShowAddForm(false); }}
           onCancel={() => setShowAddForm(false)}
         />
-      ) : existingCampuses.length < CAMPUSES.length ? (
+      ) : existingCampuses.length < campusesForSlot(service).length ? (
         <button
           onClick={() => setShowAddForm(true)}
           style={{ width: "100%", background: SURFACE, color: GOLD_DIM, border: `1px dashed hsl(38 22% 26%)`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 6, cursor: "pointer", transition: "all 0.2s" }}

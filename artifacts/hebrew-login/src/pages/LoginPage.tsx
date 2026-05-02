@@ -39,9 +39,6 @@ export default function LoginPage() {
   // Long-press admin state
   const [holding, setHolding] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
-  const [showAdminPrompt, setShowAdminPrompt] = useState(false);
-  const [adminCode, setAdminCode] = useState("");
-  const [adminError, setAdminError] = useState(false);
 
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -71,7 +68,8 @@ export default function LoginPage() {
       clearHoldTimers();
       setHolding(false);
       setHoldProgress(0);
-      setShowAdminPrompt(true);
+      localStorage.removeItem("campusSession");
+      navigate("/admin");
     }, HOLD_DURATION);
   }, [clearHoldTimers]);
 
@@ -141,17 +139,6 @@ export default function LoginPage() {
     [sequence, selectedLetters, status, verifyMutation, navigate]
   );
 
-  const handleAdminSubmit = useCallback(() => {
-    if (adminCode === "admin1234") {
-      setShowAdminPrompt(false);
-      setAdminCode("");
-      setAdminError(false);
-      navigate("/admin");
-    } else {
-      setAdminError(true);
-      setTimeout(() => setAdminError(false), 1500);
-    }
-  }, [adminCode, navigate]);
 
   const circumference = 2 * Math.PI * 28;
 
@@ -277,91 +264,6 @@ export default function LoginPage() {
 
       </div>
 
-      {/* Admin code prompt overlay */}
-      {showAdminPrompt && (
-        <div
-          className="absolute inset-0 z-50 flex items-center justify-center fade-in"
-          style={{ background: "hsl(30 18% 5% / 0.85)" }}
-        >
-          <div
-            className="flex flex-col items-center gap-5 p-8 rounded"
-            style={{
-              background: "hsl(35 22% 12%)",
-              border: "1px solid hsl(38 25% 25%)",
-              boxShadow: "0 8px 48px hsl(30 18% 5% / 0.7)",
-              minWidth: "280px",
-            }}
-          >
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1 h-px" style={{ background: "hsl(38 30% 25%)" }} />
-              <span style={{ color: "hsl(38 45% 40%)", fontFamily: "Georgia, serif" }}>✦</span>
-              <div className="flex-1 h-px" style={{ background: "hsl(38 30% 25%)" }} />
-            </div>
-            <p
-              className="text-xs uppercase tracking-widest"
-              style={{ color: "hsl(38 40% 55%)", fontFamily: "Georgia, serif", letterSpacing: "0.25em" }}
-            >
-              Admin Access
-            </p>
-            <input
-              type="password"
-              autoFocus
-              value={adminCode}
-              onChange={(e) => setAdminCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdminSubmit()}
-              placeholder="Enter code"
-              className="w-full px-4 py-2 rounded text-sm text-center"
-              style={{
-                background: "hsl(35 18% 10%)",
-                border: `1px solid ${adminError ? "hsl(0 60% 40%)" : "hsl(38 20% 28%)"}`,
-                color: "hsl(38 55% 70%)",
-                fontFamily: "Georgia, serif",
-                outline: "none",
-                letterSpacing: "0.2em",
-                transition: "border-color 0.2s",
-              }}
-            />
-            {adminError && (
-              <p
-                className="text-xs tracking-widest fade-in"
-                style={{ color: "hsl(0 60% 55%)", fontFamily: "Georgia, serif" }}
-              >
-                Invalid code
-              </p>
-            )}
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => { setShowAdminPrompt(false); setAdminCode(""); setAdminError(false); }}
-                className="flex-1 py-2 text-xs uppercase tracking-widest rounded transition-opacity opacity-50 hover:opacity-80"
-                style={{
-                  color: "hsl(38 35% 50%)",
-                  border: "1px solid hsl(38 15% 25%)",
-                  background: "transparent",
-                  fontFamily: "Georgia, serif",
-                  letterSpacing: "0.15em",
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAdminSubmit}
-                className="flex-1 py-2 text-xs uppercase tracking-widest rounded"
-                style={{
-                  background: "hsl(38 50% 30%)",
-                  color: "hsl(38 70% 80%)",
-                  border: "1px solid hsl(38 40% 38%)",
-                  fontFamily: "Georgia, serif",
-                  letterSpacing: "0.15em",
-                  cursor: "pointer",
-                }}
-              >
-                Enter
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

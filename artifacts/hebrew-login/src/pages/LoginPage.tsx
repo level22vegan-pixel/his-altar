@@ -266,6 +266,18 @@ export default function LoginPage() {
           })}
         </div>
 
+        {/* Campus login link */}
+        <div style={{ textAlign: "center", marginTop: 28 }}>
+          <button
+            onClick={() => navigate("/campus-login")}
+            style={{ color: "hsl(38 22% 32%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", opacity: 0.55, transition: "opacity 0.2s" }}
+            onMouseOver={e => (e.currentTarget.style.opacity = "0.9")}
+            onMouseOut={e => (e.currentTarget.style.opacity = "0.55")}
+          >
+            Campus Login
+          </button>
+        </div>
+
       </div>
 
       {/* Admin code prompt overlay */}

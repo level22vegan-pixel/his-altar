@@ -24,3 +24,4 @@ export * from "./checkIns";
 export * from "./serviceReports";
 export * from "./dailyAltarReports";
 export * from "./serviceNotes";
+export * from "./campusPasswords";

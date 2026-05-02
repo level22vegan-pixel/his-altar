@@ -82,6 +82,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginCodeConfig"
+  /campus-passwords:
+    get:
+      operationId: listCampusPasswords
+      tags: [campusPasswords]
+      summary: List campus password status
+      responses:
+        "200":
+          description: Campus password status list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampusPasswordList"
+    post:
+      operationId: setCampusPassword
+      tags: [campusPasswords]
+      summary: Set or update a campus password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetCampusPasswordBody"
+      responses:
+        "200":
+          description: Password set successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampusPasswordEntry"
+  /campus-passwords/verify:
+    post:
+      operationId: verifyCampusPassword
+      tags: [campusPasswords]
+      summary: Verify a campus login password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyCampusPasswordBody"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyCampusPasswordResponse"
   /workers:
     get:
       operationId: listWorkers
@@ -802,3 +849,61 @@ components:
             $ref: "#/components/schemas/DailyAltarReport"
       required:
         - reports
+    CampusPasswordEntry:
+      type: object
+      properties:
+        campus:
+          type: string
+        role:
+          type: string
+        hasPassword:
+          type: boolean
+      required:
+        - campus
+        - role
+        - hasPassword
+    CampusPasswordList:
+      type: object
+      properties:
+        passwords:
+          type: array
+          items:
+            $ref: "#/components/schemas/CampusPasswordEntry"
+      required:
+        - passwords
+    SetCampusPasswordBody:
+      type: object
+      properties:
+        campus:
+          type: string
+        role:
+          type: string
+        password:
+          type: string
+        adminPassword:
+          type: string
+      required:
+        - campus
+        - role
+        - password
+        - adminPassword
+    VerifyCampusPasswordBody:
+      type: object
+      properties:
+        campus:
+          type: string
+        role:
+          type: string
+        password:
+          type: string
+      required:
+        - campus
+        - role
+        - password
+    VerifyCampusPasswordResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+      required:
+        - valid

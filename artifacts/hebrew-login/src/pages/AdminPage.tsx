@@ -1,6 +1,113 @@
 import { useState } from "react";
-import { useGetLoginCode, useUpdateLoginCode } from "@workspace/api-client-react";
+import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+
+const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+const ROLES = [
+  { id: "lead", label: "Lead" },
+  { id: "deputy_lead", label: "Deputy Lead" },
+];
+
+const INPUT_S: React.CSSProperties = {
+  background: "hsl(35 20% 14%)", border: "1px solid hsl(38 20% 25%)",
+  color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif",
+  borderRadius: 4, padding: "7px 10px", width: "100%", fontSize: 12, outline: "none",
+};
+
+function CampusPasswordsPanel() {
+  const queryClient = useQueryClient();
+  const { data } = useListCampusPasswords({ query: { queryKey: ["campus-passwords"] } });
+  const setPass = useSetCampusPassword();
+
+  const [editing, setEditing] = useState<{ campus: string; role: string } | null>(null);
+  const [pw, setPw] = useState("");
+  const [adminPw, setAdminPw] = useState("");
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const passwords = data?.passwords ?? [];
+
+  const hasPassword = (campus: string, role: string) =>
+    passwords.find(p => p.campus === campus && p.role === role)?.hasPassword ?? false;
+
+  const handleSave = () => {
+    if (!editing || !pw || !adminPw) return;
+    setPass.mutate(
+      { data: { campus: editing.campus, role: editing.role, password: pw, adminPassword: adminPw } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["campus-passwords"] });
+          setMsg({ type: "ok", text: `Password set for ${editing.campus} / ${ROLES.find(r => r.id === editing.role)?.label}` });
+          setEditing(null); setPw(""); setAdminPw("");
+          setTimeout(() => setMsg(null), 3000);
+        },
+        onError: () => setMsg({ type: "err", text: "Failed — check admin password" }),
+      }
+    );
+  };
+
+  return (
+    <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
+      <p className="text-xs uppercase tracking-widest mb-4 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Campus Passwords</p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {CAMPUSES.map(campus => (
+          <div key={campus}>
+            <div style={{ display: "flex", alignItems: "center", gap: 0, background: "hsl(35 18% 11%)", border: "1px solid hsl(38 15% 18%)", borderRadius: 6, overflow: "hidden" }}>
+              <div style={{ padding: "8px 14px", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "hsl(38 50% 58%)", flex: 1, fontWeight: "bold" }}>{campus}</div>
+              {ROLES.map(role => {
+                const set = hasPassword(campus, role.id);
+                const isEditing = editing?.campus === campus && editing?.role === role.id;
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => { setEditing(isEditing ? null : { campus, role: role.id }); setPw(""); setAdminPw(""); setMsg(null); }}
+                    style={{
+                      padding: "8px 12px", fontFamily: "Georgia, serif", fontSize: 10,
+                      letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer",
+                      borderLeft: "1px solid hsl(38 15% 18%)", transition: "all 0.15s",
+                      background: isEditing ? "hsl(38 40% 20%)" : "none",
+                      color: isEditing ? "hsl(38 70% 72%)" : set ? "hsl(130 55% 52%)" : "hsl(38 22% 38%)",
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}
+                  >
+                    <span style={{ fontSize: 8 }}>{set ? "●" : "○"}</span>
+                    {role.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {editing?.campus === campus && (
+              <div style={{ border: "1px solid hsl(38 25% 24%)", borderTop: "none", borderRadius: "0 0 6px 6px", padding: "12px 14px", background: "hsl(35 18% 12%)", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div>
+                    <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>New Password</label>
+                    <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Set password..." style={INPUT_S} />
+                  </div>
+                  <div>
+                    <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Admin Password</label>
+                    <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="Your admin code..." style={INPUT_S} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={handleSave} disabled={!pw || !adminPw || setPass.isPending} style={{ background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "6px 16px", borderRadius: 4, cursor: "pointer", opacity: !pw || !adminPw ? 0.4 : 1 }}>
+                    {setPass.isPending ? "Saving..." : "Set Password"}
+                  </button>
+                  <button onClick={() => { setEditing(null); setPw(""); setAdminPw(""); }} style={{ background: "none", color: "hsl(38 25% 40%)", border: "1px solid hsl(38 15% 22%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {msg && (
+        <p style={{ color: msg.type === "ok" ? "hsl(130 55% 55%)" : "hsl(0 60% 55%)", fontFamily: "Georgia, serif", fontSize: 12, marginTop: 12, letterSpacing: "0.05em" }}>{msg.text}</p>
+      )}
+    </div>
+  );
+}
 
 const HEBREW_ALPHABET = [
   { letter: "א", number: 1, name: "Alef" },
@@ -95,6 +202,9 @@ export default function AdminPage() {
         >
           Manage settings &amp; tools
         </p>
+
+        {/* Campus Passwords */}
+        <CampusPasswordsPanel />
 
         {/* Tools section */}
         <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>

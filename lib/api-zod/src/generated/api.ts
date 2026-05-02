@@ -61,6 +61,48 @@ export const UpdateLoginCodeResponse = zod.object({
 });
 
 /**
+ * @summary List campus password status
+ */
+export const ListCampusPasswordsResponse = zod.object({
+  passwords: zod.array(
+    zod.object({
+      campus: zod.string(),
+      role: zod.string(),
+      hasPassword: zod.boolean(),
+    }),
+  ),
+});
+
+/**
+ * @summary Set or update a campus password
+ */
+export const SetCampusPasswordBody = zod.object({
+  campus: zod.string(),
+  role: zod.string(),
+  password: zod.string(),
+  adminPassword: zod.string(),
+});
+
+export const SetCampusPasswordResponse = zod.object({
+  campus: zod.string(),
+  role: zod.string(),
+  hasPassword: zod.boolean(),
+});
+
+/**
+ * @summary Verify a campus login password
+ */
+export const VerifyCampusPasswordBody = zod.object({
+  campus: zod.string(),
+  role: zod.string(),
+  password: zod.string(),
+});
+
+export const VerifyCampusPasswordResponse = zod.object({
+  valid: zod.boolean(),
+});
+
+/**
  * @summary List all workers
  */
 export const ListWorkersQueryParams = zod.object({

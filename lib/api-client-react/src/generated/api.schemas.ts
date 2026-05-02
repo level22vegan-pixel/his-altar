@@ -179,6 +179,33 @@ export interface DailyAltarReportList {
   reports: DailyAltarReport[];
 }
 
+export interface CampusPasswordEntry {
+  campus: string;
+  role: string;
+  hasPassword: boolean;
+}
+
+export interface CampusPasswordList {
+  passwords: CampusPasswordEntry[];
+}
+
+export interface SetCampusPasswordBody {
+  campus: string;
+  role: string;
+  password: string;
+  adminPassword: string;
+}
+
+export interface VerifyCampusPasswordBody {
+  campus: string;
+  role: string;
+  password: string;
+}
+
+export interface VerifyCampusPasswordResponse {
+  valid: boolean;
+}
+
 export type ListWorkersParams = {
   category?: string;
   campus?: string;

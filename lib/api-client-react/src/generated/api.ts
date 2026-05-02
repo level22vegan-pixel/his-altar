@@ -19,6 +19,8 @@ import type {
 import type {
   AltarReport,
   AltarReportList,
+  CampusPasswordEntry,
+  CampusPasswordList,
   CheckIn,
   CheckInList,
   CreateAltarReportBody,
@@ -38,10 +40,13 @@ import type {
   ServiceNotes,
   ServiceReport,
   ServiceReportList,
+  SetCampusPasswordBody,
   UpdateLoginCodeBody,
   UpdateWorkerBody,
   UpsertDailyAltarReportBody,
   UpsertServiceReportBody,
+  VerifyCampusPasswordBody,
+  VerifyCampusPasswordResponse,
   VerifyLoginBody,
   Worker,
   WorkerList,
@@ -380,6 +385,257 @@ export const useUpdateLoginCode = <
   TContext
 > => {
   return useMutation(getUpdateLoginCodeMutationOptions(options));
+};
+
+/**
+ * @summary List campus password status
+ */
+export const getListCampusPasswordsUrl = () => {
+  return `/api/campus-passwords`;
+};
+
+export const listCampusPasswords = async (
+  options?: RequestInit,
+): Promise<CampusPasswordList> => {
+  return customFetch<CampusPasswordList>(getListCampusPasswordsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCampusPasswordsQueryKey = () => {
+  return [`/api/campus-passwords`] as const;
+};
+
+export const getListCampusPasswordsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCampusPasswords>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listCampusPasswords>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListCampusPasswordsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listCampusPasswords>>
+  > = ({ signal }) => listCampusPasswords({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listCampusPasswords>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListCampusPasswordsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listCampusPasswords>>
+>;
+export type ListCampusPasswordsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List campus password status
+ */
+
+export function useListCampusPasswords<
+  TData = Awaited<ReturnType<typeof listCampusPasswords>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listCampusPasswords>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListCampusPasswordsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Set or update a campus password
+ */
+export const getSetCampusPasswordUrl = () => {
+  return `/api/campus-passwords`;
+};
+
+export const setCampusPassword = async (
+  setCampusPasswordBody: SetCampusPasswordBody,
+  options?: RequestInit,
+): Promise<CampusPasswordEntry> => {
+  return customFetch<CampusPasswordEntry>(getSetCampusPasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setCampusPasswordBody),
+  });
+};
+
+export const getSetCampusPasswordMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setCampusPassword>>,
+    TError,
+    { data: BodyType<SetCampusPasswordBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setCampusPassword>>,
+  TError,
+  { data: BodyType<SetCampusPasswordBody> },
+  TContext
+> => {
+  const mutationKey = ["setCampusPassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setCampusPassword>>,
+    { data: BodyType<SetCampusPasswordBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setCampusPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetCampusPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setCampusPassword>>
+>;
+export type SetCampusPasswordMutationBody = BodyType<SetCampusPasswordBody>;
+export type SetCampusPasswordMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Set or update a campus password
+ */
+export const useSetCampusPassword = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setCampusPassword>>,
+    TError,
+    { data: BodyType<SetCampusPasswordBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setCampusPassword>>,
+  TError,
+  { data: BodyType<SetCampusPasswordBody> },
+  TContext
+> => {
+  return useMutation(getSetCampusPasswordMutationOptions(options));
+};
+
+/**
+ * @summary Verify a campus login password
+ */
+export const getVerifyCampusPasswordUrl = () => {
+  return `/api/campus-passwords/verify`;
+};
+
+export const verifyCampusPassword = async (
+  verifyCampusPasswordBody: VerifyCampusPasswordBody,
+  options?: RequestInit,
+): Promise<VerifyCampusPasswordResponse> => {
+  return customFetch<VerifyCampusPasswordResponse>(
+    getVerifyCampusPasswordUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(verifyCampusPasswordBody),
+    },
+  );
+};
+
+export const getVerifyCampusPasswordMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyCampusPassword>>,
+    TError,
+    { data: BodyType<VerifyCampusPasswordBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyCampusPassword>>,
+  TError,
+  { data: BodyType<VerifyCampusPasswordBody> },
+  TContext
+> => {
+  const mutationKey = ["verifyCampusPassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyCampusPassword>>,
+    { data: BodyType<VerifyCampusPasswordBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return verifyCampusPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyCampusPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyCampusPassword>>
+>;
+export type VerifyCampusPasswordMutationBody =
+  BodyType<VerifyCampusPasswordBody>;
+export type VerifyCampusPasswordMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Verify a campus login password
+ */
+export const useVerifyCampusPassword = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyCampusPassword>>,
+    TError,
+    { data: BodyType<VerifyCampusPasswordBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyCampusPassword>>,
+  TError,
+  { data: BodyType<VerifyCampusPasswordBody> },
+  TContext
+> => {
+  return useMutation(getVerifyCampusPasswordMutationOptions(options));
 };
 
 /**

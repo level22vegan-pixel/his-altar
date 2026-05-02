@@ -70,7 +70,7 @@ export default function HomePage() {
             </p>
             <div className="grid grid-cols-2 gap-3 w-full">
               {CAMPUSES.map((campus) => {
-                const href = campus === "HALLMARK" ? "/campus/hallmark" : campus === "ARROWHEAD" ? "/campus/arrowhead" : undefined;
+                const href = campus === "HALLMARK" ? "/campus/hallmark" : campus === "ARROWHEAD" ? "/campus/arrowhead" : campus === "RIVERSIDE" ? "/campus/riverside" : undefined;
                 const btnStyle = {
                   background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",
                   color: "hsl(38 65% 68%)",

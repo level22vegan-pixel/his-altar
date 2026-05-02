@@ -7,6 +7,7 @@ import HomePage from "@/pages/HomePage";
 import AdminPage from "@/pages/AdminPage";
 import HallmarkPage from "@/pages/HallmarkPage";
 import ArrowheadPage from "@/pages/ArrowheadPage";
+import RiversidePage from "@/pages/RiversidePage";
 import AltarReportPage from "@/pages/AltarReportPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/admin" component={AdminPage} />
       <Route path="/campus/hallmark" component={HallmarkPage} />
       <Route path="/campus/arrowhead" component={ArrowheadPage} />
+      <Route path="/campus/riverside" component={RiversidePage} />
       <Route path="/admin/altar-report" component={AltarReportPage} />
       <Route path="/admin/roster" component={RosterManagerPage} />
       <Route path="/checkin" component={CheckInPage} />

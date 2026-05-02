@@ -486,7 +486,7 @@ function ServiceSection({
             title="Service notes"
             style={{ color: showNotes ? GOLD_BRIGHT : GOLD_DIM, background: showNotes ? "hsl(38 35% 20%)" : "hsl(35 18% 12%)", border: `1px solid ${showNotes ? "hsl(38 40% 30%)" : BORDER}`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", transition: "all 0.15s" }}
           >
-            📝
+            ✏️
           </button>
           {hasServiceData && (
             <button

@@ -354,7 +354,7 @@ export default function CheckInPage() {
   const [showTeamModal, setShowTeamModal] = useState(false);
 
   // Team preset stored per-campus in localStorage
-  const presetKey = `teamPreset_${campus}`;
+  const presetKey = `teamPreset_${campus}_${service}`;
   const [teamPreset, setTeamPreset] = useState<number[]>(() => {
     try { return JSON.parse(localStorage.getItem(presetKey) ?? "[]"); } catch { return []; }
   });

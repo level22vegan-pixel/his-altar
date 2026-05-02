@@ -261,6 +261,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ServiceReport"
+  /service-notes:
+    get:
+      operationId: getServiceNotes
+      tags: [service-notes]
+      summary: Get notes for a service session
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service notes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceNotes"
+    post:
+      operationId: saveServiceNotes
+      tags: [service-notes]
+      summary: Create or update service notes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveServiceNotesBody"
+      responses:
+        "200":
+          description: Saved service notes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceNotes"
   /daily-altar-reports:
     get:
       operationId: listDailyAltarReports
@@ -665,6 +705,32 @@ components:
             $ref: "#/components/schemas/AltarReport"
       required:
         - reports
+    ServiceNotes:
+      type: object
+      properties:
+        date:
+          type: string
+        service:
+          type: string
+        notes:
+          type: string
+      required:
+        - date
+        - service
+        - notes
+    SaveServiceNotesBody:
+      type: object
+      properties:
+        date:
+          type: string
+        service:
+          type: string
+        notes:
+          type: string
+      required:
+        - date
+        - service
+        - notes
     DailyAltarReport:
       type: object
       properties:
@@ -682,6 +748,8 @@ components:
           type: integer
         altarMembers:
           type: integer
+        notes:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -696,6 +764,7 @@ components:
         - salvations
         - prayers
         - altarMembers
+        - notes
         - createdAt
         - updatedAt
     UpsertDailyAltarReportBody:
@@ -713,6 +782,8 @@ components:
           type: integer
         altarMembers:
           type: integer
+        notes:
+          type: string
       required:
         - date
         - campus

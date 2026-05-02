@@ -1,7 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
-import { useListDailyAltarReports, useUpsertDailyAltarReport, useDeleteDailyAltarReport } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  useListDailyAltarReports,
+  useUpsertDailyAltarReport,
+  useDeleteDailyAltarReport,
+  useSaveServiceNotes,
+  getGetServiceNotesQueryOptions,
+} from "@workspace/api-client-react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import type { DailyAltarReport } from "@workspace/api-client-react";
 import { jsPDF } from "jspdf";
 
@@ -21,6 +27,10 @@ function getDayServices(date: Date): string[] | null {
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
 function toDateStr(y: number, m: number, d: number) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
+function todayStr() {
+  const t = new Date();
+  return toDateStr(t.getFullYear(), t.getMonth(), t.getDate());
+}
 
 const GOLD = "hsl(38 60% 62%)";
 const GOLD_DIM = "hsl(38 28% 42%)";
@@ -78,57 +88,56 @@ const PDF_WHITE = [220, 205, 175] as const;
 const PDF_ROW_ALT = [36, 28, 18] as const;
 const PDF_HEADER_ROW = [45, 34, 20] as const;
 
-function buildPDF(title: string, subtitle: string, rows: string[][]): jsPDF {
+function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?: string): jsPDF {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
   const W = doc.internal.pageSize.getWidth();
 
-  // Background
   doc.setFillColor(...PDF_BG);
   doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
-
-  // Gold top border line
   doc.setDrawColor(...PDF_GOLD);
   doc.setLineWidth(0.8);
   doc.line(14, 18, W - 14, 18);
-
-  // Title
   doc.setFont("times", "bold");
   doc.setFontSize(18);
   doc.setTextColor(...PDF_GOLD);
   doc.text(title, W / 2, 14, { align: "center" });
-
-  // Subtitle
   doc.setFont("times", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...PDF_GOLD_DIM);
   doc.text(subtitle, W / 2, 24, { align: "center" });
-
-  // Bottom border under subtitle
   doc.setDrawColor(...PDF_GOLD_DIM);
   doc.setLineWidth(0.3);
   doc.line(14, 27, W - 14, 27);
 
-  // Column config
+  let y = 36;
+
+  if (extraNote) {
+    doc.setFont("times", "italic");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_WHITE);
+    const lines = doc.splitTextToSize(`Notes: ${extraNote}`, W - 28);
+    doc.text(lines, 14, y);
+    y += lines.length * 5 + 4;
+    doc.setDrawColor(...PDF_GOLD_DIM);
+    doc.setLineWidth(0.2);
+    doc.line(14, y - 2, W - 14, y - 2);
+    y += 2;
+  }
+
   const cols = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
   const colW = [28, 20, 30, 26, 22, 32];
   const startX = 14;
-  let y = 36;
   const rowH = 8;
 
-  // Table header
   doc.setFillColor(...PDF_HEADER_ROW);
   doc.rect(startX, y - 5.5, W - 28, rowH, "F");
   doc.setFont("times", "bold");
   doc.setFontSize(8);
   doc.setTextColor(...PDF_GOLD);
   let x = startX + 2;
-  cols.forEach((col, i) => {
-    doc.text(col.toUpperCase(), x, y, {});
-    x += colW[i];
-  });
+  cols.forEach((col, i) => { doc.text(col.toUpperCase(), x, y); x += colW[i]; });
   y += rowH;
 
-  // Table rows
   doc.setFont("times", "normal");
   doc.setFontSize(9);
   rows.forEach((row, ri) => {
@@ -144,14 +153,10 @@ function buildPDF(title: string, subtitle: string, rows: string[][]): jsPDF {
     }
     doc.setTextColor(...PDF_WHITE);
     x = startX + 2;
-    row.forEach((cell, i) => {
-      doc.text(String(cell), x, y);
-      x += colW[i];
-    });
+    row.forEach((cell, i) => { doc.text(String(cell), x, y); x += colW[i]; });
     y += rowH;
   });
 
-  // Totals row (last 3 cols are numeric)
   if (rows.length > 0) {
     const totSalv = rows.reduce((s, r) => s + (parseInt(r[3]) || 0), 0);
     const totPray = rows.reduce((s, r) => s + (parseInt(r[4]) || 0), 0);
@@ -170,7 +175,6 @@ function buildPDF(title: string, subtitle: string, rows: string[][]): jsPDF {
     doc.text(String(totAltar), x, y);
   }
 
-  // Footer
   const pageH = doc.internal.pageSize.getHeight();
   doc.setDrawColor(...PDF_GOLD_DIM);
   doc.setLineWidth(0.3);
@@ -188,24 +192,25 @@ function exportMonthData(reports: DailyAltarReport[], month: number, year: numbe
     a.date.localeCompare(b.date) || a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus)
   );
   const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
-  const monthName = MONTH_NAMES[month - 1];
-  const doc = buildPDF(
-    "Altar Report",
-    `${monthName} ${year} — All Campuses`,
-    rows
-  );
-  doc.save(`altar-report-${year}-${pad2(month)}.pdf`);
+  buildPDF("Altar Report", `${MONTH_NAMES[month - 1]} ${year} — All Campuses`, rows).save(`altar-report-${year}-${pad2(month)}.pdf`);
 }
 
 function exportDayData(reports: DailyAltarReport[], dateStr: string) {
-  const sorted = [...reports]
-    .filter(r => r.date === dateStr)
+  const sorted = [...reports].filter(r => r.date === dateStr)
     .sort((a, b) => a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus));
   const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
   const date = new Date(dateStr + "T12:00:00");
   const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  const doc = buildPDF("Altar Report", label, rows);
-  doc.save(`altar-report-${dateStr}.pdf`);
+  buildPDF("Altar Report", label, rows).save(`altar-report-${dateStr}.pdf`);
+}
+
+function exportServiceData(reports: DailyAltarReport[], dateStr: string, service: string, notes: string) {
+  const sorted = [...reports].filter(r => r.date === dateStr && r.service === service)
+    .sort((a, b) => a.campus.localeCompare(b.campus));
+  const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
+  const date = new Date(dateStr + "T12:00:00");
+  const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  buildPDF("Altar Report", `${label} — ${service}`, rows, notes || undefined).save(`altar-report-${dateStr}-${service}.pdf`);
 }
 
 // ── Stat input row ─────────────────────────────────────────────────────────────
@@ -236,9 +241,7 @@ function StatFields({
 
 // ── Day Entry Card (view + inline edit) ───────────────────────────────────────
 function DayEntry({
-  report,
-  onDelete,
-  onSave,
+  report, onDelete, onSave,
 }: {
   report: DailyAltarReport;
   onDelete: (id: number) => void;
@@ -256,11 +259,7 @@ function DayEntry({
   }, [report.salvations, report.prayers, report.altarMembers]);
 
   const handleSave = () => {
-    onSave(report.id, {
-      salvations: parseInt(salvations) || 0,
-      prayers: parseInt(prayers) || 0,
-      altarMembers: parseInt(altarMembers) || 0,
-    });
+    onSave(report.id, { salvations: parseInt(salvations) || 0, prayers: parseInt(prayers) || 0, altarMembers: parseInt(altarMembers) || 0 });
     setEditing(false);
   };
 
@@ -275,21 +274,12 @@ function DayEntry({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}>
         <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em" }}>{report.campus}</span>
         <div style={{ display: "flex", gap: 6 }}>
-          <button
-            onClick={() => setEditing(e => !e)}
-            style={{ color: editing ? GOLD_BRIGHT : GOLD_DIM, background: editing ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editing ? "hsl(38 35% 28%)" : BORDER}`, borderRadius: 4, padding: "3px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}
-          >
+          <button onClick={() => setEditing(e => !e)} style={{ color: editing ? GOLD_BRIGHT : GOLD_DIM, background: editing ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editing ? "hsl(38 35% 28%)" : BORDER}`, borderRadius: 4, padding: "3px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}>
             {editing ? "Close" : "Edit"}
           </button>
-          <button
-            onClick={() => { if (confirm("Remove this entry?")) onDelete(report.id); }}
-            style={{ color: "hsl(0 50% 50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, opacity: 0.4, transition: "opacity 0.2s" }}
-            onMouseOver={e => (e.currentTarget.style.opacity = "1")}
-            onMouseOut={e => (e.currentTarget.style.opacity = "0.4")}
-          >✕</button>
+          <button onClick={() => { if (confirm("Remove this entry?")) onDelete(report.id); }} style={{ color: "hsl(0 50% 50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, opacity: 0.4, transition: "opacity 0.2s" }} onMouseOver={e => (e.currentTarget.style.opacity = "1")} onMouseOut={e => (e.currentTarget.style.opacity = "0.4")}>✕</button>
         </div>
       </div>
-
       {!editing && (
         <div style={{ display: "flex", gap: 20, padding: "0 14px 12px" }}>
           {statColors.map(s => (
@@ -300,17 +290,9 @@ function DayEntry({
           ))}
         </div>
       )}
-
       {editing && (
         <div style={{ padding: "0 14px 14px" }}>
-          <StatFields
-            salvations={salvations} prayers={prayers} altarMembers={altarMembers}
-            onChange={(field, val) => {
-              if (field === "salvations") setSalvations(val);
-              else if (field === "prayers") setPrayers(val);
-              else setAltarMembers(val);
-            }}
-          />
+          <StatFields salvations={salvations} prayers={prayers} altarMembers={altarMembers} onChange={(field, val) => { if (field === "salvations") setSalvations(val); else if (field === "prayers") setPrayers(val); else setAltarMembers(val); }} />
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <button onClick={handleSave} style={{ flex: 1, background: "hsl(38 50% 28%)", color: GOLD_BRIGHT, border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "8px 0", borderRadius: 5, cursor: "pointer" }}>Save Changes</button>
             <button onClick={() => setEditing(false)} style={{ background: "none", color: GOLD_DIM, border: `1px solid ${BORDER}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "8px 14px", borderRadius: 5, cursor: "pointer" }}>Cancel</button>
@@ -321,13 +303,14 @@ function DayEntry({
   );
 }
 
-// ── Add Entry Form ─────────────────────────────────────────────────────────────
+// ── Add Entry Form — auto-populates altar members from today's check-ins ───────
 function AddEntryForm({
-  existingCampuses,
-  onSave,
-  onCancel,
+  existingCampuses, service, dateStr,
+  onSave, onCancel,
 }: {
   existingCampuses: string[];
+  service: string;
+  dateStr: string;
   onSave: (data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onCancel: () => void;
 }) {
@@ -336,6 +319,19 @@ function AddEntryForm({
   const [salvations, setSalvations] = useState("0");
   const [prayers, setPrayers] = useState("0");
   const [altarMembers, setAltarMembers] = useState("0");
+  const isToday = dateStr === todayStr();
+
+  // Fetch today's check-in count for the selected campus+service (only for today)
+  useEffect(() => {
+    if (!campus || !isToday) return;
+    fetch(`/api/check-ins?campus=${encodeURIComponent(campus)}&service=${encodeURIComponent(service)}&serviceDate=${encodeURIComponent(dateStr)}`)
+      .then(r => r.json())
+      .then(data => {
+        const count = data?.checkIns?.length ?? 0;
+        setAltarMembers(String(count));
+      })
+      .catch(() => {});
+  }, [campus, service, dateStr, isToday]);
 
   if (available.length === 0) {
     return (
@@ -348,20 +344,18 @@ function AddEntryForm({
 
   return (
     <div style={{ background: "hsl(35 18% 15%)", border: `1px solid hsl(38 25% 26%)`, borderRadius: 8, padding: "14px" }}>
+      {isToday && (
+        <div style={{ marginBottom: 10, padding: "5px 10px", background: "hsl(38 30% 14%)", border: `1px solid hsl(38 28% 22%)`, borderRadius: 5 }}>
+          <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>Altar members pre-filled from today's check-ins — edit as needed</span>
+        </div>
+      )}
       <div style={{ marginBottom: 12 }}>
         <label style={LABEL_STYLE}>Campus</label>
         <select value={campus} onChange={e => setCampus(e.target.value)} style={{ ...INPUT_STYLE, textAlign: "left" }}>
           {available.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
-      <StatFields
-        salvations={salvations} prayers={prayers} altarMembers={altarMembers}
-        onChange={(field, val) => {
-          if (field === "salvations") setSalvations(val);
-          else if (field === "prayers") setPrayers(val);
-          else setAltarMembers(val);
-        }}
-      />
+      <StatFields salvations={salvations} prayers={prayers} altarMembers={altarMembers} onChange={(field, val) => { if (field === "salvations") setSalvations(val); else if (field === "prayers") setPrayers(val); else setAltarMembers(val); }} />
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button onClick={() => onSave({ campus, salvations: parseInt(salvations) || 0, prayers: parseInt(prayers) || 0, altarMembers: parseInt(altarMembers) || 0 })} style={{ flex: 1, background: "hsl(38 50% 28%)", color: GOLD_BRIGHT, border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 5, cursor: "pointer" }}>Save Entry</button>
         <button onClick={onCancel} style={{ background: "none", color: GOLD_DIM, border: `1px solid ${BORDER}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "9px 14px", borderRadius: 5, cursor: "pointer" }}>Cancel</button>
@@ -370,26 +364,97 @@ function AddEntryForm({
   );
 }
 
-// ── Single Service Section (used inside DayDetail) ─────────────────────────────
+// ── Service Notes Panel ────────────────────────────────────────────────────────
+function ServiceNotesPanel({
+  dateStr, service, onClose,
+}: {
+  dateStr: string;
+  service: string;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const notesKey = ["service-notes", dateStr, service];
+  const { data } = useQuery({
+    ...getGetServiceNotesQueryOptions({ date: dateStr, service }),
+    queryKey: notesKey,
+  });
+  const saveMut = useSaveServiceNotes();
+  const [text, setText] = useState("");
+  const [saved, setSaved] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (data?.notes !== undefined) setText(data.notes);
+  }, [data?.notes]);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const handleSave = () => {
+    saveMut.mutate(
+      { data: { date: dateStr, service, notes: text } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: notesKey });
+          setSaved(true);
+          setTimeout(() => setSaved(false), 1500);
+        },
+      }
+    );
+  };
+
+  return (
+    <div style={{ background: "hsl(35 18% 14%)", border: `1px solid hsl(38 28% 26%)`, borderRadius: 8, padding: 14, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase" }}>Service Notes — {service}</span>
+        <button onClick={onClose} style={{ color: GOLD_DIM, background: "none", border: "none", cursor: "pointer", fontSize: 14, opacity: 0.5 }}>✕</button>
+      </div>
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Add notes for this service..."
+        rows={4}
+        style={{
+          width: "100%", background: "hsl(35 18% 10%)", border: `1px solid hsl(38 20% 22%)`,
+          color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 13, borderRadius: 5,
+          padding: "8px 10px", outline: "none", resize: "vertical", boxSizing: "border-box", lineHeight: 1.5,
+        }}
+      />
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        <button
+          onClick={handleSave}
+          style={{ flex: 1, background: saved ? "hsl(130 40% 22%)" : "hsl(38 50% 28%)", color: saved ? "hsl(130 60% 72%)" : GOLD_BRIGHT, border: `1px solid ${saved ? "hsl(130 40% 30%)" : "hsl(38 38% 35%)"}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "8px 0", borderRadius: 5, cursor: "pointer", transition: "all 0.2s" }}
+        >
+          {saved ? "✓ Saved" : "Save Notes"}
+        </button>
+        <button onClick={onClose} style={{ background: "none", color: GOLD_DIM, border: `1px solid ${BORDER}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "8px 12px", borderRadius: 5, cursor: "pointer" }}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Single Service Section ─────────────────────────────────────────────────────
 function ServiceSection({
-  service,
-  dateStr,
-  dayMap,
-  onSave,
-  onEdit,
-  onDelete,
+  service, dateStr, dayMap, allReports,
+  onSave, onEdit, onDelete,
 }: {
   service: string;
   dateStr: string;
   dayMap: DayMap;
+  allReports: DailyAltarReport[];
   onSave: (service: string, data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onEdit: (id: number, service: string, data: { salvations: number; prayers: number; altarMembers: number }) => void;
   onDelete: (id: number) => void;
 }) {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+
   const key: DayServiceKey = `${dateStr}__${service}`;
   const serviceReports = dayMap[key] ?? [];
   const existingCampuses = serviceReports.map(r => r.campus);
+  const hasServiceData = serviceReports.length > 0;
 
   const totals = serviceReports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
@@ -398,40 +463,55 @@ function ServiceSection({
 
   return (
     <div style={{ marginBottom: 8 }}>
-      {/* Service time header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{
-          background: "hsl(38 45% 22%)",
-          border: "1px solid hsl(38 42% 32%)",
-          borderRadius: 6,
-          padding: "5px 14px",
-          color: GOLD_BRIGHT,
-          fontFamily: "Georgia, serif",
-          fontSize: 14,
-          letterSpacing: "0.12em",
-          fontWeight: "bold",
-        }}>
+      {/* Service time header row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${BORDER}` }}>
+        {/* Time badge */}
+        <div style={{ background: "hsl(38 45% 22%)", border: "1px solid hsl(38 42% 32%)", borderRadius: 6, padding: "5px 14px", color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 14, letterSpacing: "0.12em", fontWeight: "bold", flexShrink: 0 }}>
           {service}
         </div>
-        {serviceReports.length > 0 && (
-          <div style={{ display: "flex", gap: 14, marginLeft: 4 }}>
-            <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{totals.salvations}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Salv</span></span>
-            <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{totals.prayers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Prayer</span></span>
-            <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{totals.altarMembers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Altar</span></span>
+
+        {/* Inline totals */}
+        {hasServiceData && (
+          <div style={{ display: "flex", gap: 12, flex: 1 }}>
+            <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.salvations}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Salv</span></span>
+            <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.prayers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Prayer</span></span>
+            <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.altarMembers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Altar</span></span>
           </div>
         )}
+
+        {/* Notes + Export buttons */}
+        <div style={{ display: "flex", gap: 5, marginLeft: "auto", flexShrink: 0 }}>
+          <button
+            onClick={() => setShowNotes(n => !n)}
+            title="Service notes"
+            style={{ color: showNotes ? GOLD_BRIGHT : GOLD_DIM, background: showNotes ? "hsl(38 35% 20%)" : "hsl(35 18% 12%)", border: `1px solid ${showNotes ? "hsl(38 40% 30%)" : BORDER}`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", transition: "all 0.15s" }}
+          >
+            📝
+          </button>
+          {hasServiceData && (
+            <button
+              onClick={() => exportServiceData(allReports, dateStr, service, "")}
+              title="Export this service as PDF"
+              style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 22%)`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", transition: "all 0.15s", whiteSpace: "nowrap" }}
+              onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
+              onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}
+            >
+              ↓ PDF
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Notes panel */}
+      {showNotes && (
+        <ServiceNotesPanel dateStr={dateStr} service={service} onClose={() => setShowNotes(false)} />
+      )}
 
       {/* Campus entries */}
       {serviceReports.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
           {serviceReports.map(r => (
-            <DayEntry
-              key={r.id}
-              report={r}
-              onDelete={onDelete}
-              onSave={(id, data) => onEdit(id, service, data)}
-            />
+            <DayEntry key={r.id} report={r} onDelete={onDelete} onSave={(id, data) => onEdit(id, service, data)} />
           ))}
         </div>
       )}
@@ -440,6 +520,8 @@ function ServiceSection({
       {showAddForm ? (
         <AddEntryForm
           existingCampuses={existingCampuses}
+          service={service}
+          dateStr={dateStr}
           onSave={(data) => { onSave(service, data); setShowAddForm(false); }}
           onCancel={() => setShowAddForm(false)}
         />
@@ -463,14 +545,8 @@ function ServiceSection({
 
 // ── Day Detail Panel ───────────────────────────────────────────────────────────
 function DayDetail({
-  dateStr,
-  dayServices,
-  dayMap,
-  allReports,
-  onClose,
-  onSave,
-  onEdit,
-  onDelete,
+  dateStr, dayServices, dayMap, allReports,
+  onClose, onSave, onEdit, onDelete,
 }: {
   dateStr: string;
   dayServices: string[];
@@ -484,7 +560,6 @@ function DayDetail({
   const date = new Date(dateStr + "T12:00:00");
   const dayLabel = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const isWednesday = date.getDay() === 3;
-
   const dayReports = allReports.filter(r => r.date === dateStr);
   const hasDayData = dayReports.length > 0;
 
@@ -495,13 +570,10 @@ function DayDetail({
         style={{ position: "relative", background: "hsl(35 22% 11%)", borderRadius: "16px 16px 0 0", border: `1px solid hsl(38 22% 22%)`, borderBottom: "none", maxHeight: "88vh", overflowY: "auto", paddingBottom: 40 }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Drag handle */}
         <div style={{ display: "flex", justifyContent: "center", paddingTop: 10, paddingBottom: 2 }}>
           <div style={{ width: 40, height: 4, borderRadius: 2, background: "hsl(38 18% 28%)" }} />
         </div>
-
         <div style={{ padding: "10px 20px 0" }}>
-          {/* Date header */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
             <div>
               <h2 style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 17, letterSpacing: "0.06em", margin: 0 }}>{dayLabel}</h2>
@@ -514,7 +586,7 @@ function DayDetail({
                 <button
                   onClick={() => exportDayData(allReports, dateStr)}
                   style={{ color: GOLD_DIM, background: "hsl(38 30% 16%)", border: `1px solid hsl(38 28% 26%)`, borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap" }}
-                  title="Export this day as CSV"
+                  title="Export this day as PDF"
                 >
                   ↓ Export Day
                 </button>
@@ -523,7 +595,6 @@ function DayDetail({
             </div>
           </div>
 
-          {/* Services — stacked vertically */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {dayServices.map(service => (
               <ServiceSection
@@ -531,6 +602,7 @@ function DayDetail({
                 service={service}
                 dateStr={dateStr}
                 dayMap={dayMap}
+                allReports={allReports}
                 onSave={onSave}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -589,26 +661,20 @@ export default function AltarReportPage() {
 
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+  const currentTodayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const handleSave = (service: string, entryData: { campus: string; salvations: number; prayers: number; altarMembers: number }) => {
     if (!selectedDate) return;
-    upsert.mutate(
-      { data: { date: selectedDate, service, ...entryData } },
-      { onSuccess: invalidate }
-    );
+    upsert.mutate({ data: { date: selectedDate, service, ...entryData } }, { onSuccess: invalidate });
   };
 
   const handleEdit = (id: number, service: string, entryData: { salvations: number; prayers: number; altarMembers: number }) => {
     if (!selectedDate) return;
     const report = reports.find(r => r.id === id);
     if (!report) return;
-    upsert.mutate(
-      { data: { date: selectedDate, service, campus: report.campus, ...entryData } },
-      { onSuccess: invalidate }
-    );
+    upsert.mutate({ data: { date: selectedDate, service, campus: report.campus, ...entryData } }, { onSuccess: invalidate });
   };
 
   const handleDelete = (id: number) => {
@@ -657,37 +723,17 @@ export default function AltarReportPage() {
 
         {/* Month nav with export */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, padding: "0 4px" }}>
-          <button
-            onClick={() => goMonth(-1)}
-            style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-            onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
-            onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}
-          >‹</button>
-
+          <button onClick={() => goMonth(-1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>‹</button>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ textAlign: "center" }}>
               <span style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 18, letterSpacing: "0.1em" }}>{MONTH_NAMES[viewMonth]}</span>
               <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 14, marginLeft: 8 }}>{viewYear}</span>
             </div>
             {reports.length > 0 && (
-              <button
-                onClick={() => exportMonthData(reports, viewMonth + 1, viewYear)}
-                style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }}
-                onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 38% 34%)"; }}
-                onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = "hsl(38 25% 24%)"; }}
-                title="Export this month as CSV"
-              >
-                ↓ Export
-              </button>
+              <button onClick={() => exportMonthData(reports, viewMonth + 1, viewYear)} style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }} title="Export this month as PDF">↓ Export</button>
             )}
           </div>
-
-          <button
-            onClick={() => goMonth(1)}
-            style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-            onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
-            onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}
-          >›</button>
+          <button onClick={() => goMonth(1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>›</button>
         </div>
 
         {/* Day-of-week headers */}
@@ -712,7 +758,7 @@ export default function AltarReportPage() {
               const services = getDayServices(dateObj);
               const isClickable = services !== null;
               const hasData = datesWithData.has(dateStr);
-              const isToday = dateStr === todayStr;
+              const isToday = dateStr === currentTodayStr;
               const isSelected = dateStr === selectedDate;
               const isSunday = dateObj.getDay() === 0;
               const isWed = dateObj.getDay() === 3;
@@ -723,45 +769,16 @@ export default function AltarReportPage() {
                   onClick={() => isClickable ? setSelectedDate(isSelected ? null : dateStr) : undefined}
                   disabled={!isClickable}
                   style={{
-                    position: "relative",
-                    aspectRatio: "1",
-                    borderRadius: 8,
-                    border: isSelected
-                      ? "2px solid hsl(38 55% 45%)"
-                      : isToday
-                        ? "1px solid hsl(38 35% 32%)"
-                        : hasData
-                          ? "1px solid hsl(38 22% 22%)"
-                          : isClickable
-                            ? "1px solid hsl(38 16% 18%)"
-                            : "1px solid hsl(38 8% 13%)",
-                    background: isSelected
-                      ? "hsl(38 40% 18%)"
-                      : hasData
-                        ? "hsl(35 22% 15%)"
-                        : isClickable
-                          ? "hsl(35 18% 12%)"
-                          : "hsl(35 14% 10%)",
-                    cursor: isClickable ? "pointer" : "default",
-                    opacity: isClickable ? 1 : 0.3,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 3,
-                    transition: "all 0.15s",
-                    padding: 0,
+                    position: "relative", aspectRatio: "1", borderRadius: 8,
+                    border: isSelected ? "2px solid hsl(38 55% 45%)" : isToday ? "1px solid hsl(38 35% 32%)" : hasData ? "1px solid hsl(38 22% 22%)" : isClickable ? "1px solid hsl(38 16% 18%)" : "1px solid hsl(38 8% 13%)",
+                    background: isSelected ? "hsl(38 40% 18%)" : hasData ? "hsl(35 22% 15%)" : isClickable ? "hsl(35 18% 12%)" : "hsl(35 14% 10%)",
+                    cursor: isClickable ? "pointer" : "default", opacity: isClickable ? 1 : 0.3,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, transition: "all 0.15s", padding: 0,
                   }}
                   onMouseOver={e => { if (isClickable && !isSelected) { e.currentTarget.style.background = "hsl(35 22% 17%)"; e.currentTarget.style.borderColor = "hsl(38 28% 28%)"; } }}
                   onMouseOut={e => { if (!isSelected) { e.currentTarget.style.background = hasData ? "hsl(35 22% 15%)" : isClickable ? "hsl(35 18% 12%)" : "hsl(35 14% 10%)"; e.currentTarget.style.borderColor = isToday ? "hsl(38 35% 32%)" : hasData ? "hsl(38 22% 22%)" : isClickable ? "hsl(38 16% 18%)" : "hsl(38 8% 13%)"; } }}
                 >
-                  <span style={{
-                    fontFamily: "Georgia, serif",
-                    fontSize: 13,
-                    fontWeight: isToday || isSunday || isWed ? "bold" : "normal",
-                    color: isSelected ? GOLD_BRIGHT : isToday ? GOLD : isSunday ? "hsl(38 50% 60%)" : isWed ? "hsl(200 50% 60%)" : "hsl(38 15% 30%)",
-                    lineHeight: 1,
-                  }}>
+                  <span style={{ fontFamily: "Georgia, serif", fontSize: 13, fontWeight: isToday || isSunday || isWed ? "bold" : "normal", color: isSelected ? GOLD_BRIGHT : isToday ? GOLD : isSunday ? "hsl(38 50% 60%)" : isWed ? "hsl(200 50% 60%)" : "hsl(38 15% 30%)", lineHeight: 1 }}>
                     {day}
                   </span>
                   {hasData && (

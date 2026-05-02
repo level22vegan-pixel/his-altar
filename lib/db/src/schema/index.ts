@@ -23,3 +23,4 @@ export * from "./workers";
 export * from "./checkIns";
 export * from "./serviceReports";
 export * from "./dailyAltarReports";
+export * from "./serviceNotes";

@@ -30,7 +30,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { date, campus, service, salvations, prayers, altarMembers } = req.body;
+    const { date, campus, service, salvations, prayers, altarMembers, notes } = req.body;
     if (!date || !campus || !service) {
       res.status(400).json({ message: "date, campus, and service are required" });
       return;
@@ -50,9 +50,10 @@ router.post("/", async (req, res) => {
       const updated = await db
         .update(dailyAltarReportsTable)
         .set({
-          salvations: salvations ?? 0,
-          prayers: prayers ?? 0,
-          altarMembers: altarMembers ?? 0,
+          salvations: salvations ?? existing[0].salvations,
+          prayers: prayers ?? existing[0].prayers,
+          altarMembers: altarMembers ?? existing[0].altarMembers,
+          notes: notes !== undefined ? notes : existing[0].notes,
           updatedAt: new Date(),
         })
         .where(eq(dailyAltarReportsTable.id, existing[0].id))
@@ -61,7 +62,7 @@ router.post("/", async (req, res) => {
     } else {
       const inserted = await db
         .insert(dailyAltarReportsTable)
-        .values({ date, campus, service, salvations: salvations ?? 0, prayers: prayers ?? 0, altarMembers: altarMembers ?? 0 })
+        .values({ date, campus, service, salvations: salvations ?? 0, prayers: prayers ?? 0, altarMembers: altarMembers ?? 0, notes: notes ?? "" })
         .returning();
       row = inserted[0];
     }
@@ -95,6 +96,7 @@ function toDto(r: typeof dailyAltarReportsTable.$inferSelect) {
     salvations: r.salvations,
     prayers: r.prayers,
     altarMembers: r.altarMembers,
+    notes: r.notes ?? "",
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };

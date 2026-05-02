@@ -138,6 +138,18 @@ export interface AltarReportList {
   reports: AltarReport[];
 }
 
+export interface ServiceNotes {
+  date: string;
+  service: string;
+  notes: string;
+}
+
+export interface SaveServiceNotesBody {
+  date: string;
+  service: string;
+  notes: string;
+}
+
 export interface DailyAltarReport {
   id: number;
   date: string;
@@ -146,6 +158,7 @@ export interface DailyAltarReport {
   salvations: number;
   prayers: number;
   altarMembers: number;
+  notes: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -157,6 +170,7 @@ export interface UpsertDailyAltarReportBody {
   salvations?: number;
   prayers?: number;
   altarMembers?: number;
+  notes?: string;
 }
 
 export interface DailyAltarReportList {
@@ -176,6 +190,11 @@ export type ListCheckInsParams = {
 
 export type ListServiceReportsParams = {
   campus?: string;
+};
+
+export type GetServiceNotesParams = {
+  date: string;
+  service: string;
 };
 
 export type ListDailyAltarReportsParams = {

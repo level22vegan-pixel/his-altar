@@ -237,6 +237,35 @@ export const UpsertServiceReportResponse = zod.object({
 });
 
 /**
+ * @summary Get notes for a service session
+ */
+export const GetServiceNotesQueryParams = zod.object({
+  date: zod.coerce.string(),
+  service: zod.coerce.string(),
+});
+
+export const GetServiceNotesResponse = zod.object({
+  date: zod.string(),
+  service: zod.string(),
+  notes: zod.string(),
+});
+
+/**
+ * @summary Create or update service notes
+ */
+export const SaveServiceNotesBody = zod.object({
+  date: zod.string(),
+  service: zod.string(),
+  notes: zod.string(),
+});
+
+export const SaveServiceNotesResponse = zod.object({
+  date: zod.string(),
+  service: zod.string(),
+  notes: zod.string(),
+});
+
+/**
  * @summary List daily altar reports
  */
 export const ListDailyAltarReportsQueryParams = zod.object({
@@ -254,6 +283,7 @@ export const ListDailyAltarReportsResponse = zod.object({
       salvations: zod.number(),
       prayers: zod.number(),
       altarMembers: zod.number(),
+      notes: zod.string(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
     }),
@@ -270,6 +300,7 @@ export const UpsertDailyAltarReportBody = zod.object({
   salvations: zod.number().optional(),
   prayers: zod.number().optional(),
   altarMembers: zod.number().optional(),
+  notes: zod.string().optional(),
 });
 
 export const UpsertDailyAltarReportResponse = zod.object({
@@ -280,6 +311,7 @@ export const UpsertDailyAltarReportResponse = zod.object({
   salvations: zod.number(),
   prayers: zod.number(),
   altarMembers: zod.number(),
+  notes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -299,6 +331,7 @@ export const DeleteDailyAltarReportResponse = zod.object({
   salvations: zod.number(),
   prayers: zod.number(),
   altarMembers: zod.number(),
+  notes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });

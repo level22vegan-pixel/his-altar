@@ -26,6 +26,7 @@ import type {
   CreateWorkerBody,
   DailyAltarReport,
   DailyAltarReportList,
+  GetServiceNotesParams,
   HealthStatus,
   ListCheckInsParams,
   ListDailyAltarReportsParams,
@@ -33,6 +34,8 @@ import type {
   ListWorkersParams,
   LoginCodeConfig,
   LoginResult,
+  SaveServiceNotesBody,
+  ServiceNotes,
   ServiceReport,
   ServiceReportList,
   UpdateLoginCodeBody,
@@ -1175,6 +1178,186 @@ export const useUpsertServiceReport = <
   TContext
 > => {
   return useMutation(getUpsertServiceReportMutationOptions(options));
+};
+
+/**
+ * @summary Get notes for a service session
+ */
+export const getGetServiceNotesUrl = (params: GetServiceNotesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/service-notes?${stringifiedParams}`
+    : `/api/service-notes`;
+};
+
+export const getServiceNotes = async (
+  params: GetServiceNotesParams,
+  options?: RequestInit,
+): Promise<ServiceNotes> => {
+  return customFetch<ServiceNotes>(getGetServiceNotesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetServiceNotesQueryKey = (params?: GetServiceNotesParams) => {
+  return [`/api/service-notes`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetServiceNotesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getServiceNotes>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetServiceNotesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getServiceNotes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetServiceNotesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getServiceNotes>>> = ({
+    signal,
+  }) => getServiceNotes(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getServiceNotes>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetServiceNotesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getServiceNotes>>
+>;
+export type GetServiceNotesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get notes for a service session
+ */
+
+export function useGetServiceNotes<
+  TData = Awaited<ReturnType<typeof getServiceNotes>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetServiceNotesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getServiceNotes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetServiceNotesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update service notes
+ */
+export const getSaveServiceNotesUrl = () => {
+  return `/api/service-notes`;
+};
+
+export const saveServiceNotes = async (
+  saveServiceNotesBody: SaveServiceNotesBody,
+  options?: RequestInit,
+): Promise<ServiceNotes> => {
+  return customFetch<ServiceNotes>(getSaveServiceNotesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(saveServiceNotesBody),
+  });
+};
+
+export const getSaveServiceNotesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveServiceNotes>>,
+    TError,
+    { data: BodyType<SaveServiceNotesBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveServiceNotes>>,
+  TError,
+  { data: BodyType<SaveServiceNotesBody> },
+  TContext
+> => {
+  const mutationKey = ["saveServiceNotes"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveServiceNotes>>,
+    { data: BodyType<SaveServiceNotesBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveServiceNotes(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveServiceNotesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveServiceNotes>>
+>;
+export type SaveServiceNotesMutationBody = BodyType<SaveServiceNotesBody>;
+export type SaveServiceNotesMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update service notes
+ */
+export const useSaveServiceNotes = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveServiceNotes>>,
+    TError,
+    { data: BodyType<SaveServiceNotesBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveServiceNotes>>,
+  TError,
+  { data: BodyType<SaveServiceNotesBody> },
+  TContext
+> => {
+  return useMutation(getSaveServiceNotesMutationOptions(options));
 };
 
 /**

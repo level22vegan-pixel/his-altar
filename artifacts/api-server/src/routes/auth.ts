@@ -36,10 +36,14 @@ router.post("/verify", async (req, res) => {
       submitted.length === currentCode.length &&
       submitted.every((v, i) => v === currentCode[i]);
     if (match) {
-      res.json({ success: true, message: "Access granted" });
-    } else {
-      res.json({ success: false, message: "Invalid sequence" });
+      res.json({ success: true, partial: false, message: "Access granted" });
+      return;
     }
+    // Check if submitted is a valid prefix of the correct code
+    const isPartial =
+      submitted.length < currentCode.length &&
+      submitted.every((v, i) => v === currentCode[i]);
+    res.json({ success: false, partial: isPartial, message: isPartial ? "Keep going" : "Invalid sequence" });
   } catch (err) {
     req.log.error({ err }, "Error verifying login");
     res.status(500).json({ success: false, message: "Server error" });

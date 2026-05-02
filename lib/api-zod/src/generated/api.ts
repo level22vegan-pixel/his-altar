@@ -27,6 +27,7 @@ export const VerifyLoginBody = zod.object({
 
 export const VerifyLoginResponse = zod.object({
   success: zod.boolean(),
+  partial: zod.boolean().optional(),
   message: zod.string(),
 });
 

@@ -16,6 +16,7 @@ export interface VerifyLoginBody {
 
 export interface LoginResult {
   success: boolean;
+  partial?: boolean;
   message: string;
 }
 

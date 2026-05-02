@@ -103,7 +103,8 @@ export default function LoginPage() {
             if (data.success) {
               setStatus("success");
               setTimeout(() => navigate("/home"), 600);
-            } else {
+            } else if (!data.partial) {
+              // Definitively wrong (not a valid prefix) — shake and reset
               setStatus("error");
               setShaking(true);
               setTimeout(() => {
@@ -113,6 +114,7 @@ export default function LoginPage() {
                 setSelectedLetters(new Set());
               }, 600);
             }
+            // If partial === true, user is mid-sequence — do nothing, wait for next tap
           },
           onError: () => {
             setStatus("error");

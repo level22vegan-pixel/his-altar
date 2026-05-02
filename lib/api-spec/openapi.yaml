@@ -390,6 +390,8 @@ components:
       properties:
         success:
           type: boolean
+        partial:
+          type: boolean
         message:
           type: string
       required:

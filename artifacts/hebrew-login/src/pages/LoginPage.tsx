@@ -86,7 +86,7 @@ export default function LoginPage() {
 
   const handleLetterClick = useCallback(
     (letterNum: number) => {
-      if (status === "success") return;
+      if (status === "success" || verifyMutation.isPending) return;
       if (letterNum === 22) return; // ת handled via long-press only
       const newSeq = [...sequence, letterNum];
       const newSelected = new Set(selectedLetters);
@@ -94,20 +94,27 @@ export default function LoginPage() {
       setSequence(newSeq);
       setSelectedLetters(newSelected);
       setStatus("idle");
-    },
-    [sequence, selectedLetters, status]
-  );
 
-  const handleSubmit = useCallback(() => {
-    if (sequence.length === 0) return;
-    verifyMutation.mutate(
-      { data: { sequence } },
-      {
-        onSuccess: (data) => {
-          if (data.success) {
-            setStatus("success");
-            setTimeout(() => navigate("/home"), 900);
-          } else {
+      // Auto-verify on every press
+      verifyMutation.mutate(
+        { data: { sequence: newSeq } },
+        {
+          onSuccess: (data) => {
+            if (data.success) {
+              setStatus("success");
+              setTimeout(() => navigate("/home"), 600);
+            } else {
+              setStatus("error");
+              setShaking(true);
+              setTimeout(() => {
+                setShaking(false);
+                setStatus("idle");
+                setSequence([]);
+                setSelectedLetters(new Set());
+              }, 600);
+            }
+          },
+          onError: () => {
             setStatus("error");
             setShaking(true);
             setTimeout(() => {
@@ -115,28 +122,13 @@ export default function LoginPage() {
               setStatus("idle");
               setSequence([]);
               setSelectedLetters(new Set());
-            }, 700);
-          }
-        },
-        onError: () => {
-          setStatus("error");
-          setShaking(true);
-          setTimeout(() => {
-            setShaking(false);
-            setStatus("idle");
-            setSequence([]);
-            setSelectedLetters(new Set());
-          }, 700);
-        },
-      }
-    );
-  }, [sequence, verifyMutation, navigate]);
-
-  const handleClear = useCallback(() => {
-    setSequence([]);
-    setSelectedLetters(new Set());
-    setStatus("idle");
-  }, []);
+            }, 600);
+          },
+        }
+      );
+    },
+    [sequence, selectedLetters, status, verifyMutation, navigate]
+  );
 
   const handleAdminSubmit = useCallback(() => {
     if (adminCode === "admin1234") {
@@ -150,7 +142,6 @@ export default function LoginPage() {
     }
   }, [adminCode, navigate]);
 
-  const dotCount = Math.max(5, sequence.length + 1);
   const circumference = 2 * Math.PI * 28;
 
   return (
@@ -273,81 +264,6 @@ export default function LoginPage() {
           })}
         </div>
 
-        {/* Progress dots */}
-        <div className="flex gap-2 mt-2 mb-4" style={{ direction: "rtl" }}>
-          {Array.from({ length: dotCount }).map((_, i) => (
-            <span
-              key={i}
-              className="inline-block w-2 h-2 rounded-full transition-all duration-200"
-              style={{
-                background:
-                  i < sequence.length
-                    ? status === "error"
-                      ? "hsl(0 70% 55%)"
-                      : "hsl(38 80% 60%)"
-                    : "hsl(38 20% 30%)",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex gap-3 mt-1">
-          <button
-            onClick={handleClear}
-            disabled={sequence.length === 0}
-            className="px-5 py-2 text-sm rounded border tracking-widest uppercase transition-all duration-200 disabled:opacity-30"
-            style={{
-              color: "hsl(38 40% 55%)",
-              borderColor: "hsl(38 20% 30%)",
-              background: "transparent",
-              letterSpacing: "0.15em",
-              fontFamily: "Georgia, serif",
-            }}
-          >
-            Clear
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={sequence.length === 0 || verifyMutation.isPending}
-            className="px-8 py-2 text-sm rounded tracking-widest uppercase transition-all duration-200 disabled:opacity-30"
-            style={{
-              background: "hsl(38 55% 35%)",
-              color: "hsl(38 70% 85%)",
-              border: "1px solid hsl(38 45% 45%)",
-              letterSpacing: "0.15em",
-              fontFamily: "Georgia, serif",
-              boxShadow: "0 2px 12px hsl(38 55% 25% / 0.4)",
-            }}
-          >
-            {verifyMutation.isPending ? "..." : "Enter"}
-          </button>
-        </div>
-
-        {status === "error" && (
-          <p
-            className="mt-4 text-sm tracking-widest fade-in"
-            style={{ color: "hsl(0 60% 55%)", fontFamily: "Georgia, serif" }}
-          >
-            Access denied
-          </p>
-        )}
-        {status === "success" && (
-          <p
-            className="mt-4 text-sm tracking-widest fade-in"
-            style={{ color: "hsl(38 80% 65%)", fontFamily: "Georgia, serif" }}
-          >
-            Welcome...
-          </p>
-        )}
-      </div>
-
-      {/* Ornamental footer text */}
-      <div
-        className="absolute bottom-6 left-0 right-0 text-center text-xs tracking-widest uppercase z-10"
-        style={{ color: "hsl(38 25% 35%)", fontFamily: "Georgia, serif", letterSpacing: "0.3em" }}
-      >
-        Select the letters &bull; Press Enter
       </div>
 
       {/* Admin code prompt overlay */}

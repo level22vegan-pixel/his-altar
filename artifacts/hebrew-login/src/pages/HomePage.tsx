@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, Link } from "wouter";
 
 const CAMPUSES = [
@@ -10,13 +10,46 @@ const CAMPUSES = [
   "ARIZONA",
 ];
 
+function campusHref(campus: string): string | undefined {
+  const map: Record<string, string> = {
+    HALLMARK: "/campus/hallmark",
+    ARROWHEAD: "/campus/arrowhead",
+    RIVERSIDE: "/campus/riverside",
+    POMONA: "/campus/pomona",
+    LA: "/campus/la",
+    ARIZONA: "/campus/arizona",
+  };
+  return map[campus];
+}
+
 export default function HomePage() {
   const [, navigate] = useLocation();
   const [showCampuses, setShowCampuses] = useState(false);
 
+  const session = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("campusSession");
+      if (!raw) return null;
+      return JSON.parse(raw) as { campus: string; role: string };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const isScopedUser = session !== null;
+  const scopedCampus = session?.campus ?? null;
+
+  const btnStyle: React.CSSProperties = {
+    background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",
+    color: "hsl(38 65% 68%)",
+    border: "1px solid hsl(38 35% 30%)",
+    fontFamily: "Georgia, serif",
+    letterSpacing: "0.2em",
+    boxShadow: "0 2px 12px hsl(38 40% 15% / 0.4), inset 0 1px 0 hsl(38 45% 35% / 0.15)",
+  };
+
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
-      {/* Background */}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -24,7 +57,6 @@ export default function HomePage() {
             "radial-gradient(ellipse at 50% 45%, hsl(35 28% 14%) 0%, hsl(35 18% 8%) 70%, hsl(30 16% 6%) 100%)",
         }}
       />
-      {/* Vignette */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -33,18 +65,35 @@ export default function HomePage() {
         }}
       />
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center w-full max-w-lg">
-
-        {/* Decorative line top */}
         <div className="flex items-center gap-4 w-64">
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
           <span style={{ color: "hsl(38 50% 45%)", fontFamily: "Georgia, serif", fontSize: "1.4rem" }}>✦</span>
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
         </div>
 
-        {!showCampuses ? (
-          /* Select Campus button */
+        {isScopedUser ? (
+          /* ── Scoped user (lead or deputy_lead): show only their campus ── */
+          <div className="flex flex-col items-center gap-4 w-full fade-in">
+            <p
+              className="text-xs uppercase tracking-widest opacity-50"
+              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.3em" }}
+            >
+              {scopedCampus}
+            </p>
+            {(() => {
+              const href = campusHref(scopedCampus!);
+              return href ? (
+                <Link href={href}>
+                  <button className="campus-btn py-4 px-12 text-base uppercase tracking-widest rounded" style={btnStyle}>
+                    Check In
+                  </button>
+                </Link>
+              ) : null;
+            })()}
+          </div>
+        ) : !showCampuses ? (
+          /* ── Master: show Select Campus button ── */
           <button
             onClick={() => setShowCampuses(true)}
             className="campus-btn px-12 py-4 text-base uppercase tracking-widest rounded"
@@ -60,7 +109,7 @@ export default function HomePage() {
             Select Campus
           </button>
         ) : (
-          /* Campus grid */
+          /* ── Master: campus grid ── */
           <div className="flex flex-col items-center gap-3 w-full fade-in">
             <p
               className="text-xs uppercase tracking-widest mb-1 opacity-60"
@@ -70,15 +119,7 @@ export default function HomePage() {
             </p>
             <div className="grid grid-cols-2 gap-3 w-full">
               {CAMPUSES.map((campus) => {
-                const href = campus === "HALLMARK" ? "/campus/hallmark" : campus === "ARROWHEAD" ? "/campus/arrowhead" : campus === "RIVERSIDE" ? "/campus/riverside" : campus === "POMONA" ? "/campus/pomona" : campus === "LA" ? "/campus/la" : campus === "ARIZONA" ? "/campus/arizona" : undefined;
-                const btnStyle = {
-                  background: "linear-gradient(135deg, hsl(35 38% 20%), hsl(35 32% 16%))",
-                  color: "hsl(38 65% 68%)",
-                  border: "1px solid hsl(38 35% 30%)",
-                  fontFamily: "Georgia, serif",
-                  letterSpacing: "0.2em",
-                  boxShadow: "0 2px 12px hsl(38 40% 15% / 0.4), inset 0 1px 0 hsl(38 45% 35% / 0.15)",
-                };
+                const href = campusHref(campus);
                 return href ? (
                   <Link key={campus} href={href}>
                     <button className="campus-btn py-4 px-4 text-sm uppercase rounded w-full" style={btnStyle}>
@@ -102,7 +143,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Decorative line bottom */}
         <div className="flex items-center gap-4 w-64">
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
           <span style={{ color: "hsl(38 50% 45%)", fontFamily: "Georgia, serif", fontSize: "1.4rem" }}>✦</span>
@@ -110,7 +150,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Back to login */}
       <button
         onClick={() => navigate("/")}
         className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase transition-opacity duration-200 opacity-40 hover:opacity-80"

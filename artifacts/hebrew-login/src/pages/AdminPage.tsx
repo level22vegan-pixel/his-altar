@@ -187,6 +187,7 @@ export default function AdminPage() {
   const [adminPassword, setAdminPassword] = useState("");
   const [newSequence, setNewSequence] = useState<number[]>([]);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showPasswords, setShowPasswords] = useState(false);
 
   const { data: config } = useGetLoginCode({ query: { queryKey: ["loginCode"] } });
   const updateMutation = useUpdateLoginCode();
@@ -251,9 +252,6 @@ export default function AdminPage() {
           Manage settings &amp; tools
         </p>
 
-        {/* Campus Passwords */}
-        <CampusPasswordsPanel />
-
         {/* Tools section */}
         <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
           <p className="text-xs uppercase tracking-widest mb-3 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Tools</p>
@@ -274,6 +272,22 @@ export default function AdminPage() {
               <span>Roster Manager</span>
               <span style={{ opacity: 0.5 }}>→</span>
             </button>
+
+            {/* Password Manager — collapsible */}
+            <button
+              onClick={() => setShowPasswords(v => !v)}
+              className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
+              style={{ background: showPasswords ? "hsl(35 38% 20%)" : "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: `1px solid ${showPasswords ? "hsl(38 35% 32%)" : "hsl(38 30% 28%)"}`, fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+            >
+              <span>Password Manager</span>
+              <span style={{ opacity: 0.5, transition: "transform 0.2s", display: "inline-block", transform: showPasswords ? "rotate(90deg)" : "none" }}>›</span>
+            </button>
+
+            {showPasswords && (
+              <div style={{ marginTop: 2, borderRadius: 6, overflow: "hidden" }}>
+                <CampusPasswordsPanel />
+              </div>
+            )}
           </div>
         </div>
 

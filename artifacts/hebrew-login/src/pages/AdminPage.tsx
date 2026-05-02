@@ -211,28 +211,56 @@ function PasswordHistoryPanel() {
               <div
                 key={entry.id}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "8px 12px",
+                  padding: "9px 12px",
                   background: "hsl(35 18% 14%)",
                   border: "1px solid hsl(38 15% 20%)",
                   borderRadius: 6,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 55% 62%)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                    {entry.campus}
-                  </span>
-                  <span style={{ color: "hsl(38 20% 38%)", margin: "0 6px", fontSize: 10 }}>·</span>
-                  <span style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 46%)", letterSpacing: "0.08em" }}>
-                    {ROLE_LABELS[entry.role] ?? entry.role}
-                  </span>
+                {/* Campus · Role row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 55% 62%)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                      {entry.campus}
+                    </span>
+                    <span style={{ color: "hsl(38 20% 38%)", margin: "0 6px", fontSize: 10 }}>·</span>
+                    <span style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 46%)", letterSpacing: "0.08em" }}>
+                      {ROLE_LABELS[entry.role] ?? entry.role}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 28% 42%)", letterSpacing: "0.06em" }}>{dateStr}</div>
+                    <div style={{ fontFamily: "Georgia, serif", fontSize: 9, color: "hsl(38 20% 34%)", letterSpacing: "0.06em" }}>{timeStr}</div>
+                  </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 28% 42%)", letterSpacing: "0.06em" }}>{dateStr}</div>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 9, color: "hsl(38 20% 34%)", letterSpacing: "0.06em" }}>{timeStr}</div>
-                </div>
+                {/* Sequence row */}
+                {entry.sequence && entry.sequence.length > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                    {entry.sequence.map((num, i) => {
+                      const letter = HEBREW_ALPHABET.find(h => h.number === num);
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            display: "inline-flex", flexDirection: "column", alignItems: "center",
+                            background: "hsl(38 35% 18%)", border: "1px solid hsl(38 30% 26%)",
+                            borderRadius: 4, padding: "3px 7px", gap: 1,
+                          }}
+                        >
+                          <span style={{ fontFamily: "serif", fontSize: 15, color: "hsl(38 65% 72%)", lineHeight: 1 }}>
+                            {letter?.letter ?? "?"}
+                          </span>
+                          <span style={{ fontFamily: "Georgia, serif", fontSize: 8, color: "hsl(38 25% 44%)", letterSpacing: "0.05em" }}>
+                            {num}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}

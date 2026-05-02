@@ -4,6 +4,7 @@ export const passwordHistoryTable = pgTable("password_history", {
   id: serial("id").primaryKey(),
   campus: text("campus").notNull(),
   role: text("role").notNull(),
+  sequence: text("sequence").notNull().default("[]"),
   changedAt: timestamp("changed_at").defaultNow().notNull(),
 });
 

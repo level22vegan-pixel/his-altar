@@ -931,6 +931,10 @@ components:
           type: string
         role:
           type: string
+        sequence:
+          type: array
+          items:
+            type: integer
         changedAt:
           type: string
           format: date-time
@@ -938,6 +942,7 @@ components:
         - id
         - campus
         - role
+        - sequence
         - changedAt
     PasswordHistoryList:
       type: object

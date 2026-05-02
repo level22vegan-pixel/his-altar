@@ -107,6 +107,7 @@ export const GetPasswordHistoryResponse = zod.object({
       id: zod.number(),
       campus: zod.string(),
       role: zod.string(),
+      sequence: zod.array(zod.number()),
       changedAt: zod.coerce.date(),
     }),
   ),

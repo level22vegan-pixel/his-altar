@@ -211,6 +211,7 @@ export interface PasswordHistoryEntry {
   id: number;
   campus: string;
   role: string;
+  sequence: number[];
   changedAt: string;
 }
 

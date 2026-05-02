@@ -34,6 +34,7 @@ router.get("/history", async (req, res) => {
       id: r.id,
       campus: r.campus,
       role: r.role,
+      sequence: JSON.parse(r.sequence ?? "[]") as number[],
       changedAt: r.changedAt.toISOString(),
     }));
     res.json({ entries });
@@ -62,7 +63,7 @@ router.post("/", async (req, res) => {
         target: [campusPasswordsTable.campus, campusPasswordsTable.role],
         set: { password },
       });
-    await db.insert(passwordHistoryTable).values({ campus, role });
+    await db.insert(passwordHistoryTable).values({ campus, role, sequence: password });
     res.json({ campus, role, hasPassword: true });
   } catch (err) {
     req.log.error({ err }, "Error setting campus password");

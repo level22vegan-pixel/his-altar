@@ -10,7 +10,7 @@ const CAMPUSES = [
   "ARIZONA",
 ];
 
-function campusHref(campus: string): string | undefined {
+function campusHref(campus: string): string {
   const map: Record<string, string> = {
     HALLMARK: "/campus/hallmark",
     ARROWHEAD: "/campus/arrowhead",
@@ -19,7 +19,7 @@ function campusHref(campus: string): string | undefined {
     LA: "/campus/la",
     ARIZONA: "/campus/arizona",
   };
-  return map[campus];
+  return map[campus] ?? "#";
 }
 
 export default function HomePage() {
@@ -36,7 +36,6 @@ export default function HomePage() {
     }
   }, []);
 
-  const isScopedUser = session !== null;
   const scopedCampus = session?.campus ?? null;
 
   const btnStyle: React.CSSProperties = {
@@ -46,6 +45,16 @@ export default function HomePage() {
     fontFamily: "Georgia, serif",
     letterSpacing: "0.2em",
     boxShadow: "0 2px 12px hsl(38 40% 15% / 0.4), inset 0 1px 0 hsl(38 45% 35% / 0.15)",
+  };
+
+  const disabledBtnStyle: React.CSSProperties = {
+    background: "hsl(35 20% 12%)",
+    color: "hsl(38 20% 30%)",
+    border: "1px solid hsl(38 15% 20%)",
+    fontFamily: "Georgia, serif",
+    letterSpacing: "0.2em",
+    cursor: "not-allowed",
+    opacity: 0.4,
   };
 
   return (
@@ -72,28 +81,7 @@ export default function HomePage() {
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
         </div>
 
-        {isScopedUser ? (
-          /* ── Scoped user (lead or deputy_lead): show only their campus ── */
-          <div className="flex flex-col items-center gap-4 w-full fade-in">
-            <p
-              className="text-xs uppercase tracking-widest opacity-50"
-              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.3em" }}
-            >
-              {scopedCampus}
-            </p>
-            {(() => {
-              const href = campusHref(scopedCampus!);
-              return href ? (
-                <Link href={href}>
-                  <button className="campus-btn py-4 px-12 text-base uppercase tracking-widest rounded" style={btnStyle}>
-                    Check In
-                  </button>
-                </Link>
-              ) : null;
-            })()}
-          </div>
-        ) : !showCampuses ? (
-          /* ── Master: show Select Campus button ── */
+        {!showCampuses ? (
           <button
             onClick={() => setShowCampuses(true)}
             className="campus-btn px-12 py-4 text-base uppercase tracking-widest rounded"
@@ -109,7 +97,6 @@ export default function HomePage() {
             Select Campus
           </button>
         ) : (
-          /* ── Master: campus grid ── */
           <div className="flex flex-col items-center gap-3 w-full fade-in">
             <p
               className="text-xs uppercase tracking-widest mb-1 opacity-60"
@@ -119,15 +106,15 @@ export default function HomePage() {
             </p>
             <div className="grid grid-cols-2 gap-3 w-full">
               {CAMPUSES.map((campus) => {
-                const href = campusHref(campus);
-                return href ? (
-                  <Link key={campus} href={href}>
+                const isEnabled = !scopedCampus || campus === scopedCampus;
+                return isEnabled ? (
+                  <Link key={campus} href={campusHref(campus)}>
                     <button className="campus-btn py-4 px-4 text-sm uppercase rounded w-full" style={btnStyle}>
                       {campus}
                     </button>
                   </Link>
                 ) : (
-                  <button key={campus} className="campus-btn py-4 px-4 text-sm uppercase rounded" style={btnStyle}>
+                  <button key={campus} className="py-4 px-4 text-sm uppercase rounded w-full" style={disabledBtnStyle} disabled>
                     {campus}
                   </button>
                 );

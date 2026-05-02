@@ -223,12 +223,10 @@ export default function RosterManagerPage() {
   const WorkerRow = ({ w, badge }: { w: Worker; badge?: boolean }) => (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, background: w.onHold ? "hsl(35 18% 11%)" : editingId === w.id ? "hsl(35 22% 15%)" : "hsl(35 18% 12%)", border: `1px solid ${w.onHold ? "hsl(0 28% 22%)" : editingId === w.id ? "hsl(38 28% 28%)" : "hsl(38 15% 20%)"}`, borderRadius: editingId === w.id ? "6px 6px 0 0" : 6, padding: "10px 14px", transition: "all 0.15s", opacity: w.onHold ? 0.65 : 1 }}>
-        <div style={{ position: "relative", flexShrink: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flexShrink: 0 }}>
           <Avatar name={w.name} photoUrl={w.photoUrl} size={44} />
           {w.onHold && (
-            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "hsl(0 60% 20% / 0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 16, lineHeight: 1 }}>⏸</span>
-            </div>
+            <span style={{ fontSize: 10, lineHeight: 1, color: "hsl(0 55% 52%)" }}>⏸</span>
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>

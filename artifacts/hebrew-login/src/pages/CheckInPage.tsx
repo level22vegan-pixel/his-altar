@@ -74,11 +74,13 @@ function WorkerCard({
         </div>
       )}
 
-      {/* Avatar with hold indicator below */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+      {/* Avatar with hold overlay */}
+      <div style={{ position: "relative" }}>
         <Avatar name={worker.name} photoUrl={worker.photoUrl} size={64} />
         {isOnHold && (
-          <span style={{ fontSize: 13, lineHeight: 1, color: "hsl(0 55% 52%)" }}>⏸</span>
+          <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "hsl(0 60% 14% / 0.68)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid hsl(0 45% 32%)" }}>
+            <span style={{ fontSize: 22, lineHeight: 1 }}>⏸</span>
+          </div>
         )}
       </div>
 

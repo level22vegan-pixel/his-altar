@@ -63,7 +63,7 @@ function compressImage(file: File, maxSize = 300): Promise<string> {
   });
 }
 
-function EditForm({ worker, onSave, onCancel }: { worker: Worker; onSave: (data: { name: string; role: string; photoUrl: string }) => void; onCancel: () => void }) {
+function EditForm({ worker, onSave, onCancel, onToggleHold }: { worker: Worker; onSave: (data: { name: string; role: string; photoUrl: string }) => void; onCancel: () => void; onToggleHold: () => void }) {
   const [name, setName] = useState(worker.name);
   const [role, setRole] = useState(worker.role ?? "");
   const [photoUrl, setPhotoUrl] = useState(worker.photoUrl ?? "");
@@ -119,9 +119,16 @@ function EditForm({ worker, onSave, onCancel }: { worker: Worker; onSave: (data:
         </div>
       </div>
       {error && <p style={{ color: "hsl(0 60% 55%)", fontFamily: "Georgia, serif", fontSize: 12, marginBottom: 8 }}>{error}</p>}
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button onClick={() => { if (!name.trim()) { setError("Name is required"); return; } onSave({ name: name.trim(), role, photoUrl }); }} style={{ background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 18px", borderRadius: 4, cursor: "pointer" }}>Save</button>
         <button onClick={onCancel} style={{ background: "none", color: "hsl(38 28% 42%)", border: "1px solid hsl(38 15% 22%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 14px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={onToggleHold}
+          style={{ background: worker.onHold ? "hsl(0 35% 18%)" : "none", color: worker.onHold ? "hsl(0 55% 58%)" : "hsl(38 22% 36%)", border: `1px solid ${worker.onHold ? "hsl(0 35% 26%)" : "hsl(38 15% 22%)"}`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 12px", borderRadius: 4, cursor: "pointer", transition: "all 0.15s" }}
+        >
+          {worker.onHold ? "⏸ Remove Hold" : "⏸ Place on Hold"}
+        </button>
       </div>
     </div>
   );
@@ -246,13 +253,6 @@ export default function RosterManagerPage() {
           {w.role && <div style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 11 }}>{w.role}</div>}
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-          <button
-            onClick={() => handleToggleHold(w)}
-            title={w.onHold ? "Remove hold" : "Place on hold"}
-            style={{ color: w.onHold ? "hsl(0 55% 58%)" : "hsl(38 25% 38%)", background: w.onHold ? "hsl(0 35% 18%)" : "none", border: `1px solid ${w.onHold ? "hsl(0 35% 26%)" : "hsl(38 15% 22%)"}`, borderRadius: 4, padding: "3px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 12, lineHeight: 1, transition: "all 0.15s" }}
-          >
-            ⏸
-          </button>
           <button onClick={() => setEditingId(editingId === w.id ? null : w.id)} style={{ color: editingId === w.id ? "hsl(38 65% 58%)" : "hsl(38 35% 45%)", background: editingId === w.id ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editingId === w.id ? "hsl(38 35% 28%)" : "hsl(38 15% 24%)"}`, borderRadius: 4, padding: "3px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}>
             {editingId === w.id ? "Close" : "Edit"}
           </button>
@@ -261,7 +261,7 @@ export default function RosterManagerPage() {
       </div>
       {editingId === w.id && (
         <div style={{ border: "1px solid hsl(38 25% 26%)", borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
-          <EditForm worker={w} onSave={(data) => handleUpdate(w.id, data)} onCancel={() => setEditingId(null)} />
+          <EditForm worker={w} onSave={(data) => handleUpdate(w.id, data)} onCancel={() => setEditingId(null)} onToggleHold={() => handleToggleHold(w)} />
         </div>
       )}
     </div>

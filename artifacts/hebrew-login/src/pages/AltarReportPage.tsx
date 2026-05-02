@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useListDailyAltarReports, useUpsertDailyAltarReport, useDeleteDailyAltarReport } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DailyAltarReport } from "@workspace/api-client-react";
+import { jsPDF } from "jspdf";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -69,33 +70,142 @@ function buildDatesWithData(reports: DailyAltarReport[]): Set<string> {
   return new Set(reports.map(r => r.date));
 }
 
-// ── CSV export helpers ─────────────────────────────────────────────────────────
-function downloadCSV(filename: string, rows: string[][]) {
-  const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+// ── PDF export helpers ─────────────────────────────────────────────────────────
+const PDF_BG = [28, 22, 14] as const;
+const PDF_GOLD = [180, 140, 80] as const;
+const PDF_GOLD_DIM = [120, 90, 50] as const;
+const PDF_WHITE = [220, 205, 175] as const;
+const PDF_ROW_ALT = [36, 28, 18] as const;
+const PDF_HEADER_ROW = [45, 34, 20] as const;
+
+function buildPDF(title: string, subtitle: string, rows: string[][]): jsPDF {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+  const W = doc.internal.pageSize.getWidth();
+
+  // Background
+  doc.setFillColor(...PDF_BG);
+  doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
+
+  // Gold top border line
+  doc.setDrawColor(...PDF_GOLD);
+  doc.setLineWidth(0.8);
+  doc.line(14, 18, W - 14, 18);
+
+  // Title
+  doc.setFont("times", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(...PDF_GOLD);
+  doc.text(title, W / 2, 14, { align: "center" });
+
+  // Subtitle
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text(subtitle, W / 2, 24, { align: "center" });
+
+  // Bottom border under subtitle
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, 27, W - 14, 27);
+
+  // Column config
+  const cols = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
+  const colW = [28, 20, 30, 26, 22, 32];
+  const startX = 14;
+  let y = 36;
+  const rowH = 8;
+
+  // Table header
+  doc.setFillColor(...PDF_HEADER_ROW);
+  doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+  doc.setFont("times", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD);
+  let x = startX + 2;
+  cols.forEach((col, i) => {
+    doc.text(col.toUpperCase(), x, y, {});
+    x += colW[i];
+  });
+  y += rowH;
+
+  // Table rows
+  doc.setFont("times", "normal");
+  doc.setFontSize(9);
+  rows.forEach((row, ri) => {
+    if (y > doc.internal.pageSize.getHeight() - 20) {
+      doc.addPage();
+      doc.setFillColor(...PDF_BG);
+      doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
+      y = 20;
+    }
+    if (ri % 2 === 0) {
+      doc.setFillColor(...PDF_ROW_ALT);
+      doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+    }
+    doc.setTextColor(...PDF_WHITE);
+    x = startX + 2;
+    row.forEach((cell, i) => {
+      doc.text(String(cell), x, y);
+      x += colW[i];
+    });
+    y += rowH;
+  });
+
+  // Totals row (last 3 cols are numeric)
+  if (rows.length > 0) {
+    const totSalv = rows.reduce((s, r) => s + (parseInt(r[3]) || 0), 0);
+    const totPray = rows.reduce((s, r) => s + (parseInt(r[4]) || 0), 0);
+    const totAltar = rows.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
+    y += 2;
+    doc.setDrawColor(...PDF_GOLD_DIM);
+    doc.setLineWidth(0.3);
+    doc.line(startX, y - 4, W - 14, y - 4);
+    doc.setFont("times", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_GOLD);
+    doc.text("TOTALS", startX + 2, y);
+    x = startX + 2 + colW[0] + colW[1] + colW[2];
+    doc.text(String(totSalv), x, y); x += colW[3];
+    doc.text(String(totPray), x, y); x += colW[4];
+    doc.text(String(totAltar), x, y);
+  }
+
+  // Footer
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, pageH - 12, W - 14, pageH - 12);
+  doc.setFont("times", "italic");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text("Altar Report — Confidential", W / 2, pageH - 7, { align: "center" });
+
+  return doc;
 }
 
 function exportMonthData(reports: DailyAltarReport[], month: number, year: number) {
-  const header = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
-  const rows = [...reports]
-    .sort((a, b) => a.date.localeCompare(b.date) || a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus))
-    .map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
-  downloadCSV(`altar-report-${year}-${pad2(month)}.csv`, [header, ...rows]);
+  const sorted = [...reports].sort((a, b) =>
+    a.date.localeCompare(b.date) || a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus)
+  );
+  const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
+  const monthName = MONTH_NAMES[month - 1];
+  const doc = buildPDF(
+    "Altar Report",
+    `${monthName} ${year} — All Campuses`,
+    rows
+  );
+  doc.save(`altar-report-${year}-${pad2(month)}.pdf`);
 }
 
 function exportDayData(reports: DailyAltarReport[], dateStr: string) {
-  const header = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
-  const rows = [...reports]
+  const sorted = [...reports]
     .filter(r => r.date === dateStr)
-    .sort((a, b) => a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus))
-    .map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
-  downloadCSV(`altar-report-${dateStr}.csv`, [header, ...rows]);
+    .sort((a, b) => a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus));
+  const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
+  const date = new Date(dateStr + "T12:00:00");
+  const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const doc = buildPDF("Altar Report", label, rows);
+  doc.save(`altar-report-${dateStr}.pdf`);
 }
 
 // ── Stat input row ─────────────────────────────────────────────────────────────

@@ -42,10 +42,22 @@ function checkInServiceName(slot: string): string {
   return slot === "7pm" ? "Wednesday 7pm" : `Sunday ${slot}`;
 }
 
-function getDayServices(date: Date): string[] | null {
+function getDayServices(date: Date, campus?: string | null): string[] | null {
   const dow = date.getDay();
-  if (dow === 0) return SUNDAY_SERVICES;
-  if (dow === 3) return WEDNESDAY_SERVICES;
+  if (dow === 0) {
+    if (campus) {
+      const s = CAMPUS_SERVICES[campus]?.sunday ?? [];
+      return s.length > 0 ? s : null;
+    }
+    return SUNDAY_SERVICES;
+  }
+  if (dow === 3) {
+    if (campus) {
+      const s = CAMPUS_SERVICES[campus]?.wednesday ?? [];
+      return s.length > 0 ? s : null;
+    }
+    return WEDNESDAY_SERVICES;
+  }
   return null;
 }
 
@@ -650,6 +662,16 @@ export default function AltarReportPage() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
+  // Read campus from session (campus leads are scoped to their campus)
+  const sessionCampus: string | null = (() => {
+    try {
+      const s = localStorage.getItem("campusSession");
+      if (!s) return null;
+      const parsed = JSON.parse(s);
+      return parsed?.campus ?? null;
+    } catch { return null; }
+  })();
+
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -717,7 +739,7 @@ export default function AltarReportPage() {
   );
 
   const selectedDayDate = selectedDate ? new Date(selectedDate + "T12:00:00") : null;
-  const selectedDayServices = selectedDayDate ? getDayServices(selectedDayDate) : null;
+  const selectedDayServices = selectedDayDate ? getDayServices(selectedDayDate, sessionCampus) : null;
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
@@ -785,7 +807,7 @@ export default function AltarReportPage() {
               const day = idx + 1;
               const dateStr = toDateStr(viewYear, viewMonth, day);
               const dateObj = new Date(viewYear, viewMonth, day);
-              const services = getDayServices(dateObj);
+              const services = getDayServices(dateObj, sessionCampus);
               const isClickable = services !== null;
               const hasData = datesWithData.has(dateStr);
               const isToday = dateStr === currentTodayStr;

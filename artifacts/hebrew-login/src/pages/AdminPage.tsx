@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword, useGetPasswordHistory } from "@workspace/api-client-react";
+import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 
@@ -41,7 +41,6 @@ function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
 
   const [editing, setEditing] = useState<{ campus: string; role: string } | null>(null);
   const [seq, setSeq] = useState<number[]>([]);
-  const [adminPw, setAdminPw] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const passwords = data?.passwords ?? [];
@@ -50,26 +49,28 @@ function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
   const hasPassword = (campus: string, role: string) =>
     passwords.find(p => p.campus === campus && p.role === role)?.hasPassword ?? false;
 
+  const currentSequence = (campus: string, role: string): number[] =>
+    passwords.find(p => p.campus === campus && p.role === role)?.sequence ?? [];
+
   const openEdit = (campus: string, role: string) => {
     const isEditing = editing?.campus === campus && editing?.role === role;
     setEditing(isEditing ? null : { campus, role });
     setSeq([]);
-    setAdminPw("");
     setMsg(null);
   };
 
   const handleSave = () => {
-    if (!editing || seq.length === 0 || !adminPw) return;
+    if (!editing || seq.length === 0) return;
     setPass.mutate(
-      { data: { campus: editing.campus, role: editing.role, sequence: seq, adminPassword: adminPw } },
+      { data: { campus: editing.campus, role: editing.role, sequence: seq } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["campus-passwords"] });
           setMsg({ type: "ok", text: `Sequence set for ${editing.campus} / ${ROLES.find(r => r.id === editing.role)?.label}` });
-          setEditing(null); setSeq([]); setAdminPw("");
+          setEditing(null); setSeq([]);
           setTimeout(() => setMsg(null), 3000);
         },
-        onError: () => setMsg({ type: "err", text: "Failed — check admin password" }),
+        onError: () => setMsg({ type: "err", text: "Failed to save sequence" }),
       }
     );
   };
@@ -109,57 +110,77 @@ function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
 
             {editing?.campus === campus && (
               <div style={{ border: "1px solid hsl(38 25% 24%)", borderTop: "none", borderRadius: "0 0 6px 6px", padding: "14px", background: "hsl(35 18% 12%)", display: "flex", flexDirection: "column", gap: 10 }}>
+
+                {/* Current sequence */}
+                {(() => {
+                  const cur = currentSequence(campus, editing.role);
+                  return cur.length > 0 ? (
+                    <div>
+                      <label style={{ color: "hsl(38 25% 38%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>Current Sequence</label>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                        {cur.map((n, i) => {
+                          const l = HEBREW_ALPHABET.find(h => h.number === n);
+                          return (
+                            <div key={i} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", background: "hsl(35 18% 16%)", border: "1px solid hsl(38 20% 26%)", borderRadius: 4, padding: "3px 7px", gap: 1 }}>
+                              <span style={{ fontFamily: "serif", fontSize: 16, color: "hsl(38 50% 58%)", lineHeight: 1 }}>{l?.letter}</span>
+                              <span style={{ fontFamily: "Georgia, serif", fontSize: 8, color: "hsl(38 20% 40%)" }}>{n}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* New sequence builder */}
                 <div>
                   <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-                    Tap letters to set sequence
+                    New Sequence — tap letters in order
                   </label>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 36 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 36, marginBottom: 8 }}>
                     {seq.length === 0 ? (
                       <span style={{ color: "hsl(38 20% 32%)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>No letters selected</span>
                     ) : (
                       seq.map((n, i) => {
                         const l = HEBREW_ALPHABET.find(h => h.number === n);
                         return (
-                          <span key={i} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, background: "hsl(38 45% 22%)", border: "1px solid hsl(38 35% 30%)", borderRadius: 4, color: "hsl(38 70% 75%)", fontSize: 16, fontFamily: "serif" }}>
-                            {l?.letter}
-                          </span>
+                          <div key={i} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", background: "hsl(38 45% 22%)", border: "1px solid hsl(38 35% 30%)", borderRadius: 4, padding: "3px 7px", gap: 1 }}>
+                            <span style={{ fontFamily: "serif", fontSize: 16, color: "hsl(38 70% 75%)", lineHeight: 1 }}>{l?.letter}</span>
+                            <span style={{ fontFamily: "Georgia, serif", fontSize: 8, color: "hsl(38 35% 50%)" }}>{n}</span>
+                          </div>
                         );
                       })
                     )}
                     {seq.length > 0 && (
-                      <button onClick={() => setSeq(s => s.slice(0, -1))} style={{ marginLeft: 4, color: "hsl(38 25% 42%)", background: "none", border: "none", cursor: "pointer", fontSize: 11, fontFamily: "Georgia, serif", letterSpacing: "0.1em" }}>⌫</button>
+                      <button onClick={() => setSeq(s => s.slice(0, -1))} style={{ marginLeft: 4, color: "hsl(38 25% 42%)", background: "none", border: "none", cursor: "pointer", fontSize: 11, fontFamily: "Georgia, serif" }}>⌫</button>
                     )}
                   </div>
-                </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 4 }}>
-                  {HEBREW_ALPHABET.map(item => (
-                    <button
-                      key={item.number}
-                      onClick={() => setSeq(s => [...s, item.number])}
-                      style={{
-                        aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 16, fontFamily: "serif", cursor: "pointer",
-                        background: "hsl(35 18% 16%)", border: "1px solid hsl(38 15% 22%)",
-                        borderRadius: 4, color: "hsl(38 55% 65%)", transition: "all 0.1s",
-                      }}
-                      onMouseOver={e => { e.currentTarget.style.background = "hsl(38 35% 22%)"; e.currentTarget.style.color = "hsl(38 70% 78%)"; }}
-                      onMouseOut={e => { e.currentTarget.style.background = "hsl(35 18% 16%)"; e.currentTarget.style.color = "hsl(38 55% 65%)"; }}
-                    >
-                      {item.letter}
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Admin Password</label>
-                    <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="Your admin code..." style={{ background: "hsl(35 20% 14%)", border: "1px solid hsl(38 20% 25%)", color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif", borderRadius: 4, padding: "7px 10px", width: "100%", fontSize: 12, outline: "none" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 4 }}>
+                    {HEBREW_ALPHABET.map(item => (
+                      <button
+                        key={item.number}
+                        onClick={() => setSeq(s => [...s, item.number])}
+                        style={{
+                          aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 16, fontFamily: "serif", cursor: "pointer",
+                          background: "hsl(35 18% 16%)", border: "1px solid hsl(38 15% 22%)",
+                          borderRadius: 4, color: "hsl(38 55% 65%)", transition: "all 0.1s",
+                        }}
+                        onMouseOver={e => { e.currentTarget.style.background = "hsl(38 35% 22%)"; e.currentTarget.style.color = "hsl(38 70% 78%)"; }}
+                        onMouseOut={e => { e.currentTarget.style.background = "hsl(35 18% 16%)"; e.currentTarget.style.color = "hsl(38 55% 65%)"; }}
+                      >
+                        {item.letter}
+                      </button>
+                    ))}
                   </div>
-                  <button onClick={handleSave} disabled={seq.length === 0 || !adminPw || setPass.isPending} style={{ background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 16px", borderRadius: 4, cursor: "pointer", opacity: seq.length === 0 || !adminPw ? 0.4 : 1, whiteSpace: "nowrap" }}>
+                </div>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={handleSave} disabled={seq.length === 0 || setPass.isPending} style={{ flex: 1, background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 0", borderRadius: 4, cursor: "pointer", opacity: seq.length === 0 ? 0.4 : 1, whiteSpace: "nowrap" }}>
                     {setPass.isPending ? "Saving..." : "Set Sequence"}
                   </button>
-                  <button onClick={() => { setEditing(null); setSeq([]); setAdminPw(""); }} style={{ background: "none", color: "hsl(38 25% 40%)", border: "1px solid hsl(38 15% 22%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+                  <button onClick={() => { setEditing(null); setSeq([]); }} style={{ background: "none", color: "hsl(38 25% 40%)", border: "1px solid hsl(38 15% 22%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
             )}
@@ -174,101 +195,6 @@ function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
   );
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  lead: "Lead",
-  deputy_lead: "Deputy Lead",
-};
-
-function PasswordHistoryPanel() {
-  const { data, isLoading } = useGetPasswordHistory({ query: { queryKey: ["password-history"] } });
-  const entries = data?.entries ?? [];
-
-  return (
-    <div
-      className="mt-8 p-4 rounded border"
-      style={{ background: "hsl(35 18% 11%)", borderColor: "hsl(38 15% 20%)" }}
-    >
-      <p
-        className="text-xs uppercase tracking-widest mb-1 opacity-60"
-        style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}
-      >
-        Password Change Log
-      </p>
-      <p style={{ color: "hsl(38 22% 36%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em", marginBottom: 14 }}>
-        Every time a campus sequence is set or updated, it is recorded here.
-      </p>
-      {isLoading ? (
-        <p style={{ color: "hsl(38 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>Loading...</p>
-      ) : entries.length === 0 ? (
-        <p style={{ color: "hsl(38 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>No changes recorded yet.</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {entries.map((entry) => {
-            const date = new Date(entry.changedAt);
-            const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-            const timeStr = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-            return (
-              <div
-                key={entry.id}
-                style={{
-                  padding: "9px 12px",
-                  background: "hsl(35 18% 14%)",
-                  border: "1px solid hsl(38 15% 20%)",
-                  borderRadius: 6,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                }}
-              >
-                {/* Campus · Role row */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 55% 62%)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                      {entry.campus}
-                    </span>
-                    <span style={{ color: "hsl(38 20% 38%)", margin: "0 6px", fontSize: 10 }}>·</span>
-                    <span style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 46%)", letterSpacing: "0.08em" }}>
-                      {ROLE_LABELS[entry.role] ?? entry.role}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 28% 42%)", letterSpacing: "0.06em" }}>{dateStr}</div>
-                    <div style={{ fontFamily: "Georgia, serif", fontSize: 9, color: "hsl(38 20% 34%)", letterSpacing: "0.06em" }}>{timeStr}</div>
-                  </div>
-                </div>
-                {/* Sequence row */}
-                {entry.sequence && entry.sequence.length > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-                    {entry.sequence.map((num, i) => {
-                      const letter = HEBREW_ALPHABET.find(h => h.number === num);
-                      return (
-                        <div
-                          key={i}
-                          style={{
-                            display: "inline-flex", flexDirection: "column", alignItems: "center",
-                            background: "hsl(38 35% 18%)", border: "1px solid hsl(38 30% 26%)",
-                            borderRadius: 4, padding: "3px 7px", gap: 1,
-                          }}
-                        >
-                          <span style={{ fontFamily: "serif", fontSize: 15, color: "hsl(38 65% 72%)", lineHeight: 1 }}>
-                            {letter?.letter ?? "?"}
-                          </span>
-                          <span style={{ fontFamily: "Georgia, serif", fontSize: 8, color: "hsl(38 25% 44%)", letterSpacing: "0.05em" }}>
-                            {num}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function AdminPage() {
   const [, navigate] = useLocation();
@@ -550,7 +476,6 @@ export default function AdminPage() {
               </p>
             )}
 
-            <PasswordHistoryPanel />
           </>
         )}
       </div>

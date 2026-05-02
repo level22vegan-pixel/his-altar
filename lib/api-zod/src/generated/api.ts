@@ -77,6 +77,7 @@ export const ListCampusPasswordsResponse = zod.object({
       campus: zod.string(),
       role: zod.string(),
       hasPassword: zod.boolean(),
+      sequence: zod.array(zod.number()).optional(),
     }),
   ),
 });
@@ -88,13 +89,13 @@ export const SetCampusPasswordBody = zod.object({
   campus: zod.string(),
   role: zod.string(),
   sequence: zod.array(zod.number()).describe("Hebrew letter number sequence"),
-  adminPassword: zod.string(),
 });
 
 export const SetCampusPasswordResponse = zod.object({
   campus: zod.string(),
   role: zod.string(),
   hasPassword: zod.boolean(),
+  sequence: zod.array(zod.number()).optional(),
 });
 
 /**

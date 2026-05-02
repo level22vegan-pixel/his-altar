@@ -14,7 +14,12 @@ router.get("/", async (req, res) => {
     const passwords = CAMPUSES.flatMap(campus =>
       ROLES.map(role => {
         const found = rows.find(r => r.campus === campus && r.role === role);
-        return { campus, role, hasPassword: !!found };
+        return {
+          campus,
+          role,
+          hasPassword: !!found,
+          sequence: found ? (JSON.parse(found.password) as number[]) : [],
+        };
       })
     );
     res.json({ passwords });
@@ -46,11 +51,7 @@ router.get("/history", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { campus, role, sequence, adminPassword } = req.body;
-    if (adminPassword !== ADMIN_PASSWORD) {
-      res.status(401).json({ message: "Invalid admin password" });
-      return;
-    }
+    const { campus, role, sequence } = req.body;
     if (!campus || !role || !Array.isArray(sequence) || sequence.length === 0) {
       res.status(400).json({ message: "campus, role, and sequence are required" });
       return;

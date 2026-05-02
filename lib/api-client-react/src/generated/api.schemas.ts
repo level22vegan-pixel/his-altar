@@ -187,6 +187,7 @@ export interface CampusPasswordEntry {
   campus: string;
   role: string;
   hasPassword: boolean;
+  sequence?: number[];
 }
 
 export interface CampusPasswordList {
@@ -198,7 +199,6 @@ export interface SetCampusPasswordBody {
   role: string;
   /** Hebrew letter number sequence */
   sequence: number[];
-  adminPassword: string;
 }
 
 export interface VerifyCampusPasswordBody {

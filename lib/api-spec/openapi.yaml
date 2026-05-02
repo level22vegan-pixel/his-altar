@@ -877,6 +877,10 @@ components:
           type: string
         hasPassword:
           type: boolean
+        sequence:
+          type: array
+          items:
+            type: integer
       required:
         - campus
         - role
@@ -902,13 +906,10 @@ components:
           items:
             type: integer
           description: Hebrew letter number sequence
-        adminPassword:
-          type: string
       required:
         - campus
         - role
         - sequence
-        - adminPassword
     VerifyCampusPasswordBody:
       type: object
       properties:

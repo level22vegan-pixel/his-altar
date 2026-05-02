@@ -8,7 +8,6 @@ const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-// Sunday = 0, Wednesday = 3
 const SUNDAY_SERVICES = ["8am", "10am", "12pm"];
 const WEDNESDAY_SERVICES = ["7pm"];
 
@@ -16,7 +15,7 @@ function getDayServices(date: Date): string[] | null {
   const dow = date.getDay();
   if (dow === 0) return SUNDAY_SERVICES;
   if (dow === 3) return WEDNESDAY_SERVICES;
-  return null; // not clickable
+  return null;
 }
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
@@ -53,8 +52,8 @@ const LABEL_STYLE: React.CSSProperties = {
   textAlign: "center",
 };
 
-type DayServiceKey = string; // `${date}__${service}`
-type DayMap = Record<string, DailyAltarReport[]>; // keyed by date__service
+type DayServiceKey = string;
+type DayMap = Record<string, DailyAltarReport[]>;
 
 function buildDayMap(reports: DailyAltarReport[]): DayMap {
   const map: DayMap = {};
@@ -66,9 +65,37 @@ function buildDayMap(reports: DailyAltarReport[]): DayMap {
   return map;
 }
 
-// Also build a set of dates that have ANY data (for dot indicators on calendar)
 function buildDatesWithData(reports: DailyAltarReport[]): Set<string> {
   return new Set(reports.map(r => r.date));
+}
+
+// ── CSV export helpers ─────────────────────────────────────────────────────────
+function downloadCSV(filename: string, rows: string[][]) {
+  const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportMonthData(reports: DailyAltarReport[], month: number, year: number) {
+  const header = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
+  const rows = [...reports]
+    .sort((a, b) => a.date.localeCompare(b.date) || a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus))
+    .map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
+  downloadCSV(`altar-report-${year}-${pad2(month)}.csv`, [header, ...rows]);
+}
+
+function exportDayData(reports: DailyAltarReport[], dateStr: string) {
+  const header = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
+  const rows = [...reports]
+    .filter(r => r.date === dateStr)
+    .sort((a, b) => a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus))
+    .map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
+  downloadCSV(`altar-report-${dateStr}.csv`, [header, ...rows]);
 }
 
 // ── Stat input row ─────────────────────────────────────────────────────────────
@@ -112,7 +139,6 @@ function DayEntry({
   const [prayers, setPrayers] = useState(String(report.prayers));
   const [altarMembers, setAltarMembers] = useState(String(report.altarMembers));
 
-  // Keep local state in sync when report updates (after save)
   useEffect(() => {
     setSalvations(String(report.salvations));
     setPrayers(String(report.prayers));
@@ -136,7 +162,6 @@ function DayEntry({
 
   return (
     <div style={{ background: "hsl(35 18% 16%)", border: `1px solid ${editing ? "hsl(38 28% 28%)" : BORDER}`, borderRadius: 8, overflow: "hidden", transition: "border-color 0.2s" }}>
-      {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}>
         <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em" }}>{report.campus}</span>
         <div style={{ display: "flex", gap: 6 }}>
@@ -155,7 +180,6 @@ function DayEntry({
         </div>
       </div>
 
-      {/* Stat display (when not editing) */}
       {!editing && (
         <div style={{ display: "flex", gap: 20, padding: "0 14px 12px" }}>
           {statColors.map(s => (
@@ -167,7 +191,6 @@ function DayEntry({
         </div>
       )}
 
-      {/* Edit form (when editing) */}
       {editing && (
         <div style={{ padding: "0 14px 14px" }}>
           <StatFields
@@ -237,11 +260,103 @@ function AddEntryForm({
   );
 }
 
+// ── Single Service Section (used inside DayDetail) ─────────────────────────────
+function ServiceSection({
+  service,
+  dateStr,
+  dayMap,
+  onSave,
+  onEdit,
+  onDelete,
+}: {
+  service: string;
+  dateStr: string;
+  dayMap: DayMap;
+  onSave: (service: string, data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
+  onEdit: (id: number, service: string, data: { salvations: number; prayers: number; altarMembers: number }) => void;
+  onDelete: (id: number) => void;
+}) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const key: DayServiceKey = `${dateStr}__${service}`;
+  const serviceReports = dayMap[key] ?? [];
+  const existingCampuses = serviceReports.map(r => r.campus);
+
+  const totals = serviceReports.reduce(
+    (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
+    { salvations: 0, prayers: 0, altarMembers: 0 }
+  );
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      {/* Service time header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${BORDER}` }}>
+        <div style={{
+          background: "hsl(38 45% 22%)",
+          border: "1px solid hsl(38 42% 32%)",
+          borderRadius: 6,
+          padding: "5px 14px",
+          color: GOLD_BRIGHT,
+          fontFamily: "Georgia, serif",
+          fontSize: 14,
+          letterSpacing: "0.12em",
+          fontWeight: "bold",
+        }}>
+          {service}
+        </div>
+        {serviceReports.length > 0 && (
+          <div style={{ display: "flex", gap: 14, marginLeft: 4 }}>
+            <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{totals.salvations}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Salv</span></span>
+            <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{totals.prayers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Prayer</span></span>
+            <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{totals.altarMembers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Altar</span></span>
+          </div>
+        )}
+      </div>
+
+      {/* Campus entries */}
+      {serviceReports.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+          {serviceReports.map(r => (
+            <DayEntry
+              key={r.id}
+              report={r}
+              onDelete={onDelete}
+              onSave={(id, data) => onEdit(id, service, data)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Add campus entry */}
+      {showAddForm ? (
+        <AddEntryForm
+          existingCampuses={existingCampuses}
+          onSave={(data) => { onSave(service, data); setShowAddForm(false); }}
+          onCancel={() => setShowAddForm(false)}
+        />
+      ) : existingCampuses.length < CAMPUSES.length ? (
+        <button
+          onClick={() => setShowAddForm(true)}
+          style={{ width: "100%", background: SURFACE, color: GOLD_DIM, border: `1px dashed hsl(38 22% 26%)`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 6, cursor: "pointer", transition: "all 0.2s" }}
+          onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 35% 36%)"; }}
+          onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = "hsl(38 22% 26%)"; }}
+        >
+          + Add Campus Entry
+        </button>
+      ) : (
+        <div style={{ textAlign: "center", padding: "6px 0", opacity: 0.35 }}>
+          <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>All campuses entered</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Day Detail Panel ───────────────────────────────────────────────────────────
 function DayDetail({
   dateStr,
   dayServices,
   dayMap,
+  allReports,
   onClose,
   onSave,
   onEdit,
@@ -250,36 +365,24 @@ function DayDetail({
   dateStr: string;
   dayServices: string[];
   dayMap: DayMap;
+  allReports: DailyAltarReport[];
   onClose: () => void;
   onSave: (service: string, data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onEdit: (id: number, service: string, data: { salvations: number; prayers: number; altarMembers: number }) => void;
   onDelete: (id: number) => void;
 }) {
-  const [activeService, setActiveService] = useState(dayServices[0]);
-  const [showAddForm, setShowAddForm] = useState(false);
-
   const date = new Date(dateStr + "T12:00:00");
   const dayLabel = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const isWednesday = date.getDay() === 3;
 
-  const serviceKey: DayServiceKey = `${dateStr}__${activeService}`;
-  const serviceReports = dayMap[serviceKey] ?? [];
-  const existingCampuses = serviceReports.map(r => r.campus);
-
-  // Totals for active service
-  const totals = serviceReports.reduce(
-    (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
-    { salvations: 0, prayers: 0, altarMembers: 0 }
-  );
-
-  // Switch service → reset add form
-  const handleServiceSwitch = (s: string) => { setActiveService(s); setShowAddForm(false); };
+  const dayReports = allReports.filter(r => r.date === dateStr);
+  const hasDayData = dayReports.length > 0;
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", justifyContent: "flex-end" }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "hsl(30 18% 5% / 0.75)", backdropFilter: "blur(2px)" }} />
       <div
-        style={{ position: "relative", background: "hsl(35 22% 11%)", borderRadius: "16px 16px 0 0", border: `1px solid hsl(38 22% 22%)`, borderBottom: "none", maxHeight: "84vh", overflowY: "auto", paddingBottom: 40 }}
+        style={{ position: "relative", background: "hsl(35 22% 11%)", borderRadius: "16px 16px 0 0", border: `1px solid hsl(38 22% 22%)`, borderBottom: "none", maxHeight: "88vh", overflowY: "auto", paddingBottom: 40 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Drag handle */}
@@ -296,94 +399,34 @@ function DayDetail({
                 {isWednesday ? "Wednesday Evening Service" : "Sunday Services"}
               </div>
             </div>
-            <button onClick={onClose} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1, opacity: 0.6 }}>✕</button>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {hasDayData && (
+                <button
+                  onClick={() => exportDayData(allReports, dateStr)}
+                  style={{ color: GOLD_DIM, background: "hsl(38 30% 16%)", border: `1px solid hsl(38 28% 26%)`, borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap" }}
+                  title="Export this day as CSV"
+                >
+                  ↓ Export Day
+                </button>
+              )}
+              <button onClick={onClose} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1, opacity: 0.6 }}>✕</button>
+            </div>
           </div>
 
-          {/* Service time tabs (only show if multiple) */}
-          {dayServices.length > 1 && (
-            <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-              {dayServices.map(s => (
-                <button
-                  key={s}
-                  onClick={() => handleServiceSwitch(s)}
-                  style={{
-                    padding: "7px 16px",
-                    fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em",
-                    cursor: "pointer", borderRadius: 6, transition: "all 0.2s",
-                    background: activeService === s ? "hsl(38 45% 22%)" : SURFACE,
-                    color: activeService === s ? GOLD_BRIGHT : GOLD_DIM,
-                    border: activeService === s ? "1px solid hsl(38 42% 32%)" : `1px solid ${BORDER}`,
-                  }}
-                >
-                  {s}
-                  {(() => {
-                    const k = `${dateStr}__${s}`;
-                    const count = (dayMap[k] ?? []).length;
-                    return count > 0 ? (
-                      <span style={{ marginLeft: 6, background: "hsl(38 35% 20%)", color: GOLD, borderRadius: 10, padding: "1px 6px", fontSize: 10 }}>{count}</span>
-                    ) : null;
-                  })()}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Single service label (Wednesday) */}
-          {dayServices.length === 1 && (
-            <div style={{ marginBottom: 14, padding: "7px 14px", background: "hsl(38 45% 22%)", border: "1px solid hsl(38 42% 32%)", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <span style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>🕖 {activeService}</span>
-            </div>
-          )}
-
-          {/* Month totals for this service */}
-          {serviceReports.length > 0 && (
-            <div style={{ display: "flex", gap: 20, padding: "10px 14px", background: SURFACE, borderRadius: 8, marginBottom: 14, border: `1px solid ${BORDER}` }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{totals.salvations}</div>
-                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>Salvations</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{totals.prayers}</div>
-                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>Prayers</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{totals.altarMembers}</div>
-                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>Altar Members</div>
-              </div>
-            </div>
-          )}
-
-          {/* Campus entries for this service */}
-          {serviceReports.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-              {serviceReports.map(r => (
-                <DayEntry
-                  key={r.id}
-                  report={r}
-                  onDelete={onDelete}
-                  onSave={(id, data) => onEdit(id, activeService, data)}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Add campus entry */}
-          {showAddForm ? (
-            <AddEntryForm
-              existingCampuses={existingCampuses}
-              onSave={(data) => { onSave(activeService, data); setShowAddForm(false); }}
-              onCancel={() => setShowAddForm(false)}
-            />
-          ) : existingCampuses.length < CAMPUSES.length ? (
-            <button
-              onClick={() => setShowAddForm(true)}
-              style={{ width: "100%", background: SURFACE, color: GOLD_DIM, border: `1px dashed hsl(38 22% 26%)`, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", padding: "11px 0", borderRadius: 6, cursor: "pointer", transition: "all 0.2s" }}
-              onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 35% 36%)"; }}
-              onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = "hsl(38 22% 26%)"; }}
-            >
-              + Add Campus Entry
-            </button>
-          ) : null}
+          {/* Services — stacked vertically */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {dayServices.map(service => (
+              <ServiceSection
+                key={service}
+                service={service}
+                dateStr={dateStr}
+                dayMap={dayMap}
+                onSave={onSave}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -450,7 +493,6 @@ export default function AltarReportPage() {
 
   const handleEdit = (id: number, service: string, entryData: { salvations: number; prayers: number; altarMembers: number }) => {
     if (!selectedDate) return;
-    // Find campus for this id
     const report = reports.find(r => r.id === id);
     if (!report) return;
     upsert.mutate(
@@ -463,7 +505,6 @@ export default function AltarReportPage() {
     deleteMut.mutate({ id }, { onSuccess: invalidate });
   };
 
-  // Month totals
   const monthTotals = reports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
     { salvations: 0, prayers: 0, altarMembers: 0 }
@@ -504,14 +545,39 @@ export default function AltarReportPage() {
           </div>
         )}
 
-        {/* Month nav */}
+        {/* Month nav with export */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, padding: "0 4px" }}>
-          <button onClick={() => goMonth(-1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>‹</button>
-          <div style={{ textAlign: "center" }}>
-            <span style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 18, letterSpacing: "0.1em" }}>{MONTH_NAMES[viewMonth]}</span>
-            <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 14, marginLeft: 8 }}>{viewYear}</span>
+          <button
+            onClick={() => goMonth(-1)}
+            style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+            onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
+            onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}
+          >‹</button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ textAlign: "center" }}>
+              <span style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 18, letterSpacing: "0.1em" }}>{MONTH_NAMES[viewMonth]}</span>
+              <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 14, marginLeft: 8 }}>{viewYear}</span>
+            </div>
+            {reports.length > 0 && (
+              <button
+                onClick={() => exportMonthData(reports, viewMonth + 1, viewYear)}
+                style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }}
+                onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 38% 34%)"; }}
+                onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = "hsl(38 25% 24%)"; }}
+                title="Export this month as CSV"
+              >
+                ↓ Export
+              </button>
+            )}
           </div>
-          <button onClick={() => goMonth(1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>›</button>
+
+          <button
+            onClick={() => goMonth(1)}
+            style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+            onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
+            onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}
+          >›</button>
         </div>
 
         {/* Day-of-week headers */}
@@ -624,6 +690,7 @@ export default function AltarReportPage() {
           dateStr={selectedDate}
           dayServices={selectedDayServices}
           dayMap={dayMap}
+          allReports={reports}
           onClose={() => setSelectedDate(null)}
           onSave={handleSave}
           onEdit={handleEdit}

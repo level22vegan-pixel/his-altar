@@ -481,6 +481,12 @@ components:
           type: boolean
         message:
           type: string
+        role:
+          type: string
+          description: "master | lead | deputy_lead — only present on success"
+        campus:
+          type: string
+          description: "Campus name — only present when role is lead or deputy_lead"
       required:
         - success
         - message
@@ -878,14 +884,17 @@ components:
           type: string
         role:
           type: string
-        password:
-          type: string
+        sequence:
+          type: array
+          items:
+            type: integer
+          description: Hebrew letter number sequence
         adminPassword:
           type: string
       required:
         - campus
         - role
-        - password
+        - sequence
         - adminPassword
     VerifyCampusPasswordBody:
       type: object

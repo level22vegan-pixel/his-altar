@@ -29,6 +29,14 @@ export const VerifyLoginResponse = zod.object({
   success: zod.boolean(),
   partial: zod.boolean().optional(),
   message: zod.string(),
+  role: zod
+    .string()
+    .optional()
+    .describe("master | lead | deputy_lead — only present on success"),
+  campus: zod
+    .string()
+    .optional()
+    .describe("Campus name — only present when role is lead or deputy_lead"),
 });
 
 /**
@@ -79,7 +87,7 @@ export const ListCampusPasswordsResponse = zod.object({
 export const SetCampusPasswordBody = zod.object({
   campus: zod.string(),
   role: zod.string(),
-  password: zod.string(),
+  sequence: zod.array(zod.number()).describe("Hebrew letter number sequence"),
   adminPassword: zod.string(),
 });
 

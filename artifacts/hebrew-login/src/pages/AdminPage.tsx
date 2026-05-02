@@ -21,7 +21,7 @@ function CampusPasswordsPanel() {
   const setPass = useSetCampusPassword();
 
   const [editing, setEditing] = useState<{ campus: string; role: string } | null>(null);
-  const [pw, setPw] = useState("");
+  const [seq, setSeq] = useState<number[]>([]);
   const [adminPw, setAdminPw] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -30,15 +30,23 @@ function CampusPasswordsPanel() {
   const hasPassword = (campus: string, role: string) =>
     passwords.find(p => p.campus === campus && p.role === role)?.hasPassword ?? false;
 
+  const openEdit = (campus: string, role: string) => {
+    const isEditing = editing?.campus === campus && editing?.role === role;
+    setEditing(isEditing ? null : { campus, role });
+    setSeq([]);
+    setAdminPw("");
+    setMsg(null);
+  };
+
   const handleSave = () => {
-    if (!editing || !pw || !adminPw) return;
+    if (!editing || seq.length === 0 || !adminPw) return;
     setPass.mutate(
-      { data: { campus: editing.campus, role: editing.role, password: pw, adminPassword: adminPw } },
+      { data: { campus: editing.campus, role: editing.role, sequence: seq, adminPassword: adminPw } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["campus-passwords"] });
-          setMsg({ type: "ok", text: `Password set for ${editing.campus} / ${ROLES.find(r => r.id === editing.role)?.label}` });
-          setEditing(null); setPw(""); setAdminPw("");
+          setMsg({ type: "ok", text: `Sequence set for ${editing.campus} / ${ROLES.find(r => r.id === editing.role)?.label}` });
+          setEditing(null); setSeq([]); setAdminPw("");
           setTimeout(() => setMsg(null), 3000);
         },
         onError: () => setMsg({ type: "err", text: "Failed — check admin password" }),
@@ -48,30 +56,31 @@ function CampusPasswordsPanel() {
 
   return (
     <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
-      <p className="text-xs uppercase tracking-widest mb-4 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Campus Passwords</p>
+      <p className="text-xs uppercase tracking-widest mb-1 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Campus Login Sequences</p>
+      <p style={{ color: "hsl(38 22% 38%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em", marginBottom: 14 }}>Assign a Hebrew letter sequence for each campus role. Members use this sequence on the login screen.</p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {CAMPUSES.map(campus => (
           <div key={campus}>
-            <div style={{ display: "flex", alignItems: "center", gap: 0, background: "hsl(35 18% 11%)", border: "1px solid hsl(38 15% 18%)", borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "hsl(35 18% 11%)", border: "1px solid hsl(38 15% 18%)", borderRadius: 6, overflow: "hidden" }}>
               <div style={{ padding: "8px 14px", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "hsl(38 50% 58%)", flex: 1, fontWeight: "bold" }}>{campus}</div>
               {ROLES.map(role => {
-                const set = hasPassword(campus, role.id);
+                const isSet = hasPassword(campus, role.id);
                 const isEditing = editing?.campus === campus && editing?.role === role.id;
                 return (
                   <button
                     key={role.id}
-                    onClick={() => { setEditing(isEditing ? null : { campus, role: role.id }); setPw(""); setAdminPw(""); setMsg(null); }}
+                    onClick={() => openEdit(campus, role.id)}
                     style={{
                       padding: "8px 12px", fontFamily: "Georgia, serif", fontSize: 10,
                       letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer",
                       borderLeft: "1px solid hsl(38 15% 18%)", transition: "all 0.15s",
                       background: isEditing ? "hsl(38 40% 20%)" : "none",
-                      color: isEditing ? "hsl(38 70% 72%)" : set ? "hsl(130 55% 52%)" : "hsl(38 22% 38%)",
+                      color: isEditing ? "hsl(38 70% 72%)" : isSet ? "hsl(130 55% 52%)" : "hsl(38 22% 38%)",
                       display: "flex", alignItems: "center", gap: 5,
                     }}
                   >
-                    <span style={{ fontSize: 8 }}>{set ? "●" : "○"}</span>
+                    <span style={{ fontSize: 8 }}>{isSet ? "●" : "○"}</span>
                     {role.label}
                   </button>
                 );
@@ -79,22 +88,61 @@ function CampusPasswordsPanel() {
             </div>
 
             {editing?.campus === campus && (
-              <div style={{ border: "1px solid hsl(38 25% 24%)", borderTop: "none", borderRadius: "0 0 6px 6px", padding: "12px 14px", background: "hsl(35 18% 12%)", display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <div>
-                    <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>New Password</label>
-                    <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Set password..." style={INPUT_S} />
-                  </div>
-                  <div>
-                    <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Admin Password</label>
-                    <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="Your admin code..." style={INPUT_S} />
+              <div style={{ border: "1px solid hsl(38 25% 24%)", borderTop: "none", borderRadius: "0 0 6px 6px", padding: "14px", background: "hsl(35 18% 12%)", display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Sequence display */}
+                <div>
+                  <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+                    Tap letters to set sequence
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 36 }}>
+                    {seq.length === 0 ? (
+                      <span style={{ color: "hsl(38 20% 32%)", fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>No letters selected</span>
+                    ) : (
+                      seq.map((n, i) => {
+                        const l = HEBREW_ALPHABET.find(h => h.number === n);
+                        return (
+                          <span key={i} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, background: "hsl(38 45% 22%)", border: "1px solid hsl(38 35% 30%)", borderRadius: 4, color: "hsl(38 70% 75%)", fontSize: 16, fontFamily: "serif" }}>
+                            {l?.letter}
+                          </span>
+                        );
+                      })
+                    )}
+                    {seq.length > 0 && (
+                      <button onClick={() => setSeq(s => s.slice(0, -1))} style={{ marginLeft: 4, color: "hsl(38 25% 42%)", background: "none", border: "none", cursor: "pointer", fontSize: 11, fontFamily: "Georgia, serif", letterSpacing: "0.1em" }}>⌫</button>
+                    )}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={handleSave} disabled={!pw || !adminPw || setPass.isPending} style={{ background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "6px 16px", borderRadius: 4, cursor: "pointer", opacity: !pw || !adminPw ? 0.4 : 1 }}>
-                    {setPass.isPending ? "Saving..." : "Set Password"}
+
+                {/* Hebrew grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 4 }}>
+                  {HEBREW_ALPHABET.map(item => (
+                    <button
+                      key={item.number}
+                      onClick={() => setSeq(s => [...s, item.number])}
+                      style={{
+                        aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 16, fontFamily: "serif", cursor: "pointer",
+                        background: "hsl(35 18% 16%)", border: "1px solid hsl(38 15% 22%)",
+                        borderRadius: 4, color: "hsl(38 55% 65%)", transition: "all 0.1s",
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.background = "hsl(38 35% 22%)"; e.currentTarget.style.color = "hsl(38 70% 78%)"; }}
+                      onMouseOut={e => { e.currentTarget.style.background = "hsl(35 18% 16%)"; e.currentTarget.style.color = "hsl(38 55% 65%)"; }}
+                    >
+                      {item.letter}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Admin password + save */}
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Admin Password</label>
+                    <input type="password" value={adminPw} onChange={e => setAdminPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="Your admin code..." style={{ background: "hsl(35 20% 14%)", border: "1px solid hsl(38 20% 25%)", color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif", borderRadius: 4, padding: "7px 10px", width: "100%", fontSize: 12, outline: "none" }} />
+                  </div>
+                  <button onClick={handleSave} disabled={seq.length === 0 || !adminPw || setPass.isPending} style={{ background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 16px", borderRadius: 4, cursor: "pointer", opacity: seq.length === 0 || !adminPw ? 0.4 : 1, whiteSpace: "nowrap" }}>
+                    {setPass.isPending ? "Saving..." : "Set Sequence"}
                   </button>
-                  <button onClick={() => { setEditing(null); setPw(""); setAdminPw(""); }} style={{ background: "none", color: "hsl(38 25% 40%)", border: "1px solid hsl(38 15% 22%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "6px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
+                  <button onClick={() => { setEditing(null); setSeq([]); setAdminPw(""); }} style={{ background: "none", color: "hsl(38 25% 40%)", border: "1px solid hsl(38 15% 22%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", padding: "7px 12px", borderRadius: 4, cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
             )}

@@ -18,6 +18,10 @@ export interface LoginResult {
   success: boolean;
   partial?: boolean;
   message: string;
+  /** master | lead | deputy_lead — only present on success */
+  role?: string;
+  /** Campus name — only present when role is lead or deputy_lead */
+  campus?: string;
 }
 
 export interface LoginCodeConfig {
@@ -192,7 +196,8 @@ export interface CampusPasswordList {
 export interface SetCampusPasswordBody {
   campus: string;
   role: string;
-  password: string;
+  /** Hebrew letter number sequence */
+  sequence: number[];
   adminPassword: string;
 }
 

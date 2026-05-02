@@ -24,35 +24,19 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/verify", async (req, res) => {
-  try {
-    const { campus, role, password } = req.body;
-    if (!campus || !role || !password) {
-      res.status(400).json({ valid: false });
-      return;
-    }
-    const [row] = await db
-      .select()
-      .from(campusPasswordsTable)
-      .where(and(eq(campusPasswordsTable.campus, campus), eq(campusPasswordsTable.role, role)));
-    res.json({ valid: !!row && row.password === password });
-  } catch (err) {
-    req.log.error({ err }, "Error verifying campus password");
-    res.status(500).json({ valid: false });
-  }
-});
-
+// Set campus password — sequence stored as JSON string
 router.post("/", async (req, res) => {
   try {
-    const { campus, role, password, adminPassword } = req.body;
+    const { campus, role, sequence, adminPassword } = req.body;
     if (adminPassword !== ADMIN_PASSWORD) {
       res.status(401).json({ message: "Invalid admin password" });
       return;
     }
-    if (!campus || !role || !password) {
-      res.status(400).json({ message: "campus, role, and password are required" });
+    if (!campus || !role || !Array.isArray(sequence) || sequence.length === 0) {
+      res.status(400).json({ message: "campus, role, and sequence are required" });
       return;
     }
+    const password = JSON.stringify(sequence);
     await db
       .insert(campusPasswordsTable)
       .values({ campus, role, password })

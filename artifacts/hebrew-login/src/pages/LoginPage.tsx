@@ -102,7 +102,16 @@ export default function LoginPage() {
           onSuccess: (data) => {
             if (data.success) {
               setStatus("success");
-              setTimeout(() => navigate("/home"), 600);
+              const role = data.role;
+              const campus = data.campus;
+              if (campus) {
+                // Store campus session for scoped access
+                localStorage.setItem("campusSession", JSON.stringify({ campus, role }));
+              } else {
+                localStorage.removeItem("campusSession");
+              }
+              const dest = role === "lead" ? "/admin" : "/home";
+              setTimeout(() => navigate(dest), 600);
             } else if (!data.partial) {
               // Definitively wrong (not a valid prefix) — shake and reset
               setStatus("error");
@@ -264,18 +273,6 @@ export default function LoginPage() {
               </button>
             );
           })}
-        </div>
-
-        {/* Campus login link */}
-        <div style={{ textAlign: "center", marginTop: 28 }}>
-          <button
-            onClick={() => navigate("/campus-login")}
-            style={{ color: "hsl(38 22% 32%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", opacity: 0.55, transition: "opacity 0.2s" }}
-            onMouseOver={e => (e.currentTarget.style.opacity = "0.9")}
-            onMouseOut={e => (e.currentTarget.style.opacity = "0.55")}
-          >
-            Campus Login
-          </button>
         </div>
 
       </div>

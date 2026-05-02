@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, loginConfigTable } from "@workspace/db";
+import { db, loginConfigTable, campusPasswordsTable } from "@workspace/db";
 import { VerifyLoginBody, UpdateLoginCodeBody } from "@workspace/api-zod";
 import { eq, desc } from "drizzle-orm";
 
@@ -17,6 +17,17 @@ async function ensureDefaultConfig() {
   }
 }
 
+function seqEqual(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+function seqIsPrefix(submitted: number[], full: number[]): boolean {
+  return (
+    submitted.length < full.length &&
+    submitted.every((v, i) => v === full[i])
+  );
+}
+
 router.post("/verify", async (req, res) => {
   try {
     await ensureDefaultConfig();
@@ -25,25 +36,60 @@ router.post("/verify", async (req, res) => {
       res.status(400).json({ success: false, message: "Invalid request" });
       return;
     }
+
+    const submitted = parsed.data.sequence;
+
+    // --- Check master code ---
     const rows = await db
       .select()
       .from(loginConfigTable)
       .orderBy(desc(loginConfigTable.updatedAt))
       .limit(1);
-    const currentCode = rows[0]?.code ?? YESHUA_DEFAULT;
-    const submitted = parsed.data.sequence;
-    const match =
-      submitted.length === currentCode.length &&
-      submitted.every((v, i) => v === currentCode[i]);
-    if (match) {
-      res.json({ success: true, partial: false, message: "Access granted" });
+    const masterCode = rows[0]?.code ?? YESHUA_DEFAULT;
+
+    if (seqEqual(submitted, masterCode)) {
+      res.json({ success: true, partial: false, role: "master", message: "Access granted" });
       return;
     }
-    // Check if submitted is a valid prefix of the correct code
-    const isPartial =
-      submitted.length < currentCode.length &&
-      submitted.every((v, i) => v === currentCode[i]);
-    res.json({ success: false, partial: isPartial, message: isPartial ? "Keep going" : "Invalid sequence" });
+
+    // --- Check campus codes ---
+    const campusRows = await db.select().from(campusPasswordsTable);
+    for (const row of campusRows) {
+      let seq: number[];
+      try {
+        seq = JSON.parse(row.password);
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(seq)) continue;
+      if (seqEqual(submitted, seq)) {
+        res.json({ success: true, partial: false, role: row.role, campus: row.campus, message: "Access granted" });
+        return;
+      }
+    }
+
+    // --- Check partial: prefix of master OR any campus code ---
+    const isMasterPartial = seqIsPrefix(submitted, masterCode);
+    if (isMasterPartial) {
+      res.json({ success: false, partial: true, message: "Keep going" });
+      return;
+    }
+
+    for (const row of campusRows) {
+      let seq: number[];
+      try {
+        seq = JSON.parse(row.password);
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(seq)) continue;
+      if (seqIsPrefix(submitted, seq)) {
+        res.json({ success: false, partial: true, message: "Keep going" });
+        return;
+      }
+    }
+
+    res.json({ success: false, partial: false, message: "Invalid sequence" });
   } catch (err) {
     req.log.error({ err }, "Error verifying login");
     res.status(500).json({ success: false, message: "Server error" });

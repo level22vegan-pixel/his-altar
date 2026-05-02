@@ -195,6 +195,152 @@ function WorkerCard({
 
 const TABS = ["Roster", "Active", "Alt"];
 
+const CARD_STYLE: React.CSSProperties = {
+  borderRadius: "8px", padding: "12px 10px",
+  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+  gap: "8px", cursor: "pointer", transition: "all 0.2s ease",
+  position: "relative", userSelect: "none", minHeight: 120,
+};
+
+function SetTeamCard({ presetCount, onClick }: { presetCount: number; onClick: () => void }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        ...CARD_STYLE,
+        background: hover ? "hsl(220 35% 16%)" : "hsl(220 30% 12%)",
+        border: `1px dashed ${hover ? "hsl(220 50% 42%)" : "hsl(220 30% 28%)"}`,
+      }}
+    >
+      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "hsl(220 35% 20%)", border: "2px solid hsl(220 40% 32%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+        👥
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ color: "hsl(220 60% 68%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold", letterSpacing: "0.05em" }}>Set Team</div>
+        {presetCount > 0 && (
+          <div style={{ color: "hsl(220 40% 48%)", fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>{presetCount} saved</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SetActiveCard({ presetCount, onClick, disabled }: { presetCount: number; onClick: () => void; disabled: boolean }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onClick={disabled ? undefined : onClick}
+      onMouseEnter={() => { if (!disabled) setHover(true); }}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        ...CARD_STYLE,
+        background: hover ? "hsl(130 35% 16%)" : "hsl(130 28% 12%)",
+        border: `1px dashed ${hover ? "hsl(130 50% 36%)" : "hsl(130 30% 24%)"}`,
+        opacity: disabled ? 0.4 : 1,
+        cursor: disabled ? "default" : "pointer",
+      }}
+    >
+      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "hsl(130 32% 18%)", border: "2px solid hsl(130 40% 28%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+        ⚡
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ color: "hsl(130 55% 62%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold", letterSpacing: "0.05em" }}>Set Active</div>
+        {presetCount > 0
+          ? <div style={{ color: "hsl(130 35% 44%)", fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>{presetCount} members</div>
+          : <div style={{ color: "hsl(130 20% 35%)", fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>No team set</div>
+        }
+      </div>
+    </div>
+  );
+}
+
+function SetTeamModal({
+  allWorkers, presetIds, onSave, onClose,
+}: {
+  allWorkers: Worker[];
+  presetIds: number[];
+  onSave: (ids: number[]) => void;
+  onClose: () => void;
+}) {
+  const [selected, setSelected] = useState<Set<number>>(new Set(presetIds));
+
+  const toggle = (id: number) =>
+    setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "hsl(30 18% 5% / 0.96)", display: "flex", flexDirection: "column" }}>
+      {/* Modal header */}
+      <div style={{ padding: "18px 16px 12px", borderBottom: "1px solid hsl(38 18% 18%)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <div>
+          <div style={{ color: "hsl(38 60% 62%)", fontFamily: "Georgia, serif", fontSize: 14, letterSpacing: "0.2em", textTransform: "uppercase" }}>Set Team</div>
+          <div style={{ color: "hsl(38 28% 40%)", fontFamily: "Georgia, serif", fontSize: 10, marginTop: 2 }}>Tap profiles to include in preset · {selected.size} selected</div>
+        </div>
+        <button onClick={onClose} style={{ color: "hsl(38 25% 40%)", background: "none", border: "none", cursor: "pointer", fontSize: 20, lineHeight: 1, opacity: 0.6 }}>✕</button>
+      </div>
+
+      {/* Scrollable grid */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
+        {allWorkers.length === 0 ? (
+          <div style={{ textAlign: "center", paddingTop: 48, opacity: 0.4 }}>
+            <p style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", fontSize: 14 }}>No workers in roster</p>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {allWorkers.map(w => {
+              const isSelected = selected.has(w.id);
+              return (
+                <div
+                  key={w.id}
+                  onClick={() => toggle(w.id)}
+                  style={{
+                    borderRadius: 8, padding: "12px 10px",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                    cursor: "pointer", transition: "all 0.15s", userSelect: "none",
+                    background: isSelected ? "hsl(130 30% 15%)" : "hsl(35 20% 13%)",
+                    border: `1px solid ${isSelected ? "hsl(130 45% 30%)" : "hsl(38 18% 22%)"}`,
+                    position: "relative",
+                  }}
+                >
+                  {isSelected && (
+                    <div style={{ position: "absolute", top: 6, right: 6, background: "hsl(130 45% 28%)", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ color: "hsl(130 60% 72%)", fontSize: 10, lineHeight: 1 }}>✓</span>
+                    </div>
+                  )}
+                  <Avatar name={w.name} photoUrl={w.photoUrl} size={64} />
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ color: isSelected ? "hsl(130 50% 68%)" : "hsl(38 55% 68%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold", lineHeight: 1.3 }}>{w.name}</div>
+                    {w.role && <div style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 10, marginTop: 2 }}>{w.role}</div>}
+                    <div style={{ color: "hsl(38 20% 34%)", fontFamily: "Georgia, serif", fontSize: 9, marginTop: 1, letterSpacing: "0.1em", textTransform: "uppercase" }}>{w.category}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Footer actions */}
+      <div style={{ padding: "12px 16px 20px", borderTop: "1px solid hsl(38 18% 18%)", display: "flex", gap: 10, flexShrink: 0 }}>
+        <button
+          onClick={() => onSave([...selected])}
+          style={{ flex: 1, background: "hsl(38 50% 28%)", color: "hsl(38 70% 80%)", border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", padding: "11px 0", borderRadius: 6, cursor: "pointer" }}
+        >
+          Save Team ({selected.size})
+        </button>
+        <button
+          onClick={() => { setSelected(new Set()); }}
+          style={{ background: "none", color: "hsl(38 25% 40%)", border: "1px solid hsl(38 18% 22%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", padding: "11px 14px", borderRadius: 6, cursor: "pointer" }}
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckInPage() {
   const [, navigate] = useLocation();
   const params = new URLSearchParams(window.location.search);
@@ -205,6 +351,19 @@ export default function CheckInPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [loadingWorkerId, setLoadingWorkerId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [showTeamModal, setShowTeamModal] = useState(false);
+
+  // Team preset stored per-campus in localStorage
+  const presetKey = `teamPreset_${campus}`;
+  const [teamPreset, setTeamPreset] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem(presetKey) ?? "[]"); } catch { return []; }
+  });
+
+  const savePreset = (ids: number[]) => {
+    setTeamPreset(ids);
+    localStorage.setItem(presetKey, JSON.stringify(ids));
+    setShowTeamModal(false);
+  };
 
   const queryClient = useQueryClient();
   const checkInsKey = ["checkIns", campus, service, today];
@@ -261,7 +420,21 @@ export default function CheckInPage() {
     if (dx > 50 && activeTab > 0) setActiveTab(t => t - 1);
   };
 
+  const handleSetActive = useCallback(() => {
+    const allRoster = [...masterWorkers, ...altWorkers];
+    const toCheckIn = teamPreset
+      .map(id => allRoster.find(w => w.id === id))
+      .filter((w): w is Worker => !!w && !w.onHold && !checkedInIds.has(w.id));
+    toCheckIn.forEach(w => {
+      createCheckIn.mutate(
+        { data: { workerId: w.id, campus, service, serviceDate: today } },
+        { onSettled: () => queryClient.invalidateQueries({ queryKey: checkInsKey }) }
+      );
+    });
+  }, [teamPreset, masterWorkers, altWorkers, checkedInIds, campus, service, today, createCheckIn, queryClient, checkInsKey]);
+
   const activeWorkers = [...masterWorkers, ...altWorkers].filter(w => checkedInIds.has(w.id));
+  const allRosterWorkers = [...masterWorkers, ...altWorkers];
   const q = search.trim().toLowerCase();
   const filter = (workers: Worker[]) => q ? workers.filter(w => w.name.toLowerCase().includes(q)) : workers;
 
@@ -389,7 +562,28 @@ export default function CheckInPage() {
             <p style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
               Master Roster — tap to check in
             </p>
-            {renderGrid(filter(masterWorkers), true)}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", padding: "4px 0" }}>
+              <SetTeamCard
+                presetCount={teamPreset.length}
+                onClick={() => setShowTeamModal(true)}
+              />
+              <SetActiveCard
+                presetCount={teamPreset.length}
+                onClick={handleSetActive}
+                disabled={teamPreset.length === 0}
+              />
+              {filter(masterWorkers).map(w => (
+                <WorkerCard
+                  key={w.id}
+                  worker={w}
+                  isCheckedIn={checkedInIds.has(w.id)}
+                  checkInId={checkIns.find(c => c.workerId === w.id)?.id}
+                  onCheckIn={() => handleCheckIn(w.id)}
+                  onCheckOut={() => handleCheckOut(w.id)}
+                  loading={loadingWorkerId === w.id}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Panel 1: Active */}
@@ -428,6 +622,16 @@ export default function CheckInPage() {
           </div>
         </div>
       </div>
+
+      {/* Set Team Modal */}
+      {showTeamModal && (
+        <SetTeamModal
+          allWorkers={allRosterWorkers}
+          presetIds={teamPreset}
+          onSave={savePreset}
+          onClose={() => setShowTeamModal(false)}
+        />
+      )}
     </div>
   );
 }

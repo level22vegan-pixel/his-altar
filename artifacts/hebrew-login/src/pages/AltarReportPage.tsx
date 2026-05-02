@@ -334,7 +334,7 @@ function AddEntryForm({
           setAltarSource("checkins");
         } else {
           // Fall back to active (non-on-hold) roster count for this campus
-          return fetch(`/api/workers?campus=${encodeURIComponent(campus)}`)
+          fetch(`/api/workers?campus=${encodeURIComponent(campus)}`)
             .then(r => r.json())
             .then(wData => {
               const active = (wData?.workers ?? []).filter((w: { onHold: boolean }) => !w.onHold).length;

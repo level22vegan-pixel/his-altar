@@ -303,7 +303,7 @@ function DayEntry({
   );
 }
 
-// ── Add Entry Form — auto-populates altar members from today's check-ins ───────
+// ── Add Entry Form — auto-populates altar members from check-ins or active roster ─
 function AddEntryForm({
   existingCampuses, service, dateStr,
   onSave, onCancel,
@@ -319,19 +319,32 @@ function AddEntryForm({
   const [salvations, setSalvations] = useState("0");
   const [prayers, setPrayers] = useState("0");
   const [altarMembers, setAltarMembers] = useState("0");
-  const isToday = dateStr === todayStr();
+  const [altarSource, setAltarSource] = useState<"checkins" | "roster" | null>(null);
 
-  // Fetch today's check-in count for the selected campus+service (only for today)
+  // Auto-fill altar members: try check-ins first, fall back to active roster count
   useEffect(() => {
-    if (!campus || !isToday) return;
+    if (!campus) return;
+    setAltarSource(null);
     fetch(`/api/check-ins?campus=${encodeURIComponent(campus)}&service=${encodeURIComponent(service)}&serviceDate=${encodeURIComponent(dateStr)}`)
       .then(r => r.json())
       .then(data => {
         const count = data?.checkIns?.length ?? 0;
-        setAltarMembers(String(count));
+        if (count > 0) {
+          setAltarMembers(String(count));
+          setAltarSource("checkins");
+        } else {
+          // Fall back to active (non-on-hold) roster count for this campus
+          return fetch(`/api/workers?campus=${encodeURIComponent(campus)}`)
+            .then(r => r.json())
+            .then(wData => {
+              const active = (wData?.workers ?? []).filter((w: { onHold: boolean }) => !w.onHold).length;
+              setAltarMembers(String(active));
+              setAltarSource("roster");
+            });
+        }
       })
       .catch(() => {});
-  }, [campus, service, dateStr, isToday]);
+  }, [campus, service, dateStr]);
 
   if (available.length === 0) {
     return (
@@ -344,9 +357,13 @@ function AddEntryForm({
 
   return (
     <div style={{ background: "hsl(35 18% 15%)", border: `1px solid hsl(38 25% 26%)`, borderRadius: 8, padding: "14px" }}>
-      {isToday && (
+      {altarSource && (
         <div style={{ marginBottom: 10, padding: "5px 10px", background: "hsl(38 30% 14%)", border: `1px solid hsl(38 28% 22%)`, borderRadius: 5 }}>
-          <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>Altar members pre-filled from today's check-ins — edit as needed</span>
+          <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>
+            {altarSource === "checkins"
+              ? "Altar members pre-filled from service check-ins — edit as needed"
+              : "Altar members pre-filled from active roster — edit as needed"}
+          </span>
         </div>
       )}
       <div style={{ marginBottom: 12 }}>

@@ -54,10 +54,11 @@ export default function LoginPage() {
   }, []);
 
   const startHold = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
+    // Don't preventDefault — a quick release should still register as a tap
+    e.stopPropagation();
+    holdStartRef.current = Date.now();
     setHolding(true);
     setHoldProgress(0);
-    holdStartRef.current = Date.now();
 
     holdIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - holdStartRef.current;
@@ -71,7 +72,7 @@ export default function LoginPage() {
       localStorage.removeItem("campusSession");
       navigate("/admin");
     }, HOLD_DURATION);
-  }, [clearHoldTimers]);
+  }, [clearHoldTimers, navigate]);
 
   const cancelHold = useCallback(() => {
     clearHoldTimers();
@@ -85,7 +86,6 @@ export default function LoginPage() {
   const handleLetterClick = useCallback(
     (letterNum: number) => {
       if (status === "success" || verifyMutation.isPending) return;
-      if (letterNum === 22) return; // ת handled via long-press only
       const newSeq = [...sequence, letterNum];
       const newSelected = new Set(selectedLetters);
       newSelected.add(letterNum);
@@ -139,6 +139,16 @@ export default function LoginPage() {
     [sequence, selectedLetters, status, verifyMutation, navigate]
   );
 
+  // Release handler for Tav: quick tap → normal letter; full hold → already navigated
+  const endHold = useCallback(() => {
+    const elapsed = Date.now() - holdStartRef.current;
+    const didComplete = holdTimerRef.current === null && holdIntervalRef.current === null;
+    cancelHold();
+    // Only treat as tap if the hold timer hadn't already fired (i.e., didn't complete)
+    if (!didComplete && elapsed < HOLD_DURATION) {
+      handleLetterClick(22);
+    }
+  }, [cancelHold, handleLetterClick]);
 
   const circumference = 2 * Math.PI * 28;
 
@@ -181,10 +191,10 @@ export default function LoginPage() {
                   className="relative flex items-center justify-center"
                   style={{ cursor: "pointer", userSelect: "none" }}
                   onMouseDown={startHold}
-                  onMouseUp={cancelHold}
+                  onMouseUp={endHold}
                   onMouseLeave={cancelHold}
                   onTouchStart={startHold}
-                  onTouchEnd={cancelHold}
+                  onTouchEnd={endHold}
                   onTouchCancel={cancelHold}
                 >
                   {/* Circular progress ring */}

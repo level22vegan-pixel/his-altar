@@ -10,6 +10,7 @@ export const dailyAltarReportsTable = pgTable("daily_altar_reports", {
   salvations: integer("salvations").notNull().default(0),
   prayers: integer("prayers").notNull().default(0),
   altarMembers: integer("altar_members").notNull().default(0),
+  notes: text("notes").default("").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

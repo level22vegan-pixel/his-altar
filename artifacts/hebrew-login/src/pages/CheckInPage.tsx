@@ -3,6 +3,97 @@ import { useLocation } from "wouter";
 import { useListWorkers, useListCheckIns, useCreateCheckIn, useDeleteCheckIn } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Worker, CheckIn } from "@workspace/api-client-react";
+import { jsPDF } from "jspdf";
+
+function exportActivesPDF(campus: string, service: string, date: string, workers: Worker[]) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+  const W = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  const PDF_BG: [number, number, number] = [28, 22, 14];
+  const PDF_GOLD: [number, number, number] = [180, 140, 80];
+  const PDF_GOLD_DIM: [number, number, number] = [120, 90, 50];
+  const PDF_WHITE: [number, number, number] = [220, 205, 175];
+  const PDF_ROW_ALT: [number, number, number] = [36, 28, 18];
+  const PDF_HEADER_ROW: [number, number, number] = [45, 34, 20];
+
+  const dateLabel = new Date(date + "T12:00:00").toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
+  });
+
+  doc.setFillColor(...PDF_BG);
+  doc.rect(0, 0, W, pageH, "F");
+  doc.setDrawColor(...PDF_GOLD);
+  doc.setLineWidth(0.8);
+  doc.line(14, 18, W - 14, 18);
+  doc.setFont("times", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(...PDF_GOLD);
+  doc.text("Active Altar Members", W / 2, 14, { align: "center" });
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text(`${campus} — ${dateLabel} — ${service}`, W / 2, 24, { align: "center" });
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, 27, W - 14, 27);
+
+  const startX = 14;
+  const rowH = 8;
+  const colW = [10, 70, 60, 32] as const;
+  const cols = ["#", "Name", "Role", "Category"];
+  let y = 36;
+
+  doc.setFillColor(...PDF_HEADER_ROW);
+  doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+  doc.setFont("times", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD);
+  let x = startX + 2;
+  cols.forEach((col, i) => { doc.text(col.toUpperCase(), x, y); x += colW[i]; });
+  y += rowH;
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+  workers.forEach((w, ri) => {
+    if (y > pageH - 20) {
+      doc.addPage();
+      doc.setFillColor(...PDF_BG);
+      doc.rect(0, 0, W, pageH, "F");
+      y = 20;
+    }
+    if (ri % 2 === 0) {
+      doc.setFillColor(...PDF_ROW_ALT);
+      doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+    }
+    doc.setTextColor(...PDF_WHITE);
+    x = startX + 2;
+    [String(ri + 1), w.name, w.role ?? "", w.category].forEach((cell, i) => {
+      doc.text(cell, x, y);
+      x += colW[i];
+    });
+    y += rowH;
+  });
+
+  y += 4;
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.4);
+  doc.line(startX, y - 4, W - 14, y - 4);
+  doc.setFont("times", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...PDF_GOLD);
+  doc.text(`TOTAL: ${workers.length} active members`, startX + 2, y);
+
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, pageH - 12, W - 14, pageH - 12);
+  doc.setFont("times", "italic");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text("Active Altar Members — Confidential", W / 2, pageH - 7, { align: "center" });
+
+  doc.save(`actives-${campus.toLowerCase()}-${date}-${service.replace(/\s+/g, "-")}.pdf`);
+}
 
 // Avatar: colored circle with initials if no photo
 function Avatar({ name, photoUrl, size = 72 }: { name: string; photoUrl?: string; size?: number }) {
@@ -303,9 +394,28 @@ export default function CheckInPage() {
 
           {/* Panel 1: Active */}
           <div style={{ width: "33.333%", height: "100%", overflowY: "auto", padding: "12px 16px" }}>
-            <p style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
-              Active — tap to check out
-            </p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <p style={{ color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>
+                Active — tap to check out
+              </p>
+              {activeWorkers.length > 0 && (
+                <button
+                  onClick={() => exportActivesPDF(campus, service, today, activeWorkers)}
+                  style={{
+                    color: "hsl(38 45% 55%)", background: "hsl(38 30% 14%)",
+                    border: "1px solid hsl(38 28% 24%)", borderRadius: 5,
+                    padding: "4px 10px", cursor: "pointer",
+                    fontFamily: "Georgia, serif", fontSize: 10,
+                    letterSpacing: "0.12em", textTransform: "uppercase",
+                    transition: "all 0.15s", whiteSpace: "nowrap", flexShrink: 0,
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.color = "hsl(38 70% 72%)"; e.currentTarget.style.borderColor = "hsl(38 38% 34%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.color = "hsl(38 45% 55%)"; e.currentTarget.style.borderColor = "hsl(38 28% 24%)"; }}
+                >
+                  ↓ Export
+                </button>
+              )}
+            </div>
             {renderGrid(filter(activeWorkers), false)}
           </div>
 

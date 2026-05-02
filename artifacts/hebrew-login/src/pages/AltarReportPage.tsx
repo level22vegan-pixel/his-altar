@@ -220,15 +220,15 @@ function StatFields({
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
       <div>
         <label style={LABEL_STYLE}>Salvations</label>
-        <input type="number" min="0" value={salvations} onChange={e => onChange("salvations", e.target.value)} style={INPUT_STYLE} />
+        <input type="number" min="0" value={salvations} onChange={e => onChange("salvations", e.target.value)} onFocus={e => e.target.select()} style={INPUT_STYLE} />
       </div>
       <div>
         <label style={LABEL_STYLE}>Prayers</label>
-        <input type="number" min="0" value={prayers} onChange={e => onChange("prayers", e.target.value)} style={INPUT_STYLE} />
+        <input type="number" min="0" value={prayers} onChange={e => onChange("prayers", e.target.value)} onFocus={e => e.target.select()} style={INPUT_STYLE} />
       </div>
       <div>
         <label style={LABEL_STYLE}>Altar Members</label>
-        <input type="number" min="0" value={altarMembers} onChange={e => onChange("altarMembers", e.target.value)} style={INPUT_STYLE} />
+        <input type="number" min="0" value={altarMembers} onChange={e => onChange("altarMembers", e.target.value)} onFocus={e => e.target.select()} style={INPUT_STYLE} />
       </div>
     </div>
   );

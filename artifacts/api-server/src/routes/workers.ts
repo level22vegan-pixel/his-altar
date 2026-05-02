@@ -50,7 +50,7 @@ router.put("/:id", async (req, res) => {
     if (isNaN(id)) { res.status(400).json({ message: "Invalid id" }); return; }
     const parsed = UpdateWorkerBody.safeParse(req.body);
     if (!parsed.success) { res.status(400).json({ message: "Invalid request" }); return; }
-    const { name, role, campus, photoUrl } = parsed.data;
+    const { name, role, campus, photoUrl, onHold } = parsed.data;
     const updated = await db
       .update(workersTable)
       .set({
@@ -58,6 +58,7 @@ router.put("/:id", async (req, res) => {
         ...(role !== undefined && { role }),
         ...(campus !== undefined && { campus }),
         ...(photoUrl !== undefined && { photoUrl }),
+        ...(onHold !== undefined && { onHold }),
       })
       .where(eq(workersTable.id, id))
       .returning();
@@ -90,6 +91,7 @@ function toDto(w: typeof workersTable.$inferSelect) {
     category: w.category,
     campus: w.campus,
     photoUrl: w.photoUrl ?? undefined,
+    onHold: w.onHold,
     createdAt: w.createdAt.toISOString(),
   };
 }

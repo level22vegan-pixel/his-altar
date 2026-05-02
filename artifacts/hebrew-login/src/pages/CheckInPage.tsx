@@ -47,22 +47,24 @@ function WorkerCard({
   worker: Worker; isCheckedIn: boolean; checkInId?: number;
   onCheckIn: () => void; onCheckOut: () => void; loading: boolean;
 }) {
+  const isOnHold = worker.onHold;
+
   return (
     <div
-      onClick={isCheckedIn ? onCheckOut : onCheckIn}
+      onClick={isOnHold ? undefined : isCheckedIn ? onCheckOut : onCheckIn}
       style={{
-        background: isCheckedIn ? "hsl(130 30% 15%)" : "hsl(35 20% 13%)",
-        border: `1px solid ${isCheckedIn ? "hsl(130 40% 28%)" : "hsl(38 18% 22%)"}`,
+        background: isOnHold ? "hsl(35 16% 11%)" : isCheckedIn ? "hsl(130 30% 15%)" : "hsl(35 20% 13%)",
+        border: `1px solid ${isOnHold ? "hsl(0 25% 20%)" : isCheckedIn ? "hsl(130 40% 28%)" : "hsl(38 18% 22%)"}`,
         borderRadius: "8px", padding: "12px 10px",
         display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
-        cursor: loading ? "wait" : "pointer",
+        cursor: isOnHold ? "default" : loading ? "wait" : "pointer",
         transition: "all 0.2s ease",
-        opacity: loading ? 0.6 : 1,
+        opacity: loading ? 0.6 : isOnHold ? 0.6 : 1,
         position: "relative",
         userSelect: "none",
       }}
     >
-      {isCheckedIn && (
+      {isCheckedIn && !isOnHold && (
         <div style={{
           position: "absolute", top: 6, right: 6,
           background: "hsl(130 45% 28%)", borderRadius: "50%",
@@ -71,16 +73,35 @@ function WorkerCard({
           <span style={{ color: "hsl(130 60% 72%)", fontSize: 10, lineHeight: 1 }}>✓</span>
         </div>
       )}
-      <Avatar name={worker.name} photoUrl={worker.photoUrl} size={64} />
+
+      {/* Avatar with hold overlay */}
+      <div style={{ position: "relative" }}>
+        <Avatar name={worker.name} photoUrl={worker.photoUrl} size={64} />
+        {isOnHold && (
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: "50%",
+            background: "hsl(0 50% 14% / 0.72)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "2px solid hsl(0 40% 30%)",
+          }}>
+            <span style={{ fontSize: 22, lineHeight: 1, filter: "drop-shadow(0 1px 2px black)" }}>⏸</span>
+          </div>
+        )}
+      </div>
+
       <div style={{ textAlign: "center" }}>
-        <div style={{ color: isCheckedIn ? "hsl(130 50% 68%)" : "hsl(38 55% 68%)", fontFamily: "Georgia, serif", fontSize: "12px", fontWeight: "bold", lineHeight: 1.3 }}>
+        <div style={{ color: isOnHold ? "hsl(38 22% 38%)" : isCheckedIn ? "hsl(130 50% 68%)" : "hsl(38 55% 68%)", fontFamily: "Georgia, serif", fontSize: "12px", fontWeight: "bold", lineHeight: 1.3 }}>
           {worker.name}
         </div>
-        {worker.role && (
+        {isOnHold ? (
+          <div style={{ color: "hsl(0 45% 45%)", fontFamily: "Georgia, serif", fontSize: "9px", marginTop: 2, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            On Hold
+          </div>
+        ) : worker.role ? (
           <div style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: "10px", marginTop: 2 }}>
             {worker.role}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

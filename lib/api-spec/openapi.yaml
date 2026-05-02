@@ -480,6 +480,8 @@ components:
           type: string
         photoUrl:
           type: string
+        onHold:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -488,6 +490,7 @@ components:
         - name
         - category
         - campus
+        - onHold
         - createdAt
     CreateWorkerBody:
       type: object
@@ -517,6 +520,8 @@ components:
           type: string
         photoUrl:
           type: string
+        onHold:
+          type: boolean
     WorkerList:
       type: object
       properties:

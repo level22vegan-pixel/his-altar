@@ -40,6 +40,7 @@ export interface Worker {
   category: string;
   campus: string;
   photoUrl?: string;
+  onHold: boolean;
   createdAt: string;
 }
 
@@ -56,6 +57,7 @@ export interface UpdateWorkerBody {
   role?: string;
   campus?: string;
   photoUrl?: string;
+  onHold?: boolean;
 }
 
 export interface WorkerList {

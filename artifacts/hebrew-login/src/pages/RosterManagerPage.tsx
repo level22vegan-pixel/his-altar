@@ -213,22 +213,48 @@ export default function RosterManagerPage() {
     deleteWorker.mutate({ id }, { onSuccess: invalidate });
   };
 
+  const handleToggleHold = (w: Worker) => {
+    updateWorker.mutate(
+      { id: w.id, data: { onHold: !w.onHold } },
+      { onSuccess: invalidate }
+    );
+  };
+
   const WorkerRow = ({ w, badge }: { w: Worker; badge?: boolean }) => (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, background: editingId === w.id ? "hsl(35 22% 15%)" : "hsl(35 18% 12%)", border: `1px solid ${editingId === w.id ? "hsl(38 28% 28%)" : "hsl(38 15% 20%)"}`, borderRadius: editingId === w.id ? "6px 6px 0 0" : 6, padding: "10px 14px", transition: "all 0.15s" }}>
-        <Avatar name={w.name} photoUrl={w.photoUrl} size={44} />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, background: w.onHold ? "hsl(35 18% 11%)" : editingId === w.id ? "hsl(35 22% 15%)" : "hsl(35 18% 12%)", border: `1px solid ${w.onHold ? "hsl(0 28% 22%)" : editingId === w.id ? "hsl(38 28% 28%)" : "hsl(38 15% 20%)"}`, borderRadius: editingId === w.id ? "6px 6px 0 0" : 6, padding: "10px 14px", transition: "all 0.15s", opacity: w.onHold ? 0.65 : 1 }}>
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <Avatar name={w.name} photoUrl={w.photoUrl} size={44} />
+          {w.onHold && (
+            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "hsl(0 60% 20% / 0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>⏸</span>
+            </div>
+          )}
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ color: "hsl(38 60% 68%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{w.name}</span>
+            <span style={{ color: w.onHold ? "hsl(38 30% 44%)" : "hsl(38 60% 68%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{w.name}</span>
             {badge && (
               <span style={{ background: w.category === "master" ? "hsl(38 35% 20%)" : "hsl(200 30% 20%)", color: w.category === "master" ? "hsl(38 60% 60%)" : "hsl(200 55% 65%)", borderRadius: 4, padding: "1px 6px", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" as const, fontFamily: "Georgia, serif" }}>
                 {w.category}
+              </span>
+            )}
+            {w.onHold && (
+              <span style={{ background: "hsl(0 40% 18%)", color: "hsl(0 55% 58%)", borderRadius: 4, padding: "1px 6px", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" as const, fontFamily: "Georgia, serif", border: "1px solid hsl(0 35% 26%)" }}>
+                On Hold
               </span>
             )}
           </div>
           {w.role && <div style={{ color: "hsl(38 25% 42%)", fontFamily: "Georgia, serif", fontSize: 11 }}>{w.role}</div>}
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+          <button
+            onClick={() => handleToggleHold(w)}
+            title={w.onHold ? "Remove hold" : "Place on hold"}
+            style={{ color: w.onHold ? "hsl(0 55% 58%)" : "hsl(38 25% 38%)", background: w.onHold ? "hsl(0 35% 18%)" : "none", border: `1px solid ${w.onHold ? "hsl(0 35% 26%)" : "hsl(38 15% 22%)"}`, borderRadius: 4, padding: "3px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 12, lineHeight: 1, transition: "all 0.15s" }}
+          >
+            ⏸
+          </button>
           <button onClick={() => setEditingId(editingId === w.id ? null : w.id)} style={{ color: editingId === w.id ? "hsl(38 65% 58%)" : "hsl(38 35% 45%)", background: editingId === w.id ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editingId === w.id ? "hsl(38 35% 28%)" : "hsl(38 15% 24%)"}`, borderRadius: 4, padding: "3px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}>
             {editingId === w.id ? "Close" : "Edit"}
           </button>

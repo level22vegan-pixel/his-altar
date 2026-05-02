@@ -77,6 +77,7 @@ export const ListWorkersResponse = zod.object({
       category: zod.string(),
       campus: zod.string(),
       photoUrl: zod.string().optional(),
+      onHold: zod.boolean(),
       createdAt: zod.coerce.date(),
     }),
   ),
@@ -105,6 +106,7 @@ export const UpdateWorkerBody = zod.object({
   role: zod.string().optional(),
   campus: zod.string().optional(),
   photoUrl: zod.string().optional(),
+  onHold: zod.boolean().optional(),
 });
 
 export const UpdateWorkerResponse = zod.object({
@@ -114,6 +116,7 @@ export const UpdateWorkerResponse = zod.object({
   category: zod.string(),
   campus: zod.string(),
   photoUrl: zod.string().optional(),
+  onHold: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
 
@@ -131,6 +134,7 @@ export const DeleteWorkerResponse = zod.object({
   category: zod.string(),
   campus: zod.string(),
   photoUrl: zod.string().optional(),
+  onHold: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
 

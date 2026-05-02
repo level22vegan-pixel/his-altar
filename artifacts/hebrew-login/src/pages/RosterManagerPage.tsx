@@ -141,10 +141,15 @@ export default function RosterManagerPage() {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Campus selector — persisted in localStorage
-  const [campus, setCampus] = useState<string>(() => localStorage.getItem("rosterCampus") ?? "");
+  // If a campus session is active, lock to that campus
+  const sessionCampus: string | null = (() => {
+    try { const s = localStorage.getItem("campusSession"); return s ? JSON.parse(s)?.campus ?? null : null; } catch { return null; }
+  })();
 
-  useEffect(() => { if (campus) localStorage.setItem("rosterCampus", campus); }, [campus]);
+  // Campus selector — persisted in localStorage, but overridden by session
+  const [campus, setCampus] = useState<string>(() => sessionCampus ?? localStorage.getItem("rosterCampus") ?? "");
+
+  useEffect(() => { if (campus && !sessionCampus) localStorage.setItem("rosterCampus", campus); }, [campus, sessionCampus]);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -284,29 +289,36 @@ export default function RosterManagerPage() {
           <h1 style={{ color: "hsl(38 60% 62%)", fontFamily: "Georgia, serif", fontSize: 16, letterSpacing: "0.3em", textTransform: "uppercase" }}>Roster Manager</h1>
         </div>
 
-        {/* Campus selector */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ ...LABEL, marginBottom: 6, fontSize: 11 }}>Campus Roster</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-            {CAMPUSES.map(c => (
-              <button
-                key={c}
-                onClick={() => { setCampus(c); setSearch(""); setEditingId(null); }}
-                style={{
-                  padding: "10px 6px",
-                  fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase",
-                  cursor: "pointer", borderRadius: 6, transition: "all 0.2s",
-                  background: campus === c ? "hsl(38 45% 24%)" : "hsl(35 18% 13%)",
-                  color: campus === c ? "hsl(38 70% 72%)" : "hsl(38 28% 42%)",
-                  border: campus === c ? "1px solid hsl(38 45% 36%)" : "1px solid hsl(38 15% 20%)",
-                  boxShadow: campus === c ? "0 0 12px hsl(38 40% 18% / 0.6)" : "none",
-                }}
-              >
-                {c}
-              </button>
-            ))}
+        {/* Campus selector — locked for campus leads, full grid for admin */}
+        {sessionCampus ? (
+          <div style={{ marginBottom: 20, padding: "12px 16px", background: "hsl(38 45% 24%)", border: "1px solid hsl(38 45% 36%)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ color: "hsl(38 28% 46%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase" }}>Campus Roster</span>
+            <span style={{ color: "hsl(38 70% 72%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: "bold" }}>{sessionCampus}</span>
           </div>
-        </div>
+        ) : (
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ ...LABEL, marginBottom: 6, fontSize: 11 }}>Campus Roster</label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+              {CAMPUSES.map(c => (
+                <button
+                  key={c}
+                  onClick={() => { setCampus(c); setSearch(""); setEditingId(null); }}
+                  style={{
+                    padding: "10px 6px",
+                    fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase",
+                    cursor: "pointer", borderRadius: 6, transition: "all 0.2s",
+                    background: campus === c ? "hsl(38 45% 24%)" : "hsl(35 18% 13%)",
+                    color: campus === c ? "hsl(38 70% 72%)" : "hsl(38 28% 42%)",
+                    border: campus === c ? "1px solid hsl(38 45% 36%)" : "1px solid hsl(38 15% 20%)",
+                    boxShadow: campus === c ? "0 0 12px hsl(38 40% 18% / 0.6)" : "none",
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!campus ? (
           <div style={{ textAlign: "center", paddingTop: 40, opacity: 0.4 }}>

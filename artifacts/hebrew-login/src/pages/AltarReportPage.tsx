@@ -319,9 +319,9 @@ function AddEntryForm({
   const [salvations, setSalvations] = useState("0");
   const [prayers, setPrayers] = useState("0");
   const [altarMembers, setAltarMembers] = useState("0");
-  const [altarSource, setAltarSource] = useState<"checkins" | "roster" | null>(null);
+  const [altarSource, setAltarSource] = useState<"checkins" | null>(null);
 
-  // Auto-fill altar members: try check-ins first, fall back to active roster count
+  // Auto-fill altar members from check-ins for this exact campus + service + date
   useEffect(() => {
     if (!campus) return;
     setAltarSource(null);
@@ -329,19 +329,8 @@ function AddEntryForm({
       .then(r => r.json())
       .then(data => {
         const count = data?.checkIns?.length ?? 0;
-        if (count > 0) {
-          setAltarMembers(String(count));
-          setAltarSource("checkins");
-        } else {
-          // Fall back to active (non-on-hold) roster count for this campus
-          fetch(`/api/workers?campus=${encodeURIComponent(campus)}`)
-            .then(r => r.json())
-            .then(wData => {
-              const active = (wData?.workers ?? []).filter((w: { onHold: boolean }) => !w.onHold).length;
-              setAltarMembers(String(active));
-              setAltarSource("roster");
-            });
-        }
+        setAltarMembers(String(count));
+        setAltarSource(count > 0 ? "checkins" : null);
       })
       .catch(() => {});
   }, [campus, service, dateStr]);
@@ -357,12 +346,10 @@ function AddEntryForm({
 
   return (
     <div style={{ background: "hsl(35 18% 15%)", border: `1px solid hsl(38 25% 26%)`, borderRadius: 8, padding: "14px" }}>
-      {altarSource && (
+      {altarSource === "checkins" && (
         <div style={{ marginBottom: 10, padding: "5px 10px", background: "hsl(38 30% 14%)", border: `1px solid hsl(38 28% 22%)`, borderRadius: 5 }}>
           <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>
-            {altarSource === "checkins"
-              ? "Altar members pre-filled from service check-ins — edit as needed"
-              : "Altar members pre-filled from active roster — edit as needed"}
+            Altar members pre-filled from service check-ins — edit as needed
           </span>
         </div>
       )}

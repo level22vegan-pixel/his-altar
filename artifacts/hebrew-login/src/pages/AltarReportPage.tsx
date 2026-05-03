@@ -676,6 +676,11 @@ export default function AltarReportPage() {
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // Admin campus filter (only used when no sessionCampus)
+  const [adminCampus, setAdminCampus] = useState<string>("");
+
+  // The effective campus driving the calendar view
+  const activeCampus = sessionCampus ?? (adminCampus || null);
 
   const queryKey = ["daily-altar-reports", viewYear, viewMonth + 1];
 
@@ -688,8 +693,10 @@ export default function AltarReportPage() {
   const deleteMut = useDeleteDailyAltarReport();
 
   const reports = data?.reports ?? [];
+  // When a campus is selected, filter reports for totals/dots; keep full map for day detail
+  const filteredReports = activeCampus ? reports.filter(r => r.campus === activeCampus) : reports;
   const dayMap = buildDayMap(reports);
-  const datesWithData = buildDatesWithData(reports);
+  const datesWithData = buildDatesWithData(filteredReports);
 
   const goMonth = useCallback((delta: number) => {
     setSelectedDate(null);
@@ -733,13 +740,13 @@ export default function AltarReportPage() {
     deleteMut.mutate({ id }, { onSuccess: invalidate });
   };
 
-  const monthTotals = reports.reduce(
+  const monthTotals = filteredReports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
     { salvations: 0, prayers: 0, altarMembers: 0 }
   );
 
   const selectedDayDate = selectedDate ? new Date(selectedDate + "T12:00:00") : null;
-  const selectedDayServices = selectedDayDate ? getDayServices(selectedDayDate, sessionCampus) : null;
+  const selectedDayServices = selectedDayDate ? getDayServices(selectedDayDate, activeCampus) : null;
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
@@ -748,11 +755,42 @@ export default function AltarReportPage() {
       <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", maxWidth: 700, width: "100%", margin: "0 auto", padding: "16px 16px 24px" }}>
 
         {/* Top bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: !sessionCampus ? 12 : 18 }}>
           <button onClick={() => navigate("/admin")} style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", opacity: 0.5 }}>← Admin</button>
           <h1 style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 14, letterSpacing: "0.3em", textTransform: "uppercase", margin: 0 }}>Altar Report</h1>
           <div style={{ width: 60 }} />
         </div>
+
+        {/* Campus dropdown — admin only */}
+        {!sessionCampus && (
+          <div style={{ marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
+            <label style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", whiteSpace: "nowrap" }}>Campus</label>
+            <select
+              value={adminCampus}
+              onChange={e => { setAdminCampus(e.target.value); setSelectedDate(null); }}
+              style={{
+                flex: 1, background: "hsl(35 20% 13%)", border: `1px solid ${BORDER}`,
+                color: adminCampus ? GOLD_BRIGHT : GOLD_DIM,
+                fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.12em",
+                borderRadius: 6, padding: "7px 12px", outline: "none", cursor: "pointer",
+                appearance: "none", WebkitAppearance: "none",
+              }}
+            >
+              <option value="">All Campuses</option>
+              {CAMPUSES.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            {adminCampus && (
+              <button
+                onClick={() => { setAdminCampus(""); setSelectedDate(null); }}
+                style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 5, padding: "5px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em", whiteSpace: "nowrap" }}
+              >
+                All
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Month totals */}
         {reports.length > 0 && (
@@ -807,7 +845,7 @@ export default function AltarReportPage() {
               const day = idx + 1;
               const dateStr = toDateStr(viewYear, viewMonth, day);
               const dateObj = new Date(viewYear, viewMonth, day);
-              const services = getDayServices(dateObj, sessionCampus);
+              const services = getDayServices(dateObj, activeCampus);
               const isClickable = services !== null;
               const hasData = datesWithData.has(dateStr);
               const isToday = dateStr === currentTodayStr;

@@ -341,24 +341,27 @@ function DayEntry({
 
 // ── Add Entry Form — auto-populates altar members from check-ins or active roster ─
 function AddEntryForm({
-  existingCampuses, service, dateStr,
+  existingCampuses, service, dateStr, activeCampus,
   onSave, onCancel,
 }: {
   existingCampuses: string[];
   service: string;
   dateStr: string;
+  activeCampus: string | null;
   onSave: (data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onCancel: () => void;
 }) {
   const slotCampuses = campusesForSlot(service);
   const available = slotCampuses.filter(c => !existingCampuses.includes(c));
-  const [campus, setCampus] = useState(available[0] ?? "");
+  // If a campus is active (locked), use it; otherwise fall back to dropdown
+  const lockedCampus = activeCampus ?? null;
+  const [campus, setCampus] = useState(lockedCampus ?? available[0] ?? "");
   const [salvations, setSalvations] = useState("0");
   const [prayers, setPrayers] = useState("0");
   const [altarMembers, setAltarMembers] = useState("0");
   const [altarSource, setAltarSource] = useState<"checkins" | null>(null);
 
-  // Auto-fill altar members from check-ins — map slot name to stored service name
+  // Auto-fill altar members from check-ins
   const fullServiceName = checkInServiceName(service);
   useEffect(() => {
     if (!campus) return;
@@ -373,7 +376,7 @@ function AddEntryForm({
       .catch(() => {});
   }, [campus, fullServiceName, dateStr]);
 
-  if (available.length === 0) {
+  if (!lockedCampus && available.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "14px 0", opacity: 0.4 }}>
         <p style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 12 }}>All campuses have entries for this service</p>
@@ -391,12 +394,21 @@ function AddEntryForm({
           </span>
         </div>
       )}
+
+      {/* Campus — locked label when active, dropdown otherwise */}
       <div style={{ marginBottom: 12 }}>
         <label style={LABEL_STYLE}>Campus</label>
-        <select value={campus} onChange={e => setCampus(e.target.value)} style={{ ...INPUT_STYLE, textAlign: "left" }}>
-          {available.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        {lockedCampus ? (
+          <div style={{ ...INPUT_STYLE, display: "flex", alignItems: "center", opacity: 0.75, cursor: "default", userSelect: "none" }}>
+            {lockedCampus}
+          </div>
+        ) : (
+          <select value={campus} onChange={e => setCampus(e.target.value)} style={{ ...INPUT_STYLE, textAlign: "left" }}>
+            {available.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
       </div>
+
       <StatFields salvations={salvations} prayers={prayers} altarMembers={altarMembers} onChange={(field, val) => { if (field === "salvations") setSalvations(val); else if (field === "prayers") setPrayers(val); else setAltarMembers(val); }} />
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button onClick={() => onSave({ campus, salvations: parseInt(salvations) || 0, prayers: parseInt(prayers) || 0, altarMembers: parseInt(altarMembers) || 0 })} style={{ flex: 1, background: "hsl(38 50% 28%)", color: GOLD_BRIGHT, border: "1px solid hsl(38 38% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 5, cursor: "pointer" }}>Save Entry</button>
@@ -479,13 +491,14 @@ function ServiceNotesPanel({
 
 // ── Single Service Section ─────────────────────────────────────────────────────
 function ServiceSection({
-  service, dateStr, dayMap, allReports,
+  service, dateStr, dayMap, allReports, activeCampus,
   onSave, onEdit, onDelete,
 }: {
   service: string;
   dateStr: string;
   dayMap: DayMap;
   allReports: DailyAltarReport[];
+  activeCampus: string | null;
   onSave: (service: string, data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onEdit: (id: number, service: string, data: { salvations: number; prayers: number; altarMembers: number }) => void;
   onDelete: (id: number) => void;
@@ -497,6 +510,11 @@ function ServiceSection({
   const serviceReports = dayMap[key] ?? [];
   const existingCampuses = serviceReports.map(r => r.campus);
   const hasServiceData = serviceReports.length > 0;
+
+  // When a campus is locked, the add button is only available if that campus hasn't entered yet
+  const canAdd = activeCampus
+    ? !existingCampuses.includes(activeCampus)
+    : existingCampuses.length < campusesForSlot(service).length;
 
   const totals = serviceReports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
@@ -564,21 +582,24 @@ function ServiceSection({
           existingCampuses={existingCampuses}
           service={service}
           dateStr={dateStr}
+          activeCampus={activeCampus}
           onSave={(data) => { onSave(service, data); setShowAddForm(false); }}
           onCancel={() => setShowAddForm(false)}
         />
-      ) : existingCampuses.length < campusesForSlot(service).length ? (
+      ) : canAdd ? (
         <button
           onClick={() => setShowAddForm(true)}
           style={{ width: "100%", background: SURFACE, color: GOLD_DIM, border: `1px dashed hsl(38 22% 26%)`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", padding: "9px 0", borderRadius: 6, cursor: "pointer", transition: "all 0.2s" }}
           onMouseOver={e => { e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "hsl(38 35% 36%)"; }}
           onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; e.currentTarget.style.borderColor = "hsl(38 22% 26%)"; }}
         >
-          + Add Campus Entry
+          + Add Entry
         </button>
       ) : (
         <div style={{ textAlign: "center", padding: "6px 0", opacity: 0.35 }}>
-          <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>All campuses entered</span>
+          <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em" }}>
+            {activeCampus ? "Entry recorded" : "All campuses entered"}
+          </span>
         </div>
       )}
     </div>
@@ -587,13 +608,14 @@ function ServiceSection({
 
 // ── Day Detail Panel ───────────────────────────────────────────────────────────
 function DayDetail({
-  dateStr, dayServices, dayMap, allReports,
+  dateStr, dayServices, dayMap, allReports, activeCampus,
   onClose, onSave, onEdit, onDelete,
 }: {
   dateStr: string;
   dayServices: string[];
   dayMap: DayMap;
   allReports: DailyAltarReport[];
+  activeCampus: string | null;
   onClose: () => void;
   onSave: (service: string, data: { campus: string; salvations: number; prayers: number; altarMembers: number }) => void;
   onEdit: (id: number, service: string, data: { salvations: number; prayers: number; altarMembers: number }) => void;
@@ -645,6 +667,7 @@ function DayDetail({
                 dateStr={dateStr}
                 dayMap={dayMap}
                 allReports={allReports}
+                activeCampus={activeCampus}
                 onSave={onSave}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -908,6 +931,7 @@ export default function AltarReportPage() {
           dayServices={selectedDayServices}
           dayMap={dayMap}
           allReports={reports}
+          activeCampus={activeCampus}
           onClose={() => setSelectedDate(null)}
           onSave={handleSave}
           onEdit={handleEdit}

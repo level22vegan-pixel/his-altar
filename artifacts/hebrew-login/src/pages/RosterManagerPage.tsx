@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { getValidCampusSession } from "@/lib/session";
 import { useListWorkers, useCreateWorker, useDeleteWorker, useUpdateWorker } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Worker } from "@workspace/api-client-react";
@@ -142,9 +143,7 @@ export default function RosterManagerPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // If a campus session is active, lock to that campus
-  const sessionCampus: string | null = (() => {
-    try { const s = localStorage.getItem("campusSession"); return s ? JSON.parse(s)?.campus ?? null : null; } catch { return null; }
-  })();
+  const sessionCampus = getValidCampusSession()?.campus ?? null;
 
   // Campus selector — persisted in localStorage, but overridden by session
   const [campus, setCampus] = useState<string>(() => sessionCampus ?? localStorage.getItem("rosterCampus") ?? "");

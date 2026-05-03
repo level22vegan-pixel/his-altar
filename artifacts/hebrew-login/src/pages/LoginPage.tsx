@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useVerifyLogin } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
+import { setAdminSession, setCampusSession } from "@/lib/session";
 
 const HEBREW_ALPHABET = [
   { letter: "א", number: 1, name: "Alef" },
@@ -69,7 +70,7 @@ export default function LoginPage() {
       clearHoldTimers();
       setHolding(false);
       setHoldProgress(0);
-      localStorage.removeItem("campusSession");
+      setAdminSession();
       navigate("/admin");
     }, HOLD_DURATION);
   }, [clearHoldTimers, navigate]);
@@ -103,10 +104,9 @@ export default function LoginPage() {
               const role = data.role;
               const campus = data.campus;
               if (campus) {
-                // Store campus session for scoped access
-                localStorage.setItem("campusSession", JSON.stringify({ campus, role }));
+                setCampusSession(campus, role);
               } else {
-                localStorage.removeItem("campusSession");
+                setAdminSession();
               }
               const dest = role === "lead" ? "/admin" : "/home";
               setTimeout(() => navigate(dest), 600);

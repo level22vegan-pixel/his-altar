@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
+import { getValidCampusSession } from "@/lib/session";
 import {
   useListDailyAltarReports,
   useUpsertDailyAltarReport,
@@ -686,14 +687,7 @@ export default function AltarReportPage() {
   const queryClient = useQueryClient();
 
   // Read campus from session (campus leads are scoped to their campus)
-  const sessionCampus: string | null = (() => {
-    try {
-      const s = localStorage.getItem("campusSession");
-      if (!s) return null;
-      const parsed = JSON.parse(s);
-      return parsed?.campus ?? null;
-    } catch { return null; }
-  })();
+  const sessionCampus = getValidCampusSession()?.campus ?? null;
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());

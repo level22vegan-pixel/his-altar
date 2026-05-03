@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, Link } from "wouter";
+import { getValidCampusSession } from "@/lib/session";
 
 const CAMPUSES = [
   "HALLMARK",
@@ -26,15 +27,7 @@ export default function HomePage() {
   const [, navigate] = useLocation();
   const [showCampuses, setShowCampuses] = useState(false);
 
-  const session = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("campusSession");
-      if (!raw) return null;
-      return JSON.parse(raw) as { campus: string; role: string };
-    } catch {
-      return null;
-    }
-  }, []);
+  const session = useMemo(() => getValidCampusSession(), []);
 
   const scopedCampus = session?.campus ?? null;
 

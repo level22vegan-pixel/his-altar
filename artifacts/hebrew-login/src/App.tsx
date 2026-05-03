@@ -1,4 +1,5 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,27 +17,55 @@ import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
 import ServiceReportPage from "@/pages/ServiceReportPage";
 import NotFound from "@/pages/not-found";
+import { hasValidSession, clearAllSessions } from "@/lib/session";
 
 const queryClient = new QueryClient();
 
+const LOGIN_PATH = "/";
+const UNGUARDED = [LOGIN_PATH];
+
+function SessionGuard() {
+  const [location, navigate] = useLocation();
+
+  useEffect(() => {
+    if (UNGUARDED.includes(location)) return;
+
+    const check = () => {
+      if (!hasValidSession()) {
+        clearAllSessions();
+        navigate(LOGIN_PATH);
+      }
+    };
+
+    check();
+    const interval = setInterval(check, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [location, navigate]);
+
+  return null;
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={LoginPage} />
-      <Route path="/home" component={HomePage} />
-      <Route path="/admin" component={AdminPage} />
-      <Route path="/campus/hallmark" component={HallmarkPage} />
-      <Route path="/campus/arrowhead" component={ArrowheadPage} />
-      <Route path="/campus/riverside" component={RiversidePage} />
-      <Route path="/campus/pomona" component={PomonaPage} />
-      <Route path="/campus/la" component={LAPage} />
-      <Route path="/campus/arizona" component={ArizonaPage} />
-      <Route path="/admin/altar-report" component={AltarReportPage} />
-      <Route path="/admin/roster" component={RosterManagerPage} />
-      <Route path="/checkin" component={CheckInPage} />
-      <Route path="/admin/service-report" component={ServiceReportPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <SessionGuard />
+      <Switch>
+        <Route path="/" component={LoginPage} />
+        <Route path="/home" component={HomePage} />
+        <Route path="/admin" component={AdminPage} />
+        <Route path="/campus/hallmark" component={HallmarkPage} />
+        <Route path="/campus/arrowhead" component={ArrowheadPage} />
+        <Route path="/campus/riverside" component={RiversidePage} />
+        <Route path="/campus/pomona" component={PomonaPage} />
+        <Route path="/campus/la" component={LAPage} />
+        <Route path="/campus/arizona" component={ArizonaPage} />
+        <Route path="/admin/altar-report" component={AltarReportPage} />
+        <Route path="/admin/roster" component={RosterManagerPage} />
+        <Route path="/checkin" component={CheckInPage} />
+        <Route path="/admin/service-report" component={ServiceReportPage} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 

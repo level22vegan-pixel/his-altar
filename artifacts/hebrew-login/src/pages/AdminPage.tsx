@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { getValidCampusSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const ROLES = [
@@ -203,15 +204,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showPasswords, setShowPasswords] = useState(false);
 
-  const session = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("campusSession");
-      if (!raw) return null;
-      return JSON.parse(raw) as { campus: string; role: string };
-    } catch {
-      return null;
-    }
-  }, []);
+  const session = useMemo(() => getValidCampusSession(), []);
 
   const isLead = session?.role === "lead";
   const campusName = session?.campus ?? null;

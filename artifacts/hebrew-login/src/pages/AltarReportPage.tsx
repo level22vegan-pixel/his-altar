@@ -507,6 +507,13 @@ function ServiceSection({
   const [showAddForm, setShowAddForm] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
+  const notesQueryKey = ["service-notes", dateStr, service];
+  const { data: notesData } = useQuery({
+    ...getGetServiceNotesQueryOptions({ date: dateStr, service }),
+    queryKey: notesQueryKey,
+  });
+  const savedNotes = notesData?.notes ?? "";
+
   const key: DayServiceKey = `${dateStr}__${service}`;
   const serviceReports = dayMap[key] ?? [];
   const existingCampuses = serviceReports.map(r => r.campus);
@@ -549,7 +556,7 @@ function ServiceSection({
           >📝</button>
           {hasServiceData && (
             <button
-              onClick={() => exportServiceData(allReports, dateStr, service, "")}
+              onClick={() => exportServiceData(allReports, dateStr, service, savedNotes)}
               title="Export this service as PDF"
               style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 22%)`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", transition: "all 0.15s", whiteSpace: "nowrap" }}
               onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
@@ -561,7 +568,39 @@ function ServiceSection({
         </div>
       </div>
 
-      {/* Notes panel */}
+      {/* Saved notes read-only preview */}
+      {savedNotes && !showNotes && (
+        <div
+          onClick={() => setShowNotes(true)}
+          style={{
+            background: "hsl(35 18% 13%)",
+            border: `1px solid hsl(38 22% 22%)`,
+            borderRadius: 6,
+            padding: "8px 12px",
+            marginBottom: 8,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+          }}
+          title="Click to edit notes"
+        >
+          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>📝</span>
+          <p style={{
+            color: GOLD_DIM,
+            fontFamily: "Georgia, serif",
+            fontSize: 12,
+            lineHeight: 1.5,
+            margin: 0,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}>
+            {savedNotes}
+          </p>
+        </div>
+      )}
+
+      {/* Notes editor panel */}
       {showNotes && (
         <ServiceNotesPanel dateStr={dateStr} service={service} onClose={() => setShowNotes(false)} />
       )}

@@ -148,19 +148,6 @@ function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?:
 
   let y = 36;
 
-  if (extraNote) {
-    doc.setFont("times", "italic");
-    doc.setFontSize(9);
-    doc.setTextColor(...PDF_WHITE);
-    const lines = doc.splitTextToSize(`Notes: ${extraNote}`, W - 28);
-    doc.text(lines, 14, y);
-    y += lines.length * 5 + 4;
-    doc.setDrawColor(...PDF_GOLD_DIM);
-    doc.setLineWidth(0.2);
-    doc.line(14, y - 2, W - 14, y - 2);
-    y += 2;
-  }
-
   const cols = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
   const colW = [28, 20, 30, 26, 22, 32];
   const startX = 14;
@@ -210,6 +197,21 @@ function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?:
     doc.text(String(totSalv), x, y); x += colW[3];
     doc.text(String(totPray), x, y); x += colW[4];
     doc.text(String(totAltar), x, y);
+    y += rowH;
+  }
+
+  if (extraNote) {
+    y += 2;
+    doc.setDrawColor(...PDF_GOLD_DIM);
+    doc.setLineWidth(0.2);
+    doc.line(startX, y - 2, W - 14, y - 2);
+    y += 2;
+    doc.setFont("times", "italic");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_WHITE);
+    const noteLines = doc.splitTextToSize(`Notes: ${extraNote}`, W - 28);
+    doc.text(noteLines, startX, y);
+    y += noteLines.length * 5;
   }
 
   const pageH = doc.internal.pageSize.getHeight();

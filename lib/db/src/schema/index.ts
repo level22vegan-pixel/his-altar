@@ -26,3 +26,4 @@ export * from "./dailyAltarReports";
 export * from "./serviceNotes";
 export * from "./campusPasswords";
 export * from "./passwordHistory";
+export * from "./teamPresets";

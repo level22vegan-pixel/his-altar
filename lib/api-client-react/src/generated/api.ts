@@ -29,6 +29,7 @@ import type {
   DailyAltarReport,
   DailyAltarReportList,
   GetServiceNotesParams,
+  GetTeamPresetParams,
   HealthStatus,
   ListCheckInsParams,
   ListDailyAltarReportsParams,
@@ -42,6 +43,8 @@ import type {
   ServiceReport,
   ServiceReportList,
   SetCampusPasswordBody,
+  SetTeamPresetBody,
+  TeamPreset,
   UpdateLoginCodeBody,
   UpdateWorkerBody,
   UpsertDailyAltarReportBody,
@@ -1328,6 +1331,186 @@ export const useDeleteCheckIn = <
   TContext
 > => {
   return useMutation(getDeleteCheckInMutationOptions(options));
+};
+
+/**
+ * @summary Get team preset for a campus/service
+ */
+export const getGetTeamPresetUrl = (params: GetTeamPresetParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/team-presets?${stringifiedParams}`
+    : `/api/team-presets`;
+};
+
+export const getTeamPreset = async (
+  params: GetTeamPresetParams,
+  options?: RequestInit,
+): Promise<TeamPreset> => {
+  return customFetch<TeamPreset>(getGetTeamPresetUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTeamPresetQueryKey = (params?: GetTeamPresetParams) => {
+  return [`/api/team-presets`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetTeamPresetQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTeamPreset>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetTeamPresetParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTeamPreset>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTeamPresetQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamPreset>>> = ({
+    signal,
+  }) => getTeamPreset(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTeamPreset>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTeamPresetQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTeamPreset>>
+>;
+export type GetTeamPresetQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get team preset for a campus/service
+ */
+
+export function useGetTeamPreset<
+  TData = Awaited<ReturnType<typeof getTeamPreset>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetTeamPresetParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTeamPreset>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTeamPresetQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Save team preset for a campus/service
+ */
+export const getSetTeamPresetUrl = () => {
+  return `/api/team-presets`;
+};
+
+export const setTeamPreset = async (
+  setTeamPresetBody: SetTeamPresetBody,
+  options?: RequestInit,
+): Promise<TeamPreset> => {
+  return customFetch<TeamPreset>(getSetTeamPresetUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setTeamPresetBody),
+  });
+};
+
+export const getSetTeamPresetMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setTeamPreset>>,
+    TError,
+    { data: BodyType<SetTeamPresetBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setTeamPreset>>,
+  TError,
+  { data: BodyType<SetTeamPresetBody> },
+  TContext
+> => {
+  const mutationKey = ["setTeamPreset"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setTeamPreset>>,
+    { data: BodyType<SetTeamPresetBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setTeamPreset(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetTeamPresetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setTeamPreset>>
+>;
+export type SetTeamPresetMutationBody = BodyType<SetTeamPresetBody>;
+export type SetTeamPresetMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Save team preset for a campus/service
+ */
+export const useSetTeamPreset = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setTeamPreset>>,
+    TError,
+    { data: BodyType<SetTeamPresetBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setTeamPreset>>,
+  TError,
+  { data: BodyType<SetTeamPresetBody> },
+  TContext
+> => {
+  return useMutation(getSetTeamPresetMutationOptions(options));
 };
 
 /**

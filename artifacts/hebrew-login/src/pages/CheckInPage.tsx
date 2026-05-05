@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { useListWorkers, useListCheckIns, useCreateCheckIn, useDeleteCheckIn } from "@workspace/api-client-react";
+import { useListWorkers, useListCheckIns, useCreateCheckIn, useDeleteCheckIn, useGetTeamPreset, useSetTeamPreset } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Worker, CheckIn } from "@workspace/api-client-react";
 import { jsPDF } from "jspdf";
@@ -353,19 +353,25 @@ export default function CheckInPage() {
   const [search, setSearch] = useState("");
   const [showTeamModal, setShowTeamModal] = useState(false);
 
-  // Team preset stored per-campus in localStorage
-  const presetKey = `teamPreset_${campus}_${service}`;
-  const [teamPreset, setTeamPreset] = useState<number[]>(() => {
-    try { return JSON.parse(localStorage.getItem(presetKey) ?? "[]"); } catch { return []; }
-  });
+  // Team preset stored in the database so all devices stay in sync
+  const presetQueryKey = ["teamPreset", campus, service];
+  const { data: presetData } = useGetTeamPreset(
+    { campus, service },
+    { query: { queryKey: presetQueryKey, enabled: !!(campus && service) } }
+  );
+  const teamPreset: number[] = presetData?.workerIds ?? [];
 
+  const queryClient = useQueryClient();
+
+  const setTeamPresetMutation = useSetTeamPreset();
   const savePreset = (ids: number[]) => {
-    setTeamPreset(ids);
-    localStorage.setItem(presetKey, JSON.stringify(ids));
+    setTeamPresetMutation.mutate(
+      { data: { campus, service, workerIds: ids } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: presetQueryKey }) }
+    );
     setShowTeamModal(false);
   };
 
-  const queryClient = useQueryClient();
   const checkInsKey = ["checkIns", campus, service, today];
 
   const { data: masterData } = useListWorkers({ category: "master", campus }, { query: { queryKey: ["workers-master", campus] } });

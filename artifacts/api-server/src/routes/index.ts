@@ -9,6 +9,7 @@ import { checkInsRouter } from "./checkIns";
 import { serviceReportsRouter } from "./serviceReports";
 import { serviceNotesRouter } from "./serviceNotes";
 import { campusPasswordsRouter } from "./campusPasswords";
+import { teamPresetsRouter } from "./teamPresets";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use("/check-ins", checkInsRouter);
 router.use("/service-reports", serviceReportsRouter);
 router.use("/service-notes", serviceNotesRouter);
 router.use("/campus-passwords", campusPasswordsRouter);
+router.use("/team-presets", teamPresetsRouter);
 
 export default router;

@@ -219,6 +219,18 @@ export interface PasswordHistoryList {
   entries: PasswordHistoryEntry[];
 }
 
+export interface TeamPreset {
+  campus: string;
+  service: string;
+  workerIds: number[];
+}
+
+export interface SetTeamPresetBody {
+  campus: string;
+  service: string;
+  workerIds: number[];
+}
+
 export interface VerifyCampusPasswordResponse {
   valid: boolean;
 }
@@ -232,6 +244,11 @@ export type ListCheckInsParams = {
   campus: string;
   service: string;
   serviceDate: string;
+};
+
+export type GetTeamPresetParams = {
+  campus: string;
+  service: string;
 };
 
 export type ListServiceReportsParams = {

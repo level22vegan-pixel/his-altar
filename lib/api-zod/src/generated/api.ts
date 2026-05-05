@@ -254,6 +254,35 @@ export const DeleteCheckInResponse = zod.object({
 });
 
 /**
+ * @summary Get team preset for a campus/service
+ */
+export const GetTeamPresetQueryParams = zod.object({
+  campus: zod.coerce.string(),
+  service: zod.coerce.string(),
+});
+
+export const GetTeamPresetResponse = zod.object({
+  campus: zod.string(),
+  service: zod.string(),
+  workerIds: zod.array(zod.number()),
+});
+
+/**
+ * @summary Save team preset for a campus/service
+ */
+export const SetTeamPresetBody = zod.object({
+  campus: zod.string(),
+  service: zod.string(),
+  workerIds: zod.array(zod.number()),
+});
+
+export const SetTeamPresetResponse = zod.object({
+  campus: zod.string(),
+  service: zod.string(),
+  workerIds: zod.array(zod.number()),
+});
+
+/**
  * @summary List service reports
  */
 export const ListServiceReportsQueryParams = zod.object({

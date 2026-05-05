@@ -286,6 +286,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckIn"
+  /team-presets:
+    get:
+      operationId: getTeamPreset
+      tags: [team-presets]
+      summary: Get team preset for a campus/service
+      parameters:
+        - name: campus
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: service
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Team preset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamPreset"
+    put:
+      operationId: setTeamPreset
+      tags: [team-presets]
+      summary: Save team preset for a campus/service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetTeamPresetBody"
+      responses:
+        "200":
+          description: Saved team preset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamPreset"
   /service-reports:
     get:
       operationId: listServiceReports
@@ -954,6 +994,36 @@ components:
             $ref: "#/components/schemas/PasswordHistoryEntry"
       required:
         - entries
+    TeamPreset:
+      type: object
+      properties:
+        campus:
+          type: string
+        service:
+          type: string
+        workerIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - campus
+        - service
+        - workerIds
+    SetTeamPresetBody:
+      type: object
+      properties:
+        campus:
+          type: string
+        service:
+          type: string
+        workerIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - campus
+        - service
+        - workerIds
     VerifyCampusPasswordResponse:
       type: object
       properties:

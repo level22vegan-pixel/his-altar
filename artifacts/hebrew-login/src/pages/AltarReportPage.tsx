@@ -181,6 +181,18 @@ function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?:
     y += rowH;
   });
 
+  if (extraNote) {
+    y += 1;
+    doc.setFont("times", "italic");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_GOLD_DIM);
+    doc.text("Notes:", startX + 2, y);
+    doc.setTextColor(...PDF_WHITE);
+    const noteLines = doc.splitTextToSize(extraNote, W - 28 - 18);
+    doc.text(noteLines, startX + 18, y);
+    y += Math.max(noteLines.length * 5, 6) + 2;
+  }
+
   if (rows.length > 0) {
     const totSalv = rows.reduce((s, r) => s + (parseInt(r[3]) || 0), 0);
     const totPray = rows.reduce((s, r) => s + (parseInt(r[4]) || 0), 0);
@@ -198,20 +210,6 @@ function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?:
     doc.text(String(totPray), x, y); x += colW[4];
     doc.text(String(totAltar), x, y);
     y += rowH;
-  }
-
-  if (extraNote) {
-    y += 2;
-    doc.setDrawColor(...PDF_GOLD_DIM);
-    doc.setLineWidth(0.2);
-    doc.line(startX, y - 2, W - 14, y - 2);
-    y += 2;
-    doc.setFont("times", "italic");
-    doc.setFontSize(9);
-    doc.setTextColor(...PDF_WHITE);
-    const noteLines = doc.splitTextToSize(`Notes: ${extraNote}`, W - 28);
-    doc.text(noteLines, startX, y);
-    y += noteLines.length * 5;
   }
 
   const pageH = doc.internal.pageSize.getHeight();
@@ -421,6 +419,19 @@ function AddEntryForm({
   );
 }
 
+// ── Sticky Note Icon ───────────────────────────────────────────────────────────
+function StickyNoteIcon({ size = 16, style }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={style}>
+      <rect x="1" y="1" width="11" height="14" rx="1.5" fill="#f5d020" />
+      <path d="M12 10 L12 15 L7 10 Z" fill="#d4a800" />
+      <rect x="3" y="4" width="7" height="1.2" rx="0.6" fill="#b8920a" opacity="0.7" />
+      <rect x="3" y="6.5" width="5.5" height="1.2" rx="0.6" fill="#b8920a" opacity="0.7" />
+      <rect x="3" y="9" width="4" height="1.2" rx="0.6" fill="#b8920a" opacity="0.7" />
+    </svg>
+  );
+}
+
 // ── Service Notes Panel ────────────────────────────────────────────────────────
 function ServiceNotesPanel({
   dateStr, service, onClose,
@@ -554,8 +565,8 @@ function ServiceSection({
           <button
             onClick={() => setShowNotes(n => !n)}
             title="Service notes"
-            style={{ color: showNotes ? GOLD_BRIGHT : GOLD_DIM, background: showNotes ? "hsl(38 35% 20%)" : "hsl(35 18% 12%)", border: `1px solid ${showNotes ? "hsl(38 40% 30%)" : BORDER}`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", transition: "all 0.15s" }}
-          >📝</button>
+            style={{ background: showNotes ? "hsl(38 35% 20%)" : "hsl(35 18% 12%)", border: `1px solid ${showNotes ? "hsl(38 40% 30%)" : BORDER}`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", lineHeight: 1, display: "flex", alignItems: "center", transition: "all 0.15s", opacity: showNotes ? 1 : 0.75 }}
+          ><StickyNoteIcon size={15} /></button>
           {hasServiceData && (
             <button
               onClick={() => exportServiceData(allReports, dateStr, service, savedNotes)}
@@ -601,7 +612,7 @@ function ServiceSection({
             gap: 8,
           }}
         >
-          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>📝</span>
+          <StickyNoteIcon size={15} style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{
             color: GOLD_DIM,
             fontFamily: "Georgia, serif",

@@ -432,13 +432,12 @@ export default function CheckInPage() {
   };
 
   const presetActiveIds = useMemo(() => {
-    const allRoster = [...masterWorkers, ...altWorkers];
     return teamPreset
-      .map(id => allRoster.find(w => w.id === id))
+      .map(id => masterWorkers.find(w => w.id === id))
       .filter((w): w is Worker => !!w && !w.onHold)
       .filter(w => checkedInIds.has(w.id))
       .map(w => w.id);
-  }, [teamPreset, masterWorkers, altWorkers, checkedInIds]);
+  }, [teamPreset, masterWorkers, checkedInIds]);
 
   const isActiveSet = presetActiveIds.length > 0;
 

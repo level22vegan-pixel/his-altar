@@ -238,6 +238,7 @@ function exportMonthData(
   month: number,
   year: number,
   notesMap: Record<string, string> = {},
+  campus?: string | null,
 ) {
   const sorted = [...reports].sort((a, b) =>
     a.date.localeCompare(b.date) ||
@@ -273,7 +274,7 @@ function exportMonthData(
   doc.setFont("times", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...PDF_GOLD_DIM);
-  doc.text(`${MONTH_NAMES[month - 1]} ${year} — All Campuses`, W / 2, 24, { align: "center" });
+  doc.text(`${MONTH_NAMES[month - 1]} ${year} — ${campus || "All Campuses"}`, W / 2, 24, { align: "center" });
   doc.setDrawColor(...PDF_GOLD_DIM);
   doc.setLineWidth(0.3);
   doc.line(14, 27, W - 14, 27);
@@ -364,10 +365,10 @@ function exportMonthData(
   doc.save(`altar-report-${year}-${pad2(month)}.pdf`);
 }
 
-function exportDayData(reports: DailyAltarReport[], dateStr: string, notesMap: Record<string, string> = {}) {
+function exportDayData(reports: DailyAltarReport[], dateStr: string, notesMap: Record<string, string> = {}, campus?: string | null) {
   const dayReports = [...reports].filter(r => r.date === dateStr);
   const date = new Date(dateStr + "T12:00:00");
-  const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) + (campus ? ` — ${campus}` : "");
 
   // Group and sort by service time (chronological), then campus
   const serviceOrder = [...new Set(dayReports.map(r => r.service))]
@@ -492,13 +493,14 @@ function exportDayData(reports: DailyAltarReport[], dateStr: string, notesMap: R
   doc.save(`altar-report-${dateStr}.pdf`);
 }
 
-function exportServiceData(reports: DailyAltarReport[], dateStr: string, service: string, notes: string) {
+function exportServiceData(reports: DailyAltarReport[], dateStr: string, service: string, notes: string, campus?: string | null) {
   const sorted = [...reports].filter(r => r.date === dateStr && r.service === service)
     .sort((a, b) => a.campus.localeCompare(b.campus));
   const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
   const date = new Date(dateStr + "T12:00:00");
   const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  buildPDF("Altar Report", `${label} — ${service}`, rows, notes || undefined).save(`altar-report-${dateStr}-${service}.pdf`);
+  const subtitle = campus ? `${label} — ${service} — ${campus}` : `${label} — ${service}`;
+  buildPDF("Altar Report", subtitle, rows, notes || undefined).save(`altar-report-${dateStr}-${service}.pdf`);
 }
 
 // ── Stat input row ─────────────────────────────────────────────────────────────
@@ -820,7 +822,7 @@ function ServiceSection({
           ><StickyNoteIcon size={15} /></button>
           {hasServiceData && (
             <button
-              onClick={() => exportServiceData(allReports, dateStr, service, savedNotes)}
+              onClick={() => exportServiceData(allReports, dateStr, service, savedNotes, activeCampus)}
               title="Export this service as PDF"
               style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 22%)`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", transition: "all 0.15s", whiteSpace: "nowrap" }}
               onMouseOver={e => { e.currentTarget.style.color = GOLD; }}
@@ -962,7 +964,7 @@ function DayDetail({
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               {hasDayData && (
                 <button
-                  onClick={() => exportDayData(allReports, dateStr, notesMap)}
+                  onClick={() => exportDayData(allReports, dateStr, notesMap, activeCampus)}
                   style={{ color: GOLD_DIM, background: "hsl(38 30% 16%)", border: `1px solid hsl(38 28% 26%)`, borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap" }}
                   title="Export this day as PDF"
                 >
@@ -1167,7 +1169,7 @@ export default function AltarReportPage() {
               <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 14, marginLeft: 8 }}>{viewYear}</span>
             </div>
             {reports.length > 0 && (
-              <button onClick={() => exportMonthData(reports, viewMonth + 1, viewYear, monthNotesMap)} style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }} title="Export this month as PDF">↓ Export</button>
+              <button onClick={() => exportMonthData(reports, viewMonth + 1, viewYear, monthNotesMap, activeCampus)} style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }} title="Export this month as PDF">↓ Export</button>
             )}
           </div>
           <button onClick={() => goMonth(1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>›</button>

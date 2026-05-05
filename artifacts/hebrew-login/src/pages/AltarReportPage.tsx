@@ -233,12 +233,135 @@ function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?:
   return doc;
 }
 
-function exportMonthData(reports: DailyAltarReport[], month: number, year: number) {
+function exportMonthData(
+  reports: DailyAltarReport[],
+  month: number,
+  year: number,
+  notesMap: Record<string, string> = {},
+) {
   const sorted = [...reports].sort((a, b) =>
-    a.date.localeCompare(b.date) || parseServiceHour(a.service) - parseServiceHour(b.service) || a.campus.localeCompare(b.campus)
+    a.date.localeCompare(b.date) ||
+    parseServiceHour(a.service) - parseServiceHour(b.service) ||
+    a.campus.localeCompare(b.campus)
   );
-  const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
-  buildPDF("Altar Report", `${MONTH_NAMES[month - 1]} ${year} — All Campuses`, rows).save(`altar-report-${year}-${pad2(month)}.pdf`);
+
+  // Build date order and per-date service order
+  const dateOrder = [...new Set(sorted.map(r => r.date))];
+  const grouped: Record<string, Record<string, DailyAltarReport[]>> = {};
+  for (const r of sorted) {
+    if (!grouped[r.date]) grouped[r.date] = {};
+    if (!grouped[r.date][r.service]) grouped[r.date][r.service] = [];
+    grouped[r.date][r.service].push(r);
+  }
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+  const W = doc.internal.pageSize.getWidth();
+  const startX = 14;
+  const rowH = 8;
+  const cols = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
+  const colW = [28, 20, 30, 26, 22, 32];
+
+  doc.setFillColor(...PDF_BG);
+  doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
+  doc.setDrawColor(...PDF_GOLD);
+  doc.setLineWidth(0.8);
+  doc.line(14, 18, W - 14, 18);
+  doc.setFont("times", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(...PDF_GOLD);
+  doc.text("Altar Report", W / 2, 14, { align: "center" });
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text(`${MONTH_NAMES[month - 1]} ${year} — All Campuses`, W / 2, 24, { align: "center" });
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, 27, W - 14, 27);
+
+  let y = 36;
+
+  // Column headers
+  doc.setFillColor(...PDF_HEADER_ROW);
+  doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+  doc.setFont("times", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD);
+  let x = startX + 2;
+  cols.forEach((col, i) => { doc.text(col.toUpperCase(), x, y); x += colW[i]; });
+  y += rowH;
+
+  let totalSalv = 0, totalPray = 0, totalAltar = 0;
+  let rowIndex = 0;
+
+  for (const dateStr of dateOrder) {
+    const svcOrder = Object.keys(grouped[dateStr])
+      .sort((a, b) => parseServiceHour(a) - parseServiceHour(b));
+
+    for (const svc of svcOrder) {
+      for (const r of grouped[dateStr][svc]) {
+        if (y > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage();
+          doc.setFillColor(...PDF_BG);
+          doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
+          y = 20;
+        }
+        if (rowIndex % 2 === 0) {
+          doc.setFillColor(...PDF_ROW_ALT);
+          doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+        }
+        doc.setFont("times", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...PDF_WHITE);
+        x = startX + 2;
+        [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]
+          .forEach((cell, i) => { doc.text(cell, x, y); x += colW[i]; });
+        totalSalv += r.salvations;
+        totalPray += r.prayers;
+        totalAltar += r.altarMembers;
+        y += rowH;
+        rowIndex++;
+      }
+
+      const note = notesMap[`${dateStr}__${svc}`];
+      if (note?.trim()) {
+        y += 1;
+        doc.setFont("times", "italic");
+        doc.setFontSize(9);
+        doc.setTextColor(...PDF_GOLD_DIM);
+        doc.text(`${svc} Notes:`, startX + 2, y);
+        doc.setTextColor(...PDF_WHITE);
+        const noteLines = doc.splitTextToSize(note, W - 28 - 22);
+        doc.text(noteLines, startX + 22, y);
+        y += Math.max(noteLines.length * 5, 6) + 3;
+      }
+    }
+  }
+
+  if (sorted.length > 0) {
+    y += 2;
+    doc.setDrawColor(...PDF_GOLD_DIM);
+    doc.setLineWidth(0.3);
+    doc.line(startX, y - 4, W - 14, y - 4);
+    doc.setFont("times", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_GOLD);
+    doc.text("TOTALS", startX + 2, y);
+    x = startX + 2 + colW[0] + colW[1] + colW[2];
+    doc.text(String(totalSalv), x, y); x += colW[3];
+    doc.text(String(totalPray), x, y); x += colW[4];
+    doc.text(String(totalAltar), x, y);
+  }
+
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, pageH - 12, W - 14, pageH - 12);
+  doc.setFont("times", "italic");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text("Altar Report — Confidential", W / 2, pageH - 7, { align: "center" });
+
+  doc.save(`altar-report-${year}-${pad2(month)}.pdf`);
 }
 
 function exportDayData(reports: DailyAltarReport[], dateStr: string, notesMap: Record<string, string> = {}) {
@@ -902,6 +1025,23 @@ export default function AltarReportPage() {
   const reports = data?.reports ?? [];
   // When a campus is selected, filter reports for totals/dots; keep full map for day detail
   const filteredReports = activeCampus ? reports.filter(r => r.campus === activeCampus) : reports;
+
+  // Fetch notes for every unique date+service in the current month for the export
+  const uniqueDateServices = [...new Set(reports.map(r => `${r.date}__${r.service}`))];
+  const monthNotesResults = useQueries({
+    queries: uniqueDateServices.map(key => {
+      const [date, service] = key.split("__");
+      return {
+        ...getGetServiceNotesQueryOptions({ date, service }),
+        queryKey: ["service-notes", date, service],
+      };
+    }),
+  });
+  const monthNotesMap: Record<string, string> = {};
+  uniqueDateServices.forEach((key, i) => {
+    const n = monthNotesResults[i]?.data?.notes;
+    if (n) monthNotesMap[key] = n;
+  });
   const dayMap = buildDayMap(reports);
   const datesWithData = buildDatesWithData(filteredReports);
 
@@ -1027,7 +1167,7 @@ export default function AltarReportPage() {
               <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 14, marginLeft: 8 }}>{viewYear}</span>
             </div>
             {reports.length > 0 && (
-              <button onClick={() => exportMonthData(reports, viewMonth + 1, viewYear)} style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }} title="Export this month as PDF">↓ Export</button>
+              <button onClick={() => exportMonthData(reports, viewMonth + 1, viewYear, monthNotesMap)} style={{ color: GOLD_DIM, background: "hsl(38 30% 14%)", border: `1px solid hsl(38 25% 24%)`, borderRadius: 5, padding: "4px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "all 0.15s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }} title="Export this month as PDF">↓ Export</button>
             )}
           </div>
           <button onClick={() => goMonth(1)} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }} onMouseOver={e => { e.currentTarget.style.color = GOLD; }} onMouseOut={e => { e.currentTarget.style.color = GOLD_DIM; }}>›</button>

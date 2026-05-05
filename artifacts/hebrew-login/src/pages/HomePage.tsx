@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, Link } from "wouter";
-import { getValidCampusSession } from "@/lib/session";
+import { getValidCampusSession, getValidAdminSession } from "@/lib/session";
 
 const CAMPUSES = [
   "HALLMARK",
@@ -28,6 +28,7 @@ export default function HomePage() {
   const [showCampuses, setShowCampuses] = useState(false);
 
   const session = useMemo(() => getValidCampusSession(), []);
+  const isAdmin = useMemo(() => getValidAdminSession(), []);
 
   const scopedCampus = session?.campus ?? null;
 
@@ -138,7 +139,7 @@ export default function HomePage() {
         &larr; Login
       </button>
 
-      {session?.role === "lead" && (
+      {(isAdmin || session?.role === "lead") && (
         <button
           onClick={() => navigate("/admin")}
           className="absolute top-5 right-6 z-10 text-xs tracking-widest uppercase transition-opacity duration-200 opacity-50 hover:opacity-90"

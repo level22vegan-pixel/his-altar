@@ -163,7 +163,7 @@ export default function LoginPage() {
       setHoldPassword("");
       setHoldPasswordError(false);
       setAdminSession();
-      navigate("/admin");
+      navigate("/home");
     } else {
       setHoldPasswordError(true);
       setHoldPassword("");

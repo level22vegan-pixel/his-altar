@@ -62,6 +62,15 @@ function getDayServices(date: Date, campus?: string | null): string[] | null {
   return null;
 }
 
+function parseServiceHour(service: string): number {
+  const m = service.match(/^(\d+)(am|pm)$/i);
+  if (!m) return 999;
+  let h = parseInt(m[1]);
+  if (m[2].toLowerCase() === "pm" && h !== 12) h += 12;
+  if (m[2].toLowerCase() === "am" && h === 12) h = 0;
+  return h;
+}
+
 function pad2(n: number) { return String(n).padStart(2, "0"); }
 function toDateStr(y: number, m: number, d: number) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
 function todayStr() {
@@ -226,23 +235,138 @@ function buildPDF(title: string, subtitle: string, rows: string[][], extraNote?:
 
 function exportMonthData(reports: DailyAltarReport[], month: number, year: number) {
   const sorted = [...reports].sort((a, b) =>
-    a.date.localeCompare(b.date) || a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus)
+    a.date.localeCompare(b.date) || parseServiceHour(a.service) - parseServiceHour(b.service) || a.campus.localeCompare(b.campus)
   );
   const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
   buildPDF("Altar Report", `${MONTH_NAMES[month - 1]} ${year} — All Campuses`, rows).save(`altar-report-${year}-${pad2(month)}.pdf`);
 }
 
 function exportDayData(reports: DailyAltarReport[], dateStr: string, notesMap: Record<string, string> = {}) {
-  const sorted = [...reports].filter(r => r.date === dateStr)
-    .sort((a, b) => a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus));
-  const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
+  const dayReports = [...reports].filter(r => r.date === dateStr);
   const date = new Date(dateStr + "T12:00:00");
   const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  const combinedNotes = Object.entries(notesMap)
-    .filter(([, v]) => v.trim())
-    .map(([service, note]) => `${service}: ${note}`)
-    .join("\n");
-  buildPDF("Altar Report", label, rows, combinedNotes || undefined).save(`altar-report-${dateStr}.pdf`);
+
+  // Group and sort by service time (chronological), then campus
+  const serviceOrder = [...new Set(dayReports.map(r => r.service))]
+    .sort((a, b) => parseServiceHour(a) - parseServiceHour(b));
+  const grouped: Record<string, DailyAltarReport[]> = {};
+  for (const r of dayReports) {
+    if (!grouped[r.service]) grouped[r.service] = [];
+    grouped[r.service].push(r);
+  }
+  for (const svc of serviceOrder) {
+    grouped[svc].sort((a, b) => a.campus.localeCompare(b.campus));
+  }
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+  const W = doc.internal.pageSize.getWidth();
+  const startX = 14;
+  const rowH = 8;
+  const cols = ["Date", "Service", "Campus", "Salvations", "Prayers", "Altar Members"];
+  const colW = [28, 20, 30, 26, 22, 32];
+
+  // Page background + header
+  doc.setFillColor(...PDF_BG);
+  doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
+  doc.setDrawColor(...PDF_GOLD);
+  doc.setLineWidth(0.8);
+  doc.line(14, 18, W - 14, 18);
+  doc.setFont("times", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(...PDF_GOLD);
+  doc.text("Altar Report", W / 2, 14, { align: "center" });
+  doc.setFont("times", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text(label, W / 2, 24, { align: "center" });
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, 27, W - 14, 27);
+
+  let y = 36;
+
+  // Column header row
+  doc.setFillColor(...PDF_HEADER_ROW);
+  doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+  doc.setFont("times", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD);
+  let x = startX + 2;
+  cols.forEach((col, i) => { doc.text(col.toUpperCase(), x, y); x += colW[i]; });
+  y += rowH;
+
+  let totalSalv = 0, totalPray = 0, totalAltar = 0;
+  let rowIndex = 0;
+
+  for (const svc of serviceOrder) {
+    const svcReports = grouped[svc];
+
+    for (const r of svcReports) {
+      if (y > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        doc.setFillColor(...PDF_BG);
+        doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
+        y = 20;
+      }
+      if (rowIndex % 2 === 0) {
+        doc.setFillColor(...PDF_ROW_ALT);
+        doc.rect(startX, y - 5.5, W - 28, rowH, "F");
+      }
+      doc.setFont("times", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...PDF_WHITE);
+      x = startX + 2;
+      [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]
+        .forEach((cell, i) => { doc.text(cell, x, y); x += colW[i]; });
+      totalSalv += r.salvations;
+      totalPray += r.prayers;
+      totalAltar += r.altarMembers;
+      y += rowH;
+      rowIndex++;
+    }
+
+    // Notes directly under this service's rows
+    const note = notesMap[svc];
+    if (note?.trim()) {
+      y += 1;
+      doc.setFont("times", "italic");
+      doc.setFontSize(9);
+      doc.setTextColor(...PDF_GOLD_DIM);
+      doc.text(`${svc} Notes:`, startX + 2, y);
+      doc.setTextColor(...PDF_WHITE);
+      const noteLines = doc.splitTextToSize(note, W - 28 - 22);
+      doc.text(noteLines, startX + 22, y);
+      y += Math.max(noteLines.length * 5, 6) + 3;
+    }
+  }
+
+  // Totals
+  if (dayReports.length > 0) {
+    y += 2;
+    doc.setDrawColor(...PDF_GOLD_DIM);
+    doc.setLineWidth(0.3);
+    doc.line(startX, y - 4, W - 14, y - 4);
+    doc.setFont("times", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_GOLD);
+    doc.text("TOTALS", startX + 2, y);
+    x = startX + 2 + colW[0] + colW[1] + colW[2];
+    doc.text(String(totalSalv), x, y); x += colW[3];
+    doc.text(String(totalPray), x, y); x += colW[4];
+    doc.text(String(totalAltar), x, y);
+  }
+
+  // Footer
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setDrawColor(...PDF_GOLD_DIM);
+  doc.setLineWidth(0.3);
+  doc.line(14, pageH - 12, W - 14, pageH - 12);
+  doc.setFont("times", "italic");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_GOLD_DIM);
+  doc.text("Altar Report — Confidential", W / 2, pageH - 7, { align: "center" });
+
+  doc.save(`altar-report-${dateStr}.pdf`);
 }
 
 function exportServiceData(reports: DailyAltarReport[], dateStr: string, service: string, notes: string) {

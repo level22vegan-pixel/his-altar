@@ -568,10 +568,25 @@ function ServiceSection({
         </div>
       </div>
 
-      {/* Saved notes read-only preview */}
+      {/* Notes editor panel */}
+      {showNotes && (
+        <ServiceNotesPanel dateStr={dateStr} service={service} onClose={() => setShowNotes(false)} />
+      )}
+
+      {/* Campus entries */}
+      {serviceReports.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+          {serviceReports.map(r => (
+            <DayEntry key={r.id} report={r} onDelete={onDelete} onSave={(id, data) => onEdit(id, service, data)} />
+          ))}
+        </div>
+      )}
+
+      {/* Saved notes read-only preview — sits below entries, inside the service block */}
       {savedNotes && !showNotes && (
         <div
           onClick={() => setShowNotes(true)}
+          title="Click to edit notes"
           style={{
             background: "hsl(35 18% 13%)",
             border: `1px solid hsl(38 22% 22%)`,
@@ -583,7 +598,6 @@ function ServiceSection({
             alignItems: "flex-start",
             gap: 8,
           }}
-          title="Click to edit notes"
         >
           <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>📝</span>
           <p style={{
@@ -597,20 +611,6 @@ function ServiceSection({
           }}>
             {savedNotes}
           </p>
-        </div>
-      )}
-
-      {/* Notes editor panel */}
-      {showNotes && (
-        <ServiceNotesPanel dateStr={dateStr} service={service} onClose={() => setShowNotes(false)} />
-      )}
-
-      {/* Campus entries */}
-      {serviceReports.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-          {serviceReports.map(r => (
-            <DayEntry key={r.id} report={r} onDelete={onDelete} onSave={(id, data) => onEdit(id, service, data)} />
-          ))}
         </div>
       )}
 

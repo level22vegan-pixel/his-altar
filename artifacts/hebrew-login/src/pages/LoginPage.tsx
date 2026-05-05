@@ -3,6 +3,8 @@ import { useVerifyLogin } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { setAdminSession, setCampusSession } from "@/lib/session";
 
+const ADMIN_HOLD_PASSWORD = "admin4680";
+
 const HEBREW_ALPHABET = [
   { letter: "א", number: 1, name: "Alef" },
   { letter: "ב", number: 2, name: "Bet" },
@@ -41,6 +43,11 @@ export default function LoginPage() {
   const [holding, setHolding] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
 
+  // Password prompt after hold
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [holdPassword, setHoldPassword] = useState("");
+  const [holdPasswordError, setHoldPasswordError] = useState(false);
+
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const holdStartRef = useRef<number>(0);
@@ -70,8 +77,9 @@ export default function LoginPage() {
       clearHoldTimers();
       setHolding(false);
       setHoldProgress(0);
-      setAdminSession();
-      navigate("/admin");
+      setShowPasswordModal(true);
+      setHoldPassword("");
+      setHoldPasswordError(false);
     }, HOLD_DURATION);
   }, [clearHoldTimers, navigate]);
 
@@ -148,6 +156,20 @@ export default function LoginPage() {
       handleLetterClick(22);
     }
   }, [cancelHold, handleLetterClick]);
+
+  const submitHoldPassword = useCallback(() => {
+    if (holdPassword === ADMIN_HOLD_PASSWORD) {
+      setShowPasswordModal(false);
+      setHoldPassword("");
+      setHoldPasswordError(false);
+      setAdminSession();
+      navigate("/admin");
+    } else {
+      setHoldPasswordError(true);
+      setHoldPassword("");
+      setTimeout(() => setHoldPasswordError(false), 1200);
+    }
+  }, [holdPassword, navigate]);
 
   const circumference = 2 * Math.PI * 28;
 
@@ -272,6 +294,82 @@ export default function LoginPage() {
         </div>
 
       </div>
+
+      {/* Password modal after Tav hold */}
+      {showPasswordModal && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 100,
+            background: "hsl(30 18% 5% / 0.85)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onClick={() => { setShowPasswordModal(false); setHoldPassword(""); setHoldPasswordError(false); }}
+        >
+          <div
+            style={{
+              background: "hsl(35 20% 10%)",
+              border: `1px solid ${holdPasswordError ? "hsl(0 50% 35%)" : "hsl(38 30% 24%)"}`,
+              borderRadius: 12,
+              padding: "32px 28px",
+              minWidth: 280,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
+              boxShadow: "0 8px 40px hsl(30 18% 4% / 0.8)",
+              transition: "border-color 0.2s",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "hsl(38 80% 60%)", letterSpacing: "0.08em" }}>ת</div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "hsl(38 45% 52%)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              Enter Password
+            </div>
+            <input
+              autoFocus
+              type="password"
+              value={holdPassword}
+              onChange={e => setHoldPassword(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") submitHoldPassword(); if (e.key === "Escape") { setShowPasswordModal(false); setHoldPassword(""); setHoldPasswordError(false); } }}
+              style={{
+                width: "100%",
+                background: "hsl(35 18% 7%)",
+                border: `1px solid ${holdPasswordError ? "hsl(0 55% 40%)" : "hsl(38 25% 22%)"}`,
+                borderRadius: 6,
+                color: holdPasswordError ? "hsl(0 70% 60%)" : "hsl(38 60% 70%)",
+                fontFamily: "Georgia, serif",
+                fontSize: 16,
+                padding: "9px 12px",
+                outline: "none",
+                textAlign: "center",
+                letterSpacing: "0.15em",
+                transition: "border-color 0.2s, color 0.2s",
+              }}
+              placeholder="••••••••"
+            />
+            {holdPasswordError && (
+              <div style={{ color: "hsl(0 65% 55%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
+                Incorrect password
+              </div>
+            )}
+            <button
+              onClick={submitHoldPassword}
+              style={{
+                width: "100%",
+                background: "hsl(38 30% 14%)",
+                border: "1px solid hsl(38 35% 26%)",
+                borderRadius: 6,
+                color: "hsl(38 70% 58%)",
+                fontFamily: "Georgia, serif",
+                fontSize: 12,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                padding: "9px 0",
+                cursor: "pointer",
+              }}
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

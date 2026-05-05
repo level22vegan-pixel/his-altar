@@ -260,7 +260,7 @@ export default function RosterManagerPage() {
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
           <button onClick={() => setEditingId(editingId === w.id ? null : w.id)} style={{ color: editingId === w.id ? "hsl(38 65% 58%)" : "hsl(38 35% 45%)", background: editingId === w.id ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editingId === w.id ? "hsl(38 35% 28%)" : "hsl(38 15% 24%)"}`, borderRadius: 4, padding: "3px 9px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}>
-            {editingId === w.id ? "Close" : "Edit"}
+            {editingId === w.id ? "Close" : "✏️"}
           </button>
           <button onClick={() => handleDelete(w.id)} style={{ color: "hsl(0 50% 50%)", background: "none", border: "none", cursor: "pointer", fontSize: 14, opacity: 0.5, transition: "opacity 0.2s" }} onMouseOver={e => (e.currentTarget.style.opacity = "1")} onMouseOut={e => (e.currentTarget.style.opacity = "0.5")}>✕</button>
         </div>

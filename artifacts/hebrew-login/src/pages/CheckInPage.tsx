@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useListWorkers, useListCheckIns, useCreateCheckIn, useDeleteCheckIn, useGetTeamPreset, useSetTeamPreset } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -228,8 +228,9 @@ function SetTeamCard({ presetCount, onClick }: { presetCount: number; onClick: (
   );
 }
 
-function SetActiveCard({ presetCount, onClick, disabled }: { presetCount: number; onClick: () => void; disabled: boolean }) {
+function SetActiveCard({ presetCount, onClick, disabled, isActiveSet }: { presetCount: number; onClick: () => void; disabled: boolean; isActiveSet: boolean }) {
   const [hover, setHover] = useState(false);
+  const hue = isActiveSet ? "0" : "130";
   return (
     <div
       onClick={disabled ? undefined : onClick}
@@ -237,20 +238,24 @@ function SetActiveCard({ presetCount, onClick, disabled }: { presetCount: number
       onMouseLeave={() => setHover(false)}
       style={{
         ...CARD_STYLE,
-        background: hover ? "hsl(130 35% 16%)" : "hsl(130 28% 12%)",
-        border: `1px dashed ${hover ? "hsl(130 50% 36%)" : "hsl(130 30% 24%)"}`,
+        background: hover
+          ? `hsl(${hue} 35% 16%)`
+          : isActiveSet ? `hsl(${hue} 28% 14%)` : `hsl(${hue} 28% 12%)`,
+        border: `1px dashed ${hover ? `hsl(${hue} 50% 36%)` : `hsl(${hue} 30% 24%)`}`,
         opacity: disabled ? 0.4 : 1,
         cursor: disabled ? "default" : "pointer",
       }}
     >
-      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "hsl(130 32% 18%)", border: "2px solid hsl(130 40% 28%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
-        ⚡
+      <div style={{ width: 44, height: 44, borderRadius: "50%", background: `hsl(${hue} 32% 18%)`, border: `2px solid hsl(${hue} 40% 28%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+        {isActiveSet ? "⛔" : "⚡"}
       </div>
       <div style={{ textAlign: "center" }}>
-        <div style={{ color: "hsl(130 55% 62%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold", letterSpacing: "0.05em" }}>Set Active</div>
+        <div style={{ color: `hsl(${hue} 55% 62%)`, fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold", letterSpacing: "0.05em" }}>
+          {isActiveSet ? "Unset Active" : "Set Active"}
+        </div>
         {presetCount > 0
-          ? <div style={{ color: "hsl(130 35% 44%)", fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>{presetCount} members</div>
-          : <div style={{ color: "hsl(130 20% 35%)", fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>No team set</div>
+          ? <div style={{ color: `hsl(${hue} 35% 44%)`, fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>{presetCount} members</div>
+          : <div style={{ color: `hsl(${hue} 20% 35%)`, fontFamily: "Georgia, serif", fontSize: 9, marginTop: 2 }}>No team set</div>
         }
       </div>
     </div>
@@ -426,18 +431,43 @@ export default function CheckInPage() {
     if (dx > 50 && activeTab > 0) setActiveTab(t => t - 1);
   };
 
+  const presetActiveIds = useMemo(() => {
+    const allRoster = [...masterWorkers, ...altWorkers];
+    return teamPreset
+      .map(id => allRoster.find(w => w.id === id))
+      .filter((w): w is Worker => !!w && !w.onHold)
+      .filter(w => checkedInIds.has(w.id))
+      .map(w => w.id);
+  }, [teamPreset, masterWorkers, altWorkers, checkedInIds]);
+
+  const isActiveSet = presetActiveIds.length > 0;
+
   const handleSetActive = useCallback(() => {
     const allRoster = [...masterWorkers, ...altWorkers];
-    const toCheckIn = teamPreset
-      .map(id => allRoster.find(w => w.id === id))
-      .filter((w): w is Worker => !!w && !w.onHold && !checkedInIds.has(w.id));
-    toCheckIn.forEach(w => {
-      createCheckIn.mutate(
-        { data: { workerId: w.id, campus, service, serviceDate: today } },
-        { onSettled: () => queryClient.invalidateQueries({ queryKey: checkInsKey }) }
-      );
-    });
-  }, [teamPreset, masterWorkers, altWorkers, checkedInIds, campus, service, today, createCheckIn, queryClient, checkInsKey]);
+    if (isActiveSet) {
+      // Unset: check out all preset workers currently active
+      presetActiveIds.forEach(id => {
+        const ci = checkIns.find(c => c.workerId === id);
+        if (ci) {
+          deleteCheckIn.mutate(
+            { id: ci.id },
+            { onSettled: () => queryClient.invalidateQueries({ queryKey: checkInsKey }) }
+          );
+        }
+      });
+    } else {
+      // Set: check in all preset workers not yet active
+      const toCheckIn = teamPreset
+        .map(id => allRoster.find(w => w.id === id))
+        .filter((w): w is Worker => !!w && !w.onHold && !checkedInIds.has(w.id));
+      toCheckIn.forEach(w => {
+        createCheckIn.mutate(
+          { data: { workerId: w.id, campus, service, serviceDate: today } },
+          { onSettled: () => queryClient.invalidateQueries({ queryKey: checkInsKey }) }
+        );
+      });
+    }
+  }, [isActiveSet, presetActiveIds, checkIns, teamPreset, masterWorkers, altWorkers, checkedInIds, campus, service, today, createCheckIn, deleteCheckIn, queryClient, checkInsKey]);
 
   const activeWorkers = [...masterWorkers, ...altWorkers].filter(w => checkedInIds.has(w.id));
   const allRosterWorkers = [...masterWorkers, ...altWorkers];
@@ -577,6 +607,7 @@ export default function CheckInPage() {
                 presetCount={teamPreset.length}
                 onClick={handleSetActive}
                 disabled={teamPreset.length === 0}
+                isActiveSet={isActiveSet}
               />
               {filter(masterWorkers).map(w => (
                 <WorkerCard
@@ -632,7 +663,7 @@ export default function CheckInPage() {
       {/* Set Team Modal */}
       {showTeamModal && (
         <SetTeamModal
-          allWorkers={allRosterWorkers}
+          allWorkers={masterWorkers}
           presetIds={teamPreset}
           onSave={savePreset}
           onClose={() => setShowTeamModal(false)}

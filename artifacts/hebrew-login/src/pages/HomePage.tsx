@@ -137,6 +137,24 @@ export default function HomePage() {
       >
         &larr; Login
       </button>
+
+      {session?.role === "lead" && (
+        <button
+          onClick={() => navigate("/admin")}
+          className="absolute top-5 right-6 z-10 text-xs tracking-widest uppercase transition-opacity duration-200 opacity-50 hover:opacity-90"
+          style={{
+            color: "hsl(38 60% 62%)",
+            fontFamily: "Georgia, serif",
+            letterSpacing: "0.2em",
+            background: "hsl(35 32% 16%)",
+            border: "1px solid hsl(38 32% 28%)",
+            borderRadius: 5,
+            padding: "5px 14px",
+          }}
+        >
+          Admin →
+        </button>
+      )}
     </div>
   );
 }

@@ -312,7 +312,7 @@ function DayEntry({
         <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em" }}>{report.campus}</span>
         <div style={{ display: "flex", gap: 6 }}>
           <button onClick={() => setEditing(e => !e)} style={{ color: editing ? GOLD_BRIGHT : GOLD_DIM, background: editing ? "hsl(38 35% 20%)" : "none", border: `1px solid ${editing ? "hsl(38 35% 28%)" : BORDER}`, borderRadius: 4, padding: "3px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", transition: "all 0.15s" }}>
-            {editing ? "Close" : "Edit"}
+            {editing ? "Close" : "✏️"}
           </button>
           <button onClick={() => { if (confirm("Remove this entry?")) onDelete(report.id); }} style={{ color: "hsl(0 50% 50%)", background: "none", border: "none", cursor: "pointer", fontSize: 15, opacity: 0.4, transition: "opacity 0.2s" }} onMouseOver={e => (e.currentTarget.style.opacity = "1")} onMouseOut={e => (e.currentTarget.style.opacity = "0.4")}>✕</button>
         </div>
@@ -546,9 +546,7 @@ function ServiceSection({
             onClick={() => setShowNotes(n => !n)}
             title="Service notes"
             style={{ color: showNotes ? GOLD_BRIGHT : GOLD_DIM, background: showNotes ? "hsl(38 35% 20%)" : "hsl(35 18% 12%)", border: `1px solid ${showNotes ? "hsl(38 40% 30%)" : BORDER}`, borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", transition: "all 0.15s" }}
-          >
-            ✏️
-          </button>
+          >📝</button>
           {hasServiceData && (
             <button
               onClick={() => exportServiceData(allReports, dateStr, service, "")}

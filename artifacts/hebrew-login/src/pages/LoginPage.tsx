@@ -108,8 +108,7 @@ export default function LoginPage() {
               } else {
                 setAdminSession();
               }
-              const dest = role === "lead" ? "/admin" : "/home";
-              setTimeout(() => navigate(dest), 600);
+              setTimeout(() => navigate("/home"), 600);
             } else if (!data.partial) {
               // Definitively wrong (not a valid prefix) — shake and reset
               setStatus("error");

@@ -40,8 +40,8 @@ function exportActivesPDF(campus: string, service: string, date: string, workers
 
   const startX = 14;
   const rowH = 8;
-  const colW = [10, 70, 60, 32] as const;
-  const cols = ["#", "Name", "Role", "Category"];
+  const colW = [10, 80, 82] as const;
+  const cols = ["#", "Name", "Role"];
   let y = 36;
 
   doc.setFillColor(...PDF_HEADER_ROW);
@@ -68,7 +68,7 @@ function exportActivesPDF(campus: string, service: string, date: string, workers
     }
     doc.setTextColor(...PDF_WHITE);
     x = startX + 2;
-    [String(ri + 1), w.name, w.role ?? "", w.category].forEach((cell, i) => {
+    [String(ri + 1), w.name, w.role ?? ""].forEach((cell, i) => {
       doc.text(cell, x, y);
       x += colW[i];
     });

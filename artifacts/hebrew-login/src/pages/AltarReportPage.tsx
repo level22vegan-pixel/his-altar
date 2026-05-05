@@ -8,7 +8,7 @@ import {
   useSaveServiceNotes,
   getGetServiceNotesQueryOptions,
 } from "@workspace/api-client-react";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useQueries } from "@tanstack/react-query";
 import type { DailyAltarReport } from "@workspace/api-client-react";
 import { jsPDF } from "jspdf";
 
@@ -232,13 +232,17 @@ function exportMonthData(reports: DailyAltarReport[], month: number, year: numbe
   buildPDF("Altar Report", `${MONTH_NAMES[month - 1]} ${year} — All Campuses`, rows).save(`altar-report-${year}-${pad2(month)}.pdf`);
 }
 
-function exportDayData(reports: DailyAltarReport[], dateStr: string) {
+function exportDayData(reports: DailyAltarReport[], dateStr: string, notesMap: Record<string, string> = {}) {
   const sorted = [...reports].filter(r => r.date === dateStr)
     .sort((a, b) => a.service.localeCompare(b.service) || a.campus.localeCompare(b.campus));
   const rows = sorted.map(r => [r.date, r.service, r.campus, String(r.salvations), String(r.prayers), String(r.altarMembers)]);
   const date = new Date(dateStr + "T12:00:00");
   const label = date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  buildPDF("Altar Report", label, rows).save(`altar-report-${dateStr}.pdf`);
+  const combinedNotes = Object.entries(notesMap)
+    .filter(([, v]) => v.trim())
+    .map(([service, note]) => `${service}: ${note}`)
+    .join("\n");
+  buildPDF("Altar Report", label, rows, combinedNotes || undefined).save(`altar-report-${dateStr}.pdf`);
 }
 
 function exportServiceData(reports: DailyAltarReport[], dateStr: string, service: string, notes: string) {
@@ -678,6 +682,18 @@ function DayDetail({
   const dayReports = allReports.filter(r => r.date === dateStr);
   const hasDayData = dayReports.length > 0;
 
+  const notesResults = useQueries({
+    queries: dayServices.map(service => ({
+      ...getGetServiceNotesQueryOptions({ date: dateStr, service }),
+      queryKey: ["service-notes", dateStr, service],
+    })),
+  });
+  const notesMap: Record<string, string> = {};
+  dayServices.forEach((service, i) => {
+    const n = notesResults[i]?.data?.notes;
+    if (n) notesMap[service] = n;
+  });
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", justifyContent: "flex-end" }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "hsl(30 18% 5% / 0.75)", backdropFilter: "blur(2px)" }} />
@@ -699,7 +715,7 @@ function DayDetail({
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               {hasDayData && (
                 <button
-                  onClick={() => exportDayData(allReports, dateStr)}
+                  onClick={() => exportDayData(allReports, dateStr, notesMap)}
                   style={{ color: GOLD_DIM, background: "hsl(38 30% 16%)", border: `1px solid hsl(38 28% 26%)`, borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", whiteSpace: "nowrap" }}
                   title="Export this day as PDF"
                 >

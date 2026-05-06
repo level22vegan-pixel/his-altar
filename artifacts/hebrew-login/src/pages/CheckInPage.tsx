@@ -18,7 +18,7 @@ function exportActivesPDF(campus: string, service: string, date: string, workers
   const PDF_HEADER_ROW: [number, number, number] = [45, 34, 20];
 
   const dateLabel = new Date(date + "T12:00:00").toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", year: "numeric",
+    month: "long", day: "numeric", year: "numeric",
   });
 
   doc.setFillColor(...PDF_BG);

@@ -84,7 +84,7 @@ export default function DbancPage() {
 
         {/* Three big circles */}
         <div
-          className="flex flex-col sm:flex-row items-center justify-center gap-8 w-full"
+          className="flex flex-col items-center justify-center gap-8 w-full"
           style={{ maxWidth: 900 }}
         >
           {CIRCLES.map((c) => (

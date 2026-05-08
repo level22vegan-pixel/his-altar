@@ -286,6 +286,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckIn"
+  /activity-logs:
+    get:
+      operationId: listActivityLogs
+      tags: [activity-logs]
+      summary: List activity logs
+      parameters:
+        - name: tool
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Activity logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityLogList"
+    post:
+      operationId: createActivityLog
+      tags: [activity-logs]
+      summary: Record an activity log entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActivityLogBody"
+      responses:
+        "201":
+          description: Created log entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityLog"
   /team-presets:
     get:
       operationId: getTeamPreset
@@ -1031,3 +1066,39 @@ components:
           type: boolean
       required:
         - valid
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        tool:
+          type: string
+        action:
+          type: string
+        accessedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - tool
+        - action
+        - accessedAt
+    ActivityLogList:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityLog"
+      required:
+        - logs
+    CreateActivityLogBody:
+      type: object
+      properties:
+        tool:
+          type: string
+        action:
+          type: string
+      required:
+        - tool
+        - action

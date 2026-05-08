@@ -254,6 +254,32 @@ export const DeleteCheckInResponse = zod.object({
 });
 
 /**
+ * @summary List activity logs
+ */
+export const ListActivityLogsQueryParams = zod.object({
+  tool: zod.coerce.string().optional(),
+});
+
+export const ListActivityLogsResponse = zod.object({
+  logs: zod.array(
+    zod.object({
+      id: zod.number(),
+      tool: zod.string(),
+      action: zod.string(),
+      accessedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Record an activity log entry
+ */
+export const CreateActivityLogBody = zod.object({
+  tool: zod.string(),
+  action: zod.string(),
+});
+
+/**
  * @summary Get team preset for a campus/service
  */
 export const GetTeamPresetQueryParams = zod.object({

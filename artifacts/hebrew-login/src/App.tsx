@@ -14,6 +14,7 @@ import LAPage from "@/pages/LAPage";
 import ArizonaPage from "@/pages/ArizonaPage";
 import AltarReportPage from "@/pages/AltarReportPage";
 import DbancPage from "@/pages/DbancPage";
+import ActivityLogPage from "@/pages/ActivityLogPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
 import ServiceReportPage from "@/pages/ServiceReportPage";
@@ -65,6 +66,8 @@ function Router() {
         <Route path="/checkin" component={CheckInPage} />
         <Route path="/admin/service-report" component={ServiceReportPage} />
         <Route path="/admin/dbanc" component={DbancPage} />
+        <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
+        <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
         <Route component={NotFound} />
       </Switch>
     </>

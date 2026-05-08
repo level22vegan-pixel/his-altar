@@ -17,12 +17,15 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ActivityLog,
+  ActivityLogList,
   AltarReport,
   AltarReportList,
   CampusPasswordEntry,
   CampusPasswordList,
   CheckIn,
   CheckInList,
+  CreateActivityLogBody,
   CreateAltarReportBody,
   CreateCheckInBody,
   CreateWorkerBody,
@@ -31,6 +34,7 @@ import type {
   GetServiceNotesParams,
   GetTeamPresetParams,
   HealthStatus,
+  ListActivityLogsParams,
   ListCheckInsParams,
   ListDailyAltarReportsParams,
   ListServiceReportsParams,
@@ -1331,6 +1335,189 @@ export const useDeleteCheckIn = <
   TContext
 > => {
   return useMutation(getDeleteCheckInMutationOptions(options));
+};
+
+/**
+ * @summary List activity logs
+ */
+export const getListActivityLogsUrl = (params?: ListActivityLogsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/activity-logs?${stringifiedParams}`
+    : `/api/activity-logs`;
+};
+
+export const listActivityLogs = async (
+  params?: ListActivityLogsParams,
+  options?: RequestInit,
+): Promise<ActivityLogList> => {
+  return customFetch<ActivityLogList>(getListActivityLogsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListActivityLogsQueryKey = (
+  params?: ListActivityLogsParams,
+) => {
+  return [`/api/activity-logs`, ...(params ? [params] : [])] as const;
+};
+
+export const getListActivityLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listActivityLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListActivityLogsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listActivityLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListActivityLogsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listActivityLogs>>
+  > = ({ signal }) => listActivityLogs(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listActivityLogs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListActivityLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listActivityLogs>>
+>;
+export type ListActivityLogsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List activity logs
+ */
+
+export function useListActivityLogs<
+  TData = Awaited<ReturnType<typeof listActivityLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListActivityLogsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listActivityLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListActivityLogsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Record an activity log entry
+ */
+export const getCreateActivityLogUrl = () => {
+  return `/api/activity-logs`;
+};
+
+export const createActivityLog = async (
+  createActivityLogBody: CreateActivityLogBody,
+  options?: RequestInit,
+): Promise<ActivityLog> => {
+  return customFetch<ActivityLog>(getCreateActivityLogUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createActivityLogBody),
+  });
+};
+
+export const getCreateActivityLogMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createActivityLog>>,
+    TError,
+    { data: BodyType<CreateActivityLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createActivityLog>>,
+  TError,
+  { data: BodyType<CreateActivityLogBody> },
+  TContext
+> => {
+  const mutationKey = ["createActivityLog"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createActivityLog>>,
+    { data: BodyType<CreateActivityLogBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createActivityLog(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateActivityLogMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createActivityLog>>
+>;
+export type CreateActivityLogMutationBody = BodyType<CreateActivityLogBody>;
+export type CreateActivityLogMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Record an activity log entry
+ */
+export const useCreateActivityLog = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createActivityLog>>,
+    TError,
+    { data: BodyType<CreateActivityLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createActivityLog>>,
+  TError,
+  { data: BodyType<CreateActivityLogBody> },
+  TContext
+> => {
+  return useMutation(getCreateActivityLogMutationOptions(options));
 };
 
 /**

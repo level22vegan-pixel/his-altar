@@ -27,3 +27,4 @@ export * from "./serviceNotes";
 export * from "./campusPasswords";
 export * from "./passwordHistory";
 export * from "./teamPresets";
+export * from "./activityLogs";

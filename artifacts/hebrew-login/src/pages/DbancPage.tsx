@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useCreateActivityLog } from "@workspace/api-client-react";
 
 const CIRCLES = [
   {
@@ -27,6 +29,12 @@ const CIRCLES = [
 
 export default function DbancPage() {
   const [, navigate] = useLocation();
+  const logAccess = useCreateActivityLog();
+
+  useEffect(() => {
+    logAccess.mutate({ data: { tool: "dbanc", action: "page_access" } });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div

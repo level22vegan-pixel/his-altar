@@ -235,6 +235,22 @@ export interface VerifyCampusPasswordResponse {
   valid: boolean;
 }
 
+export interface ActivityLog {
+  id: number;
+  tool: string;
+  action: string;
+  accessedAt: string;
+}
+
+export interface ActivityLogList {
+  logs: ActivityLog[];
+}
+
+export interface CreateActivityLogBody {
+  tool: string;
+  action: string;
+}
+
 export type ListWorkersParams = {
   category?: string;
   campus?: string;
@@ -244,6 +260,10 @@ export type ListCheckInsParams = {
   campus: string;
   service: string;
   serviceDate: string;
+};
+
+export type ListActivityLogsParams = {
+  tool?: string;
 };
 
 export type GetTeamPresetParams = {

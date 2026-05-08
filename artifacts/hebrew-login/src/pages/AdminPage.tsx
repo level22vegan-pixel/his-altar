@@ -313,21 +313,43 @@ export default function AdminPage() {
         <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
           <p className="text-xs uppercase tracking-widest mb-3 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Extensions</p>
           <div className="flex flex-col gap-2">
-            <button
-              onClick={() => navigate("/admin/dbanc")}
-              className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
-            >
-              <span>Dbanc</span>
-              <span style={{ opacity: 0.5 }}>→</span>
-            </button>
-            <button
-              className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
-            >
-              <span>PXP</span>
-              <span style={{ opacity: 0.5 }}>→</span>
-            </button>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                onClick={() => navigate("/admin/dbanc")}
+                className="py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
+                style={{ flex: 1, background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+              >
+                <span>Dbanc</span>
+                <span style={{ opacity: 0.5 }}>→</span>
+              </button>
+              <button
+                onClick={() => navigate("/admin/activity-log/dbanc")}
+                title="View Dbanc activity log"
+                style={{ padding: "0 12px", background: "hsl(35 28% 16%)", border: "1px solid hsl(38 25% 24%)", borderRadius: 6, color: "hsl(38 50% 52%)", fontFamily: "Georgia, serif", fontSize: 14, cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}
+                onMouseOver={e => { e.currentTarget.style.background = "hsl(35 32% 20%)"; e.currentTarget.style.color = "hsl(38 65% 65%)"; }}
+                onMouseOut={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 50% 52%)"; }}
+              >
+                📋
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                className="py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
+                style={{ flex: 1, background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+              >
+                <span>PXP</span>
+                <span style={{ opacity: 0.5 }}>→</span>
+              </button>
+              <button
+                onClick={() => navigate("/admin/activity-log/pxp")}
+                title="View PXP activity log"
+                style={{ padding: "0 12px", background: "hsl(35 28% 16%)", border: "1px solid hsl(38 25% 24%)", borderRadius: 6, color: "hsl(38 50% 52%)", fontFamily: "Georgia, serif", fontSize: 14, cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}
+                onMouseOver={e => { e.currentTarget.style.background = "hsl(35 32% 20%)"; e.currentTarget.style.color = "hsl(38 65% 65%)"; }}
+                onMouseOut={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 50% 52%)"; }}
+              >
+                📋
+              </button>
+            </div>
           </div>
         </div>
 

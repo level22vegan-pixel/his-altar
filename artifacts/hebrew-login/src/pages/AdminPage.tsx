@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCampusPassword } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { getValidCampusSession } from "@/lib/session";
+import { getValidCampusSession, getValidAdminSession, clearAllSessions } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const ROLES = [
@@ -204,11 +204,21 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showPasswords, setShowPasswords] = useState(false);
 
-  const session = useMemo(() => getValidCampusSession(), []);
+  const session      = useMemo(() => getValidCampusSession(), []);
+  const isMasterAdmin = useMemo(() => getValidAdminSession(), []);
 
   const isCampusUser = session !== null;
-  const isLead = session?.role === "lead";
-  const campusName = session?.campus ?? null;
+  const isLead       = session?.role === "lead";
+  const campusName   = session?.campus ?? null;
+
+  function handleBack() {
+    if (isCampusUser) {
+      navigate("/home");
+    } else {
+      clearAllSessions();
+      navigate("/");
+    }
+  }
 
   const { data: config } = useGetLoginCode({ query: { queryKey: ["loginCode"] } });
   const updateMutation = useUpdateLoginCode();
@@ -248,11 +258,11 @@ export default function AdminPage() {
 
       <div className="relative z-10 w-full max-w-xl">
         <button
-          onClick={() => navigate("/")}
+          onClick={handleBack}
           className="mb-8 text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
           style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
         >
-          &larr; Back to Login
+          {isCampusUser ? "← Home" : "← Sign Out"}
         </button>
 
         <h1

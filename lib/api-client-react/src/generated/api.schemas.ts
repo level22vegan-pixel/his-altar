@@ -311,6 +311,7 @@ export interface PxpCaller {
   name: string;
   campus: string;
   phone: string;
+  password: string;
   createdAt: string;
 }
 

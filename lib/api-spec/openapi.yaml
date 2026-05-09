@@ -492,6 +492,24 @@ paths:
       responses:
         "204":
           description: Deleted
+  /pxp/callers/{id}/reset-password:
+    put:
+      operationId: resetPxpCallerPassword
+      tags: [pxp]
+      summary: Generate a new password for a caller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated caller with new password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpCaller"
   /pxp/config:
     get:
       operationId: getPxpConfig
@@ -1510,6 +1528,8 @@ components:
           type: string
         phone:
           type: string
+        password:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -1518,6 +1538,7 @@ components:
         - name
         - campus
         - phone
+        - password
         - createdAt
     PxpCallerList:
       type: object

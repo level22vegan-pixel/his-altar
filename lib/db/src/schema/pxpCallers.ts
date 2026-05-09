@@ -7,6 +7,7 @@ export const pxpCallersTable = pgTable("pxp_callers", {
   name: text("name").notNull(),
   campus: text("campus").notNull(),
   phone: text("phone").notNull().default(""),
+  password: text("password").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

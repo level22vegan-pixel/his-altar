@@ -4,6 +4,15 @@ import { eq, asc } from "drizzle-orm";
 
 const router = Router();
 
+function generatePassword(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < 6; i++) {
+    out += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return out;
+}
+
 router.get("/", async (req, res) => {
   try {
     const { campus } = req.query as { campus?: string };
@@ -26,13 +35,31 @@ router.post("/", async (req, res) => {
       res.status(400).json({ message: "name and campus are required" });
       return;
     }
+    const password = generatePassword();
     const [caller] = await db
       .insert(pxpCallersTable)
-      .values({ name: String(name), campus: String(campus), phone: String(phone) })
+      .values({ name: String(name), campus: String(campus), phone: String(phone), password })
       .returning();
     res.status(201).json(caller);
   } catch (err) {
     req.log.error({ err }, "Error creating pxp caller");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/:id/reset-password", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const password = generatePassword();
+    const [caller] = await db
+      .update(pxpCallersTable)
+      .set({ password })
+      .where(eq(pxpCallersTable.id, id))
+      .returning();
+    if (!caller) { res.status(404).json({ error: "Not found" }); return; }
+    res.json(caller);
+  } catch (err) {
+    req.log.error({ err }, "Error resetting caller password");
     res.status(500).json({ message: "Server error" });
   }
 });

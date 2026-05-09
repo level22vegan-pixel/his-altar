@@ -425,6 +425,7 @@ export const ListPxpCallersResponse = zod.object({
       name: zod.string(),
       campus: zod.string(),
       phone: zod.string(),
+      password: zod.string(),
       createdAt: zod.coerce.date(),
     }),
   ),
@@ -444,6 +445,22 @@ export const CreatePxpCallerBody = zod.object({
  */
 export const DeletePxpCallerParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Generate a new password for a caller
+ */
+export const ResetPxpCallerPasswordParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ResetPxpCallerPasswordResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  campus: zod.string(),
+  phone: zod.string(),
+  password: zod.string(),
+  createdAt: zod.coerce.date(),
 });
 
 /**

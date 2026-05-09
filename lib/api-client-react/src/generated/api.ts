@@ -2394,6 +2394,90 @@ export const useDeletePxpCaller = <
 };
 
 /**
+ * @summary Generate a new password for a caller
+ */
+export const getResetPxpCallerPasswordUrl = (id: number) => {
+  return `/api/pxp/callers/${id}/reset-password`;
+};
+
+export const resetPxpCallerPassword = async (
+  id: number,
+  options?: RequestInit,
+): Promise<PxpCaller> => {
+  return customFetch<PxpCaller>(getResetPxpCallerPasswordUrl(id), {
+    ...options,
+    method: "PUT",
+  });
+};
+
+export const getResetPxpCallerPasswordMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetPxpCallerPassword>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetPxpCallerPassword>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["resetPxpCallerPassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetPxpCallerPassword>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return resetPxpCallerPassword(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetPxpCallerPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resetPxpCallerPassword>>
+>;
+
+export type ResetPxpCallerPasswordMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate a new password for a caller
+ */
+export const useResetPxpCallerPassword = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetPxpCallerPassword>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof resetPxpCallerPassword>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getResetPxpCallerPasswordMutationOptions(options));
+};
+
+/**
  * @summary Get PXP script config
  */
 export const getGetPxpConfigUrl = () => {

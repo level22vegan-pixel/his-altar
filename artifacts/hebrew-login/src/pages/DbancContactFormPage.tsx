@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useLocation, useParams, useSearch } from "wouter";
 import {
   useCreateDbancContact,
   useUpdateDbancContact,
   useGetDbancContact,
   useListDbancCustomFields,
 } from "@workspace/api-client-react";
-import { getValidCampusSession, hasValidSession } from "@/lib/session";
+import { getValidCampusSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
@@ -61,9 +61,10 @@ export default function DbancContactFormPage() {
   const params = useParams<{ id: string }>();
   const isEdit = !!params.id;
 
+  const search        = useSearch();
   const campusSession = getValidCampusSession();
   const lockedCampus  = campusSession?.campus ?? null;
-  const isPublic      = !hasValidSession();
+  const isPublic      = new URLSearchParams(search).get("public") === "1";
 
   const { data: existingData } = useGetDbancContact(
     parseInt(params.id ?? "0"),

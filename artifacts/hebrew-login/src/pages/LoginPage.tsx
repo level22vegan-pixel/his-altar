@@ -128,7 +128,7 @@ export default function LoginPage() {
     const didComplete = alefHoldTimerRef.current === null && alefHoldIntervalRef.current === null;
     cancelAlefHold();
     if (!didComplete && elapsed < HOLD_DURATION) {
-      navigate("/admin/dbanc/new");
+      navigate("/admin/dbanc/new?public=1");
     }
   }, [cancelAlefHold, navigate]);
 

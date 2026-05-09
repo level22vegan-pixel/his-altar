@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   useGetDbancContact,
@@ -6,6 +6,7 @@ import {
   useListPxpCallers,
   useUpdateDbancContact,
 } from "@workspace/api-client-react";
+import { getValidCallerSession } from "@/lib/session";
 
 function formatPhone(p: string) {
   const d = p.replace(/\D/g, "");
@@ -57,10 +58,13 @@ export default function PXPContactProfilePage() {
   const contactId = parseInt(params.id ?? "0");
   const [, navigate] = useLocation();
 
+  const callerSession = getValidCallerSession();
+  const isCallerSession = !!callerSession;
+
   const { data: contact, isLoading } = useGetDbancContact(contactId, {
     query: { enabled: !!contactId, queryKey: [`/api/dbanc/contacts/${contactId}`] },
   });
-  const { data: logsData, refetch: refetchLogs } = useListPxpCallLogs(
+  const { data: logsData } = useListPxpCallLogs(
     contactId ? { contactId } : undefined
   );
   const { data: callersData } = useListPxpCallers(
@@ -77,14 +81,36 @@ export default function PXPContactProfilePage() {
   const [servicesNotes, setServicesNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const autoAssigned = useRef(false);
 
   useEffect(() => {
-    if (contact) {
-      setCrisisFlag(contact.crisisFlag ?? false);
-      setDoNotContact(contact.doNotContact ?? false);
+    if (!contact) return;
+    setCrisisFlag(contact.crisisFlag ?? false);
+    setDoNotContact(contact.doNotContact ?? false);
+    setServicesNotes(contact.servicesNotes ?? "");
+
+    // If a caller is signed in, always assign them to this contact
+    if (isCallerSession && callerSession) {
+      setAssignedCallerId(callerSession.callerId);
+      // Auto-save the assignment if it's not already set to this caller
+      if (!autoAssigned.current && contact.assignedCallerId !== callerSession.callerId) {
+        autoAssigned.current = true;
+        updateContact.mutate({
+          id: contactId,
+          data: {
+            firstName: contact.firstName,
+            lastName: contact.lastName,
+            phone: contact.phone,
+            assignedCallerId: callerSession.callerId,
+          },
+        });
+      } else {
+        autoAssigned.current = true;
+      }
+    } else {
       setAssignedCallerId(contact.assignedCallerId ?? null);
-      setServicesNotes(contact.servicesNotes ?? "");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contact]);
 
   async function handleSave() {
@@ -109,9 +135,12 @@ export default function PXPContactProfilePage() {
   }
 
   function handleStartCall() {
-    const callerName = callers.find(c => c.id === assignedCallerId)?.name ?? "";
+    // Caller sessions use their own name; admins use the assigned caller's name
+    const callerName = isCallerSession
+      ? (callerSession?.callerName ?? "")
+      : (callers.find(c => c.id === assignedCallerId)?.name ?? "");
     navigate(
-      `/admin/pxp/call?contactId=${contactId}&callerName=${encodeURIComponent(callerName || "")}&campus=${encodeURIComponent(contact?.campus ?? "")}`
+      `/admin/pxp/call?contactId=${contactId}&callerName=${encodeURIComponent(callerName)}&campus=${encodeURIComponent(contact?.campus ?? "")}`
     );
   }
 
@@ -285,20 +314,31 @@ export default function PXPContactProfilePage() {
         {/* Assigned Caller */}
         <div style={S.card}>
           <p style={S.label}>Assigned Caller</p>
-          <select
-            style={{ ...S.input, appearance: "none" as const }}
-            value={assignedCallerId ?? ""}
-            onChange={e => setAssignedCallerId(e.target.value ? parseInt(e.target.value) : null)}
-          >
-            <option value="">— No assigned caller —</option>
-            {callers.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-          {callers.length === 0 && (
-            <p style={{ color: "hsl(270 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 6 }}>
-              No callers registered for {contact.campus} yet.
-            </p>
+          {isCallerSession ? (
+            /* Caller session: locked to the signed-in caller */
+            <div style={{ ...S.input, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.82 }}>
+              <span style={{ color: "hsl(270 60% 72%)" }}>{callerSession?.callerName}</span>
+              <span style={{ color: "hsl(270 30% 45%)", fontSize: 10, letterSpacing: "0.12em" }}>ASSIGNED FROM SIGN-IN</span>
+            </div>
+          ) : (
+            /* Admin: free dropdown */
+            <>
+              <select
+                style={{ ...S.input, appearance: "none" as const }}
+                value={assignedCallerId ?? ""}
+                onChange={e => setAssignedCallerId(e.target.value ? parseInt(e.target.value) : null)}
+              >
+                <option value="">— No assigned caller —</option>
+                {callers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              {callers.length === 0 && (
+                <p style={{ color: "hsl(270 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 6 }}>
+                  No callers registered for {contact.campus} yet.
+                </p>
+              )}
+            </>
           )}
         </div>
 

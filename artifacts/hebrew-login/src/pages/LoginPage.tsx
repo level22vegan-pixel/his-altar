@@ -39,21 +39,29 @@ export default function LoginPage() {
   const [shaking, setShaking] = useState(false);
   const [, navigate] = useLocation();
 
-  // Long-press admin state
+  // Long-press state — Tav (admin)
   const [holding, setHolding] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
 
-  // Password prompt after hold
+  // Password prompt after Tav hold
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [holdPassword, setHoldPassword] = useState("");
   const [holdPasswordError, setHoldPasswordError] = useState(false);
 
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const holdStartRef = useRef<number>(0);
+  const holdStartRef    = useRef<number>(0);
+
+  // Long-press state — Alef (dbanc / follow-up)
+  const [alefHolding, setAlefHolding]         = useState(false);
+  const [alefHoldProgress, setAlefHoldProgress] = useState(0);
+  const alefHoldTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alefHoldIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const alefHoldStartRef    = useRef<number>(0);
 
   const verifyMutation = useVerifyLogin();
 
+  // ── Tav hold (admin password) ─────────────────────────────────────────────
   const clearHoldTimers = useCallback(() => {
     if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
     if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
@@ -62,17 +70,13 @@ export default function LoginPage() {
   }, []);
 
   const startHold = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    // Don't preventDefault — a quick release should still register as a tap
     e.stopPropagation();
     holdStartRef.current = Date.now();
     setHolding(true);
     setHoldProgress(0);
-
     holdIntervalRef.current = setInterval(() => {
-      const elapsed = Date.now() - holdStartRef.current;
-      setHoldProgress(Math.min(elapsed / HOLD_DURATION, 1));
+      setHoldProgress(Math.min((Date.now() - holdStartRef.current) / HOLD_DURATION, 1));
     }, 30);
-
     holdTimerRef.current = setTimeout(() => {
       clearHoldTimers();
       setHolding(false);
@@ -81,7 +85,7 @@ export default function LoginPage() {
       setHoldPassword("");
       setHoldPasswordError(false);
     }, HOLD_DURATION);
-  }, [clearHoldTimers, navigate]);
+  }, [clearHoldTimers]);
 
   const cancelHold = useCallback(() => {
     clearHoldTimers();
@@ -89,20 +93,51 @@ export default function LoginPage() {
     setHoldProgress(0);
   }, [clearHoldTimers]);
 
+  // ── Alef hold (tap → Dbanc new; hold → follow-up login) ──────────────────
+  const clearAlefHoldTimers = useCallback(() => {
+    if (alefHoldTimerRef.current) clearTimeout(alefHoldTimerRef.current);
+    if (alefHoldIntervalRef.current) clearInterval(alefHoldIntervalRef.current);
+    alefHoldTimerRef.current = null;
+    alefHoldIntervalRef.current = null;
+  }, []);
+
+  const startAlefHold = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    alefHoldStartRef.current = Date.now();
+    setAlefHolding(true);
+    setAlefHoldProgress(0);
+    alefHoldIntervalRef.current = setInterval(() => {
+      setAlefHoldProgress(Math.min((Date.now() - alefHoldStartRef.current) / HOLD_DURATION, 1));
+    }, 30);
+    alefHoldTimerRef.current = setTimeout(() => {
+      clearAlefHoldTimers();
+      setAlefHolding(false);
+      setAlefHoldProgress(0);
+      navigate("/caller-login");
+    }, HOLD_DURATION);
+  }, [clearAlefHoldTimers, navigate]);
+
+  const cancelAlefHold = useCallback(() => {
+    clearAlefHoldTimers();
+    setAlefHolding(false);
+    setAlefHoldProgress(0);
+  }, [clearAlefHoldTimers]);
+
+  const endAlefHold = useCallback(() => {
+    const elapsed = Date.now() - alefHoldStartRef.current;
+    const didComplete = alefHoldTimerRef.current === null && alefHoldIntervalRef.current === null;
+    cancelAlefHold();
+    if (!didComplete && elapsed < HOLD_DURATION) {
+      navigate("/admin/dbanc/new");
+    }
+  }, [cancelAlefHold, navigate]);
+
   // Clean up on unmount
-  useEffect(() => () => clearHoldTimers(), [clearHoldTimers]);
+  useEffect(() => () => { clearHoldTimers(); clearAlefHoldTimers(); }, [clearHoldTimers, clearAlefHoldTimers]);
 
   const handleLetterClick = useCallback(
     (letterNum: number) => {
       if (status === "success" || verifyMutation.isPending) return;
-
-      // Alef + Alef shortcut → caller login
-      if (letterNum === 1 && sequence.length === 1 && sequence[0] === 1) {
-        setSequence([]);
-        setSelectedLetters(new Set());
-        navigate("/caller-login");
-        return;
-      }
 
       const newSeq = [...sequence, letterNum];
       const newSelected = new Set(selectedLetters);
@@ -210,10 +245,12 @@ export default function LoginPage() {
         >
           {HEBREW_ALPHABET.map((item) => {
             const isSelected = selectedLetters.has(item.number);
-            const isError = status === "error" && isSelected;
+            const isError   = status === "error"   && isSelected;
             const isSuccess = status === "success" && isSelected;
-            const isTav = item.number === 22;
+            const isTav  = item.number === 22;
+            const isAlef = item.number === 1;
 
+            // ── Tav — hold for admin password ────────────────────────────────
             if (isTav) {
               return (
                 <div
@@ -227,31 +264,11 @@ export default function LoginPage() {
                   onTouchEnd={endHold}
                   onTouchCancel={cancelHold}
                 >
-                  {/* Circular progress ring */}
                   {holding && (
-                    <svg
-                      className="absolute"
-                      width="64"
-                      height="64"
-                      style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
-                    >
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        fill="none"
-                        stroke="hsl(38 20% 25%)"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx="32"
-                        cy="32"
-                        r="28"
-                        fill="none"
-                        stroke="hsl(38 80% 60%)"
-                        strokeWidth="2"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={circumference * (1 - holdProgress)}
+                    <svg className="absolute" width="64" height="64" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+                      <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(38 20% 25%)" strokeWidth="2" />
+                      <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(38 80% 60%)" strokeWidth="2"
+                        strokeDasharray={circumference} strokeDashoffset={circumference * (1 - holdProgress)}
                         strokeLinecap="round"
                         style={{ transform: "rotate(-90deg)", transformOrigin: "center", transition: "stroke-dashoffset 0.03s linear" }}
                       />
@@ -260,9 +277,7 @@ export default function LoginPage() {
                   <span
                     className="hebrew-letter text-5xl sm:text-6xl leading-none py-3 px-1"
                     style={{
-                      color: holding
-                        ? "hsl(38 90% 72%)"
-                        : "hsl(38 40% 45%)",
+                      color: holding ? "hsl(38 90% 72%)" : "hsl(38 40% 45%)",
                       fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif",
                       textShadow: holding ? "0 0 18px hsl(38 80% 68% / 0.6)" : "none",
                       transition: "color 0.2s, text-shadow 0.2s",
@@ -275,6 +290,47 @@ export default function LoginPage() {
               );
             }
 
+            // ── Alef — tap → Dbanc new contact; hold → follow-up login ───────
+            if (isAlef) {
+              return (
+                <div
+                  key={item.number}
+                  className="relative flex items-center justify-center"
+                  style={{ cursor: "pointer", userSelect: "none" }}
+                  onMouseDown={startAlefHold}
+                  onMouseUp={endAlefHold}
+                  onMouseLeave={cancelAlefHold}
+                  onTouchStart={startAlefHold}
+                  onTouchEnd={endAlefHold}
+                  onTouchCancel={cancelAlefHold}
+                >
+                  {alefHolding && (
+                    <svg className="absolute" width="64" height="64" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+                      <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(270 20% 25%)" strokeWidth="2" />
+                      <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(270 70% 65%)" strokeWidth="2"
+                        strokeDasharray={circumference} strokeDashoffset={circumference * (1 - alefHoldProgress)}
+                        strokeLinecap="round"
+                        style={{ transform: "rotate(-90deg)", transformOrigin: "center", transition: "stroke-dashoffset 0.03s linear" }}
+                      />
+                    </svg>
+                  )}
+                  <span
+                    className="hebrew-letter text-5xl sm:text-6xl leading-none py-3 px-1"
+                    style={{
+                      color: alefHolding ? "hsl(270 75% 78%)" : "hsl(38 40% 45%)",
+                      fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif",
+                      textShadow: alefHolding ? "0 0 18px hsl(270 65% 65% / 0.6)" : "none",
+                      transition: "color 0.2s, text-shadow 0.2s",
+                    }}
+                    aria-label={item.name}
+                  >
+                    {item.letter}
+                  </span>
+                </div>
+              );
+            }
+
+            // ── All other letters ─────────────────────────────────────────────
             return (
               <button
                 key={item.number}
@@ -286,11 +342,9 @@ export default function LoginPage() {
                 `}
                 style={{
                   color: isSelected
-                    ? isError
-                      ? "hsl(0 70% 55%)"
-                      : isSuccess
-                      ? "hsl(38 90% 72%)"
-                      : "hsl(38 85% 68%)"
+                    ? isError   ? "hsl(0 70% 55%)"
+                    : isSuccess ? "hsl(38 90% 72%)"
+                                : "hsl(38 85% 68%)"
                     : "hsl(38 40% 45%)",
                   fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif",
                 }}

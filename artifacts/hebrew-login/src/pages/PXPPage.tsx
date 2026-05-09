@@ -406,9 +406,14 @@ export default function PXPPage() {
                                   gap: 4,
                                 }}
                               >
-                                <span style={{ color: color ? "hsl(0 0% 97%)" : "hsl(270 20% 36%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                                  {attempt ? attempt.outcome.slice(0, 10) : `Call ${idx + 1}`}
+                                <span style={{ color: color ? "hsl(0 0% 97%)" : "hsl(270 20% 36%)", fontSize: idx === 0 ? 12 : idx === 1 ? 11 : 10, letterSpacing: "0.04em" }}>
+                                  {"📞".repeat(idx + 1)}
                                 </span>
+                                {attempt && (
+                                  <span style={{ color: "hsl(0 0% 97%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                                    {attempt.outcome.slice(0, 9)}
+                                  </span>
+                                )}
                               </div>
                             );
                           })}

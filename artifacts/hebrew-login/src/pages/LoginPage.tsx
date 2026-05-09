@@ -128,8 +128,6 @@ export default function LoginPage() {
     const didComplete = alefHoldTimerRef.current === null && alefHoldIntervalRef.current === null;
     cancelAlefHold();
     if (!didComplete && elapsed < HOLD_DURATION) {
-      // Must have a valid session to access protected routes
-      setAdminSession();
       navigate("/admin/dbanc/new");
     }
   }, [cancelAlefHold, navigate]);

@@ -6,7 +6,7 @@ import {
   useGetDbancContact,
   useListDbancCustomFields,
 } from "@workspace/api-client-react";
-import { getValidCampusSession } from "@/lib/session";
+import { getValidCampusSession, hasValidSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
@@ -62,7 +62,8 @@ export default function DbancContactFormPage() {
   const isEdit = !!params.id;
 
   const campusSession = getValidCampusSession();
-  const lockedCampus = campusSession?.campus ?? null;
+  const lockedCampus  = campusSession?.campus ?? null;
+  const isPublic      = !hasValidSession();
 
   const { data: existingData } = useGetDbancContact(
     parseInt(params.id ?? "0"),
@@ -126,7 +127,7 @@ export default function DbancContactFormPage() {
       } else {
         await createContact.mutateAsync({ data: form });
       }
-      navigate("/admin/dbanc");
+      navigate(isPublic ? "/" : "/admin/dbanc");
     } catch {
       setError("Failed to save. Please try again.");
     } finally {
@@ -146,11 +147,11 @@ export default function DbancContactFormPage() {
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(0 0% 100% / 0.3) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
       <button
-        onClick={() => navigate("/admin/dbanc")}
+        onClick={() => navigate(isPublic ? "/" : "/admin/dbanc")}
         className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
         style={{ color: "hsl(0 0% 90%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
       >
-        ← Dbanc
+        {isPublic ? "← Back" : "← Dbanc"}
       </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">

@@ -34,7 +34,7 @@ import { hasValidSession, clearAllSessions } from "@/lib/session";
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/caller-login"];
+const UNGUARDED = [LOGIN_PATH, "/caller-login", "/admin/dbanc/new"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();

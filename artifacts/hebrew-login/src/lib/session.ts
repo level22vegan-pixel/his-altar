@@ -33,8 +33,9 @@ export function getValidCampusSession(): { campus: string; role: string } | null
     const raw = localStorage.getItem("campusSession");
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed?.campus || !parsed?.loginAt) return null;
-    if (isExpired(parsed.loginAt)) {
+    if (!parsed?.campus) return null;
+    // Only enforce expiry if loginAt is present (older sessions without it stay valid)
+    if (parsed.loginAt && isExpired(parsed.loginAt)) {
       localStorage.removeItem("campusSession");
       return null;
     }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { setCampusSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
@@ -12,23 +13,6 @@ const GOLD = "hsl(38 60% 62%)";
 const GOLD_DIM = "hsl(38 28% 42%)";
 const GOLD_BRIGHT = "hsl(38 75% 72%)";
 const BORDER = "hsl(38 18% 20%)";
-
-export function setCampusSession(campus: string, role: string) {
-  localStorage.setItem("campusSession", JSON.stringify({ campus, role }));
-}
-
-export function getCampusSession(): { campus: string; role: string } | null {
-  try {
-    const raw = localStorage.getItem("campusSession");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function clearCampusSession() {
-  localStorage.removeItem("campusSession");
-}
 
 export default function CampusLoginPage() {
   const [, navigate] = useLocation();

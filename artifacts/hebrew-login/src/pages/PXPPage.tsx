@@ -117,7 +117,11 @@ export default function PXPPage() {
     ? allContacts.filter(c => calledContactIds.has(c.id))
     : allContacts;
 
-  const contacts = filteredByTab.filter(c => {
+  const filteredByService = serviceFilter
+    ? filteredByTab.filter(c => c.serviceTime === serviceFilter)
+    : filteredByTab;
+
+  const contacts = filteredByService.filter(c => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -310,6 +314,20 @@ export default function PXPPage() {
                 {tab === "all" ? `All (${allContacts.length})` : `Called (${calledCount})`}
               </button>
             ))}
+          </div>
+
+          {/* Service time filter */}
+          <div style={{ marginBottom: 10 }}>
+            <select
+              style={{ ...inputStyle, appearance: "none" as const, color: serviceFilter ? "hsl(270 70% 78%)" : "hsl(270 25% 50%)" }}
+              value={serviceFilter}
+              onChange={e => { setServiceFilter(e.target.value); setSelectedId(null); }}
+            >
+              <option value="">All service times</option>
+              {(CAMPUS_SERVICES[activeCampus] ?? []).map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
 
           <input

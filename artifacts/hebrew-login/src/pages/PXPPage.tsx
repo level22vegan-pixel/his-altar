@@ -385,31 +385,36 @@ export default function PXPPage() {
                             </span>
                           )}
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          {/* 3-attempt status boxes */}
-                          <div style={{ display: "flex", gap: 4 }}>
-                            {[0, 1, 2].map(idx => {
-                              const attempt = attempts[idx];
-                              const color = attempt ? outcomeColor(attempt.outcome) : undefined;
-                              return (
-                                <div
-                                  key={idx}
-                                  title={attempt ? `Call ${idx + 1}: ${attempt.outcome}` : `Call ${idx + 1}: not attempted`}
-                                  style={{
-                                    width: 14,
-                                    height: 14,
-                                    borderRadius: 3,
-                                    background: color ?? "transparent",
-                                    border: `1.5px solid ${color ?? "hsl(270 25% 32%)"}`,
-                                    flexShrink: 0,
-                                  }}
-                                />
-                              );
-                            })}
-                          </div>
-                          <span style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
-                            {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
-                          </span>
+                        {/* 3-attempt status boxes — full width, touch-friendly */}
+                        <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                          {[0, 1, 2].map(idx => {
+                            const attempt = attempts[idx];
+                            const color = attempt ? outcomeColor(attempt.outcome) : undefined;
+                            return (
+                              <div
+                                key={idx}
+                                title={attempt ? `Call ${idx + 1}: ${attempt.outcome}` : `Call ${idx + 1}: not attempted`}
+                                style={{
+                                  flex: 1,
+                                  minHeight: 28,
+                                  borderRadius: 6,
+                                  background: color ? `${color}` : "hsl(270 20% 12%)",
+                                  border: `2px solid ${color ?? "hsl(270 25% 28%)"}`,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                <span style={{ color: color ? "hsl(0 0% 97%)" : "hsl(270 20% 36%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                                  {attempt ? attempt.outcome.slice(0, 10) : `Call ${idx + 1}`}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 4 }}>
+                          {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
                         </div>
                       </div>
                       {isSelected && (

@@ -311,36 +311,16 @@ export default function PXPContactProfilePage() {
           </div>
         </div>
 
-        {/* Assigned Caller */}
-        <div style={S.card}>
-          <p style={S.label}>Assigned Caller</p>
-          {isCallerSession ? (
-            /* Caller session: locked to the signed-in caller */
+        {/* Assigned Caller — shown only when a caller is signed in */}
+        {isCallerSession && (
+          <div style={S.card}>
+            <p style={S.label}>Assigned Caller</p>
             <div style={{ ...S.input, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.82 }}>
               <span style={{ color: "hsl(270 60% 72%)" }}>{callerSession?.callerName}</span>
               <span style={{ color: "hsl(270 30% 45%)", fontSize: 10, letterSpacing: "0.12em" }}>ASSIGNED FROM SIGN-IN</span>
             </div>
-          ) : (
-            /* Admin: free dropdown */
-            <>
-              <select
-                style={{ ...S.input, appearance: "none" as const }}
-                value={assignedCallerId ?? ""}
-                onChange={e => setAssignedCallerId(e.target.value ? parseInt(e.target.value) : null)}
-              >
-                <option value="">— No assigned caller —</option>
-                {callers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              {callers.length === 0 && (
-                <p style={{ color: "hsl(270 25% 38%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 6 }}>
-                  No callers registered for {contact.campus} yet.
-                </p>
-              )}
-            </>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Services & Feedback Notes */}
         <div style={S.card}>

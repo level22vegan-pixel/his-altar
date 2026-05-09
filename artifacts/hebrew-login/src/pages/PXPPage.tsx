@@ -51,6 +51,7 @@ export default function PXPPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [contactFilter, setContactFilter] = useState<"all" | "called">("all");
   const [serviceFilter, setServiceFilter] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const activeCampus = lockedCampus ?? callerCampus;
 
@@ -111,7 +112,7 @@ export default function PXPPage() {
       ? manualName.trim()
       : callers.find(c => c.id === selectedCallerId)?.name ?? "";
 
-  const allContacts = [...(data?.contacts ?? [])].sort((a, b) => b.id - a.id);
+  const allContacts = [...(data?.contacts ?? [])].sort((a, b) => sortOrder === "newest" ? b.id - a.id : a.id - b.id);
 
   const filteredByTab = contactFilter === "called"
     ? allContacts.filter(c => calledContactIds.has(c.id))
@@ -328,6 +329,26 @@ export default function PXPPage() {
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+          </div>
+
+          {/* Sort toggle */}
+          <div style={{ display: "flex", background: "hsl(270 30% 8%)", borderRadius: 8, padding: 3, marginBottom: 10, gap: 3 }}>
+            {(["newest", "oldest"] as const).map(opt => (
+              <button
+                key={opt}
+                onClick={() => setSortOrder(opt)}
+                style={{
+                  flex: 1, padding: "6px 0", borderRadius: 6,
+                  background: sortOrder === opt ? "hsl(270 50% 22%)" : "transparent",
+                  color: sortOrder === opt ? "hsl(270 70% 78%)" : "hsl(270 25% 42%)",
+                  fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase",
+                  border: sortOrder === opt ? "1px solid hsl(270 45% 35%)" : "1px solid transparent",
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                {opt === "newest" ? "Newest First" : "Oldest First"}
+              </button>
+            ))}
           </div>
 
           <input

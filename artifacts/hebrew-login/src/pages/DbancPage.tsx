@@ -33,6 +33,7 @@ export default function DbancPage() {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [campusFilter, setCampusFilter] = useState("HALLMARK");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const logAccess = useCreateActivityLog();
 
   const campusSession = getValidCampusSession();
@@ -53,7 +54,7 @@ export default function DbancPage() {
   }, []);
 
   const contacts = [...(data?.contacts ?? [])]
-    .sort((a, b) => b.id - a.id)
+    .sort((a, b) => sortOrder === "newest" ? b.id - a.id : a.id - b.id)
     .filter(c => {
     const q = search.toLowerCase();
     return (
@@ -176,6 +177,26 @@ export default function DbancPage() {
           <button onClick={() => navigate("/admin/dbanc/new")} style={{ ...BTN, flex: 1 }}>
             + Add Contact
           </button>
+        </div>
+
+        {/* Sort toggle */}
+        <div style={{ display: "flex", background: "hsl(220 40% 8%)", borderRadius: 8, padding: 3, marginBottom: 10, gap: 3 }}>
+          {(["newest", "oldest"] as const).map(opt => (
+            <button
+              key={opt}
+              onClick={() => setSortOrder(opt)}
+              style={{
+                flex: 1, padding: "6px 0", borderRadius: 6,
+                background: sortOrder === opt ? "hsl(220 50% 22%)" : "transparent",
+                color: sortOrder === opt ? "hsl(220 70% 78%)" : "hsl(220 25% 42%)",
+                fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase",
+                border: sortOrder === opt ? "1px solid hsl(220 45% 35%)" : "1px solid transparent",
+                cursor: "pointer", transition: "all 0.15s",
+              }}
+            >
+              {opt === "newest" ? "Newest First" : "Oldest First"}
+            </button>
+          ))}
         </div>
 
         {/* Search */}

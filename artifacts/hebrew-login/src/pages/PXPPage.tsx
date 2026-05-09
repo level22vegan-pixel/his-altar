@@ -466,30 +466,28 @@ export default function PXPPage() {
           )}
         </div>
 
-        {/* Start Call */}
-        <button
-          onClick={handleStartCall}
-          disabled={!canStart}
-          style={{
-            width: "100%",
-            padding: "16px 0",
-            borderRadius: 12,
-            background: canStart
-              ? "linear-gradient(135deg, hsl(270 65% 40%), hsl(270 60% 28%))"
-              : "hsl(270 25% 15%)",
-            color: canStart ? "hsl(0 0% 97%)" : "hsl(270 20% 40%)",
-            fontFamily: "Georgia, serif",
-            fontSize: 14,
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            border: `1px solid ${canStart ? "hsl(270 55% 45%)" : "hsl(270 20% 22%)"}`,
-            cursor: canStart ? "pointer" : "not-allowed",
-            boxShadow: canStart ? "0 4px 30px hsl(270 60% 25% / 0.5)" : "none",
-            transition: "all 0.2s",
-          }}
-        >
-          {canStart ? `Start Call with ${selected?.firstName}` : "Complete steps above to start"}
-        </button>
+        {/* Start Call — only shown when ready */}
+        {canStart && (
+          <button
+            onClick={handleStartCall}
+            style={{
+              width: "100%",
+              padding: "16px 0",
+              borderRadius: 12,
+              background: "linear-gradient(135deg, hsl(270 65% 40%), hsl(270 60% 28%))",
+              color: "hsl(0 0% 97%)",
+              fontFamily: "Georgia, serif",
+              fontSize: 14,
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              border: "1px solid hsl(270 55% 45%)",
+              cursor: "pointer",
+              boxShadow: "0 4px 30px hsl(270 60% 25% / 0.5)",
+            }}
+          >
+            Start Call with {selected?.firstName}
+          </button>
+        )}
       </div>
     </div>
   );

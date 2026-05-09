@@ -10,6 +10,7 @@ export const dbancContactsTable = pgTable("dbanc_contacts", {
   carrier: text("carrier").notNull().default(""),
   gender: text("gender").notNull().default(""),
   campus: text("campus").notNull().default(""),
+  serviceTime: text("service_time").notNull().default(""),
   notes: text("notes").notNull().default(""),
   customData: jsonb("custom_data").notNull().default({}),
   crisisFlag: boolean("crisis_flag").notNull().default(false),

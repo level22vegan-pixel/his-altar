@@ -263,6 +263,7 @@ export interface DbancContact {
   carrier: string;
   gender: string;
   campus: string;
+  serviceTime: string;
   notes: string;
   customData: DbancContactCustomData;
   crisisFlag: boolean;
@@ -286,6 +287,7 @@ export interface CreateDbancContactBody {
   carrier?: string;
   gender?: string;
   campus?: string;
+  serviceTime: string;
   notes?: string;
   customData?: CreateDbancContactBodyCustomData;
   crisisFlag?: boolean;

@@ -101,6 +101,7 @@ export default function PXPContactProfilePage() {
             firstName: contact.firstName,
             lastName: contact.lastName,
             phone: contact.phone,
+            serviceTime: contact.serviceTime ?? "",
             assignedCallerId: callerSession.callerId,
           },
         });
@@ -123,6 +124,7 @@ export default function PXPContactProfilePage() {
         firstName: contact!.firstName,
         lastName: contact!.lastName,
         phone: contact!.phone,
+        serviceTime: contact!.serviceTime ?? "",
         crisisFlag,
         doNotContact,
         assignedCallerId,

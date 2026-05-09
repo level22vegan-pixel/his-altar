@@ -1412,6 +1412,8 @@ components:
           type: string
         campus:
           type: string
+        serviceTime:
+          type: string
         notes:
           type: string
         customData:
@@ -1440,6 +1442,7 @@ components:
         - carrier
         - gender
         - campus
+        - serviceTime
         - notes
         - customData
         - crisisFlag
@@ -1471,6 +1474,8 @@ components:
           type: string
         campus:
           type: string
+        serviceTime:
+          type: string
         notes:
           type: string
         customData:
@@ -1489,6 +1494,7 @@ components:
         - firstName
         - lastName
         - phone
+        - serviceTime
     DbancCustomField:
       type: object
       properties:

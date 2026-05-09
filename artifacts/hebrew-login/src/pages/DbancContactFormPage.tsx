@@ -12,6 +12,15 @@ const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
 const GENDERS = ["Male", "Female", "Prefer not to say"];
 
+const CAMPUS_SERVICES: Record<string, string[]> = {
+  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
+  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
+  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
+  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
+  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+};
+
 const inputStyle = {
   width: "100%",
   padding: "10px 14px",
@@ -42,6 +51,7 @@ interface FormData {
   carrier: string;
   gender: string;
   campus: string;
+  serviceTime: string;
   notes: string;
   customData: Record<string, string>;
 }
@@ -69,6 +79,7 @@ export default function DbancContactFormPage() {
     carrier: "",
     gender: "",
     campus: lockedCampus ?? "",
+    serviceTime: "",
     notes: "",
     customData: {},
   });
@@ -84,6 +95,7 @@ export default function DbancContactFormPage() {
         carrier: existingData.carrier,
         gender: existingData.gender,
         campus: existingData.campus,
+        serviceTime: existingData.serviceTime ?? "",
         notes: existingData.notes,
         customData: (existingData.customData as Record<string, string>) ?? {},
       });
@@ -102,8 +114,8 @@ export default function DbancContactFormPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim()) {
-      setError("First name, last name, and phone are required.");
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim() || !form.serviceTime) {
+      setError("First name, last name, phone, and service time are required.");
       return;
     }
     setSaving(true);
@@ -201,12 +213,35 @@ export default function DbancContactFormPage() {
                   <span style={{ color: "hsl(220 30% 48%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>Locked</span>
                 </div>
               ) : (
-                <select style={{ ...inputStyle, appearance: "none" as const }} value={form.campus} onChange={e => setField("campus", e.target.value)}>
+                <select
+                  style={{ ...inputStyle, appearance: "none" as const }}
+                  value={form.campus}
+                  onChange={e => { setField("campus", e.target.value); setField("serviceTime", ""); }}
+                >
                   <option value="">Select campus…</option>
                   {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               )}
             </div>
+          </div>
+
+          {/* Service Time */}
+          <div>
+            <label style={labelStyle}>Service Time *</label>
+            <select
+              style={{
+                ...inputStyle,
+                appearance: "none" as const,
+                borderColor: !form.serviceTime ? "hsl(220 55% 38%)" : "hsl(220 40% 26%)",
+              }}
+              value={form.serviceTime}
+              onChange={e => setField("serviceTime", e.target.value)}
+            >
+              <option value="">Select service time…</option>
+              {(CAMPUS_SERVICES[form.campus] ?? Object.values(CAMPUS_SERVICES).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
 
           {/* Notes */}

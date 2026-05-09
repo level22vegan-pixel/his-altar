@@ -106,6 +106,13 @@ export default function PXPPage() {
 
   const selected = contacts.find(c => c.id === selectedId) ?? allContacts.find(c => c.id === selectedId);
 
+  // Auto-fill service time from the selected contact's Dbanc record
+  useEffect(() => {
+    if (selected?.serviceTime) {
+      setServiceFilter(selected.serviceTime);
+    }
+  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleStartCall() {
     if (!callerName || !selectedId || !activeCampus) return;
     if (!lockedCampus) localStorage.setItem("pxp_campus", callerCampus);

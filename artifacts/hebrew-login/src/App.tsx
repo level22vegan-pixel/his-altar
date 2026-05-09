@@ -21,6 +21,8 @@ import PXPCallPage from "@/pages/PXPCallPage";
 import PXPLogsPage from "@/pages/PXPLogsPage";
 import PXPScriptPage from "@/pages/PXPScriptPage";
 import PXPCallersPage from "@/pages/PXPCallersPage";
+import CallerLoginPage from "@/pages/CallerLoginPage";
+import CallerPasswordsPage from "@/pages/CallerPasswordsPage";
 import ActivityLogPage from "@/pages/ActivityLogPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
@@ -31,7 +33,7 @@ import { hasValidSession, clearAllSessions } from "@/lib/session";
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH];
+const UNGUARDED = [LOGIN_PATH, "/caller-login"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -81,6 +83,8 @@ function Router() {
         <Route path="/admin/pxp/logs" component={PXPLogsPage} />
         <Route path="/admin/pxp/script" component={PXPScriptPage} />
         <Route path="/admin/pxp/callers" component={PXPCallersPage} />
+        <Route path="/admin/caller-passwords" component={CallerPasswordsPage} />
+        <Route path="/caller-login" component={CallerLoginPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
         <Route component={NotFound} />

@@ -95,6 +95,15 @@ export default function LoginPage() {
   const handleLetterClick = useCallback(
     (letterNum: number) => {
       if (status === "success" || verifyMutation.isPending) return;
+
+      // Alef + Alef shortcut → caller login
+      if (letterNum === 1 && sequence.length === 1 && sequence[0] === 1) {
+        setSequence([]);
+        setSelectedLetters(new Set());
+        navigate("/caller-login");
+        return;
+      }
+
       const newSeq = [...sequence, letterNum];
       const newSelected = new Set(selectedLetters);
       newSelected.add(letterNum);

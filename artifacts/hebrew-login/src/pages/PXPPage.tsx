@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListDbancContacts, useListPxpCallers, useCreateActivityLog } from "@workspace/api-client-react";
-import { getSessionUserName, getValidCampusSession } from "@/lib/session";
+import { getSessionUserName, getValidCampusSession, getValidCallerSession, clearAllSessions } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
@@ -29,9 +29,14 @@ export default function PXPPage() {
   const logAccess = useCreateActivityLog();
 
   const campusSession = getValidCampusSession();
-  const lockedCampus = campusSession?.campus ?? null;
+  const callerSession = getValidCallerSession();
 
-  // If campus user, always use their campus; otherwise restore from localStorage
+  // Caller session takes precedence over campus session for caller info
+  const lockedCampus = callerSession?.campus ?? campusSession?.campus ?? null;
+  const lockedCallerName = callerSession?.callerName ?? null;
+  const isCallerSession = !!callerSession;
+
+  // If campus user or caller, always use their campus; otherwise restore from localStorage
   const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? "HALLMARK");
   const [selectedCallerId, setSelectedCallerId] = useState<number | "manual" | null>(null);
   const [manualName, setManualName] = useState("");
@@ -41,7 +46,7 @@ export default function PXPPage() {
   const activeCampus = lockedCampus ?? callerCampus;
 
   const { data: callersData } = useListPxpCallers(
-    activeCampus ? { campus: activeCampus } : undefined
+    !isCallerSession && activeCampus ? { campus: activeCampus } : undefined
   );
   const { data } = useListDbancContacts(
     lockedCampus ? { campus: lockedCampus } : undefined
@@ -65,8 +70,10 @@ export default function PXPPage() {
     setManualName("");
   }, [callerCampus]);
 
-  const callerName =
-    selectedCallerId === "manual"
+  // For caller session, name is locked from session
+  const callerName = isCallerSession
+    ? lockedCallerName ?? ""
+    : selectedCallerId === "manual"
       ? manualName.trim()
       : callers.find(c => c.id === selectedCallerId)?.name ?? "";
 
@@ -90,6 +97,11 @@ export default function PXPPage() {
     navigate(`/admin/pxp/call?contactId=${selectedId}&callerName=${encodeURIComponent(callerName)}&campus=${encodeURIComponent(activeCampus)}`);
   }
 
+  function handleSignOut() {
+    clearAllSessions();
+    navigate("/");
+  }
+
   const canStart = !!callerName && !!selectedId && !!activeCampus;
 
   return (
@@ -101,14 +113,24 @@ export default function PXPPage() {
       <div className="absolute top-0 left-0 right-0 h-1" style={{ background: "linear-gradient(90deg, hsl(270 70% 55%), hsl(300 60% 55%), hsl(270 70% 55%))" }} />
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(270 50% 60% / 0.06) 1px, transparent 1px)", backgroundSize: "50px 50px" }} />
 
-      {/* Back */}
-      <button
-        onClick={() => navigate("/admin")}
-        className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
-      >
-        ← Admin
-      </button>
+      {/* Back / Sign out */}
+      {isCallerSession ? (
+        <button
+          onClick={handleSignOut}
+          className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+          style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        >
+          ← Sign Out
+        </button>
+      ) : (
+        <button
+          onClick={() => navigate("/admin")}
+          className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+          style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        >
+          ← Admin
+        </button>
+      )}
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         {/* Header */}
@@ -120,8 +142,18 @@ export default function PXPPage() {
           <p style={{ color: "hsl(270 40% 58%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", marginTop: 6, textTransform: "uppercase" }}>
             Prayer Follow-Up System
           </p>
-          {/* Campus lock badge */}
-          {lockedCampus && (
+
+          {/* Caller session badge */}
+          {isCallerSession && (
+            <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 50% 18%)", border: "1px solid hsl(270 45% 32%)", borderRadius: 20 }}>
+              <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                {lockedCallerName} · {lockedCampus}
+              </span>
+            </div>
+          )}
+
+          {/* Campus session badge */}
+          {!isCallerSession && lockedCampus && (
             <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 50% 18%)", border: "1px solid hsl(270 45% 32%)", borderRadius: 20 }}>
               <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
                 {lockedCampus} · {campusSession?.role === "lead" ? "Lead" : "Deputy Lead"}
@@ -136,57 +168,73 @@ export default function PXPPage() {
             Step 1 — Caller Info
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Campus selector — admin only */}
-            {!lockedCampus && (
-              <select
-                style={{ ...inputStyle, appearance: "none" as const }}
-                value={callerCampus}
-                onChange={e => setCallerCampus(e.target.value)}
-              >
-                {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            )}
-            {lockedCampus && (
-              <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
-                <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
-                <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
-              </div>
-            )}
-            {/* Caller dropdown */}
-            {callers.length > 0 ? (
+            {/* Caller session: both campus and name are locked */}
+            {isCallerSession ? (
               <>
-                <select
-                  style={{ ...inputStyle, appearance: "none" as const }}
-                  value={selectedCallerId === "manual" ? "manual" : (selectedCallerId ?? "")}
-                  onChange={e => {
-                    const v = e.target.value;
-                    if (v === "manual") setSelectedCallerId("manual");
-                    else if (v === "") setSelectedCallerId(null);
-                    else setSelectedCallerId(parseInt(v));
-                  }}
-                >
-                  <option value="">Select caller…</option>
-                  {callers.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                  <option value="manual">— Enter name manually —</option>
-                </select>
-                {selectedCallerId === "manual" && (
+                <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                  <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
+                  <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS</span>
+                </div>
+                <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                  <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCallerName}</span>
+                  <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>YOUR NAME</span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Campus selector — admin only */}
+                {!lockedCampus && (
+                  <select
+                    style={{ ...inputStyle, appearance: "none" as const }}
+                    value={callerCampus}
+                    onChange={e => setCallerCampus(e.target.value)}
+                  >
+                    {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                )}
+                {lockedCampus && (
+                  <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                    <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
+                    <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
+                  </div>
+                )}
+                {/* Caller dropdown */}
+                {callers.length > 0 ? (
+                  <>
+                    <select
+                      style={{ ...inputStyle, appearance: "none" as const }}
+                      value={selectedCallerId === "manual" ? "manual" : (selectedCallerId ?? "")}
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (v === "manual") setSelectedCallerId("manual");
+                        else if (v === "") setSelectedCallerId(null);
+                        else setSelectedCallerId(parseInt(v));
+                      }}
+                    >
+                      <option value="">Select caller…</option>
+                      {callers.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                      <option value="manual">— Enter name manually —</option>
+                    </select>
+                    {selectedCallerId === "manual" && (
+                      <input
+                        style={inputStyle}
+                        placeholder="Type caller name…"
+                        value={manualName}
+                        onChange={e => setManualName(e.target.value)}
+                      />
+                    )}
+                  </>
+                ) : (
                   <input
                     style={inputStyle}
-                    placeholder="Type caller name…"
+                    placeholder="Caller name (no callers registered yet)"
                     value={manualName}
-                    onChange={e => setManualName(e.target.value)}
+                    onChange={e => { setManualName(e.target.value); setSelectedCallerId("manual"); }}
                   />
                 )}
               </>
-            ) : (
-              <input
-                style={inputStyle}
-                placeholder="Caller name (no callers registered yet)"
-                value={manualName}
-                onChange={e => { setManualName(e.target.value); setSelectedCallerId("manual"); }}
-              />
             )}
           </div>
         </div>

@@ -14,6 +14,12 @@ import LAPage from "@/pages/LAPage";
 import ArizonaPage from "@/pages/ArizonaPage";
 import AltarReportPage from "@/pages/AltarReportPage";
 import DbancPage from "@/pages/DbancPage";
+import DbancContactFormPage from "@/pages/DbancContactFormPage";
+import DbancFieldsPage from "@/pages/DbancFieldsPage";
+import PXPPage from "@/pages/PXPPage";
+import PXPCallPage from "@/pages/PXPCallPage";
+import PXPLogsPage from "@/pages/PXPLogsPage";
+import PXPScriptPage from "@/pages/PXPScriptPage";
 import ActivityLogPage from "@/pages/ActivityLogPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
@@ -66,6 +72,13 @@ function Router() {
         <Route path="/checkin" component={CheckInPage} />
         <Route path="/admin/service-report" component={ServiceReportPage} />
         <Route path="/admin/dbanc" component={DbancPage} />
+        <Route path="/admin/dbanc/new" component={DbancContactFormPage} />
+        <Route path="/admin/dbanc/contacts/:id" component={DbancContactFormPage} />
+        <Route path="/admin/dbanc/fields" component={DbancFieldsPage} />
+        <Route path="/admin/pxp" component={PXPPage} />
+        <Route path="/admin/pxp/call" component={PXPCallPage} />
+        <Route path="/admin/pxp/logs" component={PXPLogsPage} />
+        <Route path="/admin/pxp/script" component={PXPScriptPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
         <Route component={NotFound} />

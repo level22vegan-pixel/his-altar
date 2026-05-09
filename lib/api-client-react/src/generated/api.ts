@@ -28,20 +28,31 @@ import type {
   CreateActivityLogBody,
   CreateAltarReportBody,
   CreateCheckInBody,
+  CreateDbancContactBody,
+  CreateDbancCustomFieldBody,
+  CreatePxpCallLogBody,
   CreateWorkerBody,
   DailyAltarReport,
   DailyAltarReportList,
+  DbancContact,
+  DbancContactList,
+  DbancCustomField,
+  DbancCustomFieldList,
   GetServiceNotesParams,
   GetTeamPresetParams,
   HealthStatus,
   ListActivityLogsParams,
   ListCheckInsParams,
   ListDailyAltarReportsParams,
+  ListPxpCallLogsParams,
   ListServiceReportsParams,
   ListWorkersParams,
   LoginCodeConfig,
   LoginResult,
   PasswordHistoryList,
+  PxpCallLog,
+  PxpCallLogList,
+  PxpConfig,
   SaveServiceNotesBody,
   ServiceNotes,
   ServiceReport,
@@ -50,6 +61,7 @@ import type {
   SetTeamPresetBody,
   TeamPreset,
   UpdateLoginCodeBody,
+  UpdatePxpConfigBody,
   UpdateWorkerBody,
   UpsertDailyAltarReportBody,
   UpsertServiceReportBody,
@@ -1335,6 +1347,1100 @@ export const useDeleteCheckIn = <
   TContext
 > => {
   return useMutation(getDeleteCheckInMutationOptions(options));
+};
+
+/**
+ * @summary List all prayer contacts
+ */
+export const getListDbancContactsUrl = () => {
+  return `/api/dbanc/contacts`;
+};
+
+export const listDbancContacts = async (
+  options?: RequestInit,
+): Promise<DbancContactList> => {
+  return customFetch<DbancContactList>(getListDbancContactsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDbancContactsQueryKey = () => {
+  return [`/api/dbanc/contacts`] as const;
+};
+
+export const getListDbancContactsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDbancContacts>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listDbancContacts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDbancContactsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listDbancContacts>>
+  > = ({ signal }) => listDbancContacts({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDbancContacts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListDbancContactsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDbancContacts>>
+>;
+export type ListDbancContactsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all prayer contacts
+ */
+
+export function useListDbancContacts<
+  TData = Awaited<ReturnType<typeof listDbancContacts>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listDbancContacts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDbancContactsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a new prayer contact
+ */
+export const getCreateDbancContactUrl = () => {
+  return `/api/dbanc/contacts`;
+};
+
+export const createDbancContact = async (
+  createDbancContactBody: CreateDbancContactBody,
+  options?: RequestInit,
+): Promise<DbancContact> => {
+  return customFetch<DbancContact>(getCreateDbancContactUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createDbancContactBody),
+  });
+};
+
+export const getCreateDbancContactMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDbancContact>>,
+    TError,
+    { data: BodyType<CreateDbancContactBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createDbancContact>>,
+  TError,
+  { data: BodyType<CreateDbancContactBody> },
+  TContext
+> => {
+  const mutationKey = ["createDbancContact"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createDbancContact>>,
+    { data: BodyType<CreateDbancContactBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createDbancContact(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateDbancContactMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createDbancContact>>
+>;
+export type CreateDbancContactMutationBody = BodyType<CreateDbancContactBody>;
+export type CreateDbancContactMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a new prayer contact
+ */
+export const useCreateDbancContact = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDbancContact>>,
+    TError,
+    { data: BodyType<CreateDbancContactBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createDbancContact>>,
+  TError,
+  { data: BodyType<CreateDbancContactBody> },
+  TContext
+> => {
+  return useMutation(getCreateDbancContactMutationOptions(options));
+};
+
+/**
+ * @summary Get a single contact
+ */
+export const getGetDbancContactUrl = (id: number) => {
+  return `/api/dbanc/contacts/${id}`;
+};
+
+export const getDbancContact = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DbancContact> => {
+  return customFetch<DbancContact>(getGetDbancContactUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDbancContactQueryKey = (id: number) => {
+  return [`/api/dbanc/contacts/${id}`] as const;
+};
+
+export const getGetDbancContactQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDbancContact>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDbancContact>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDbancContactQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDbancContact>>> = ({
+    signal,
+  }) => getDbancContact(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDbancContact>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDbancContactQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDbancContact>>
+>;
+export type GetDbancContactQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get a single contact
+ */
+
+export function useGetDbancContact<
+  TData = Awaited<ReturnType<typeof getDbancContact>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDbancContact>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDbancContactQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a contact
+ */
+export const getUpdateDbancContactUrl = (id: number) => {
+  return `/api/dbanc/contacts/${id}`;
+};
+
+export const updateDbancContact = async (
+  id: number,
+  createDbancContactBody: CreateDbancContactBody,
+  options?: RequestInit,
+): Promise<DbancContact> => {
+  return customFetch<DbancContact>(getUpdateDbancContactUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createDbancContactBody),
+  });
+};
+
+export const getUpdateDbancContactMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDbancContact>>,
+    TError,
+    { id: number; data: BodyType<CreateDbancContactBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDbancContact>>,
+  TError,
+  { id: number; data: BodyType<CreateDbancContactBody> },
+  TContext
+> => {
+  const mutationKey = ["updateDbancContact"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDbancContact>>,
+    { id: number; data: BodyType<CreateDbancContactBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateDbancContact(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDbancContactMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDbancContact>>
+>;
+export type UpdateDbancContactMutationBody = BodyType<CreateDbancContactBody>;
+export type UpdateDbancContactMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a contact
+ */
+export const useUpdateDbancContact = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDbancContact>>,
+    TError,
+    { id: number; data: BodyType<CreateDbancContactBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDbancContact>>,
+  TError,
+  { id: number; data: BodyType<CreateDbancContactBody> },
+  TContext
+> => {
+  return useMutation(getUpdateDbancContactMutationOptions(options));
+};
+
+/**
+ * @summary Delete a contact
+ */
+export const getDeleteDbancContactUrl = (id: number) => {
+  return `/api/dbanc/contacts/${id}`;
+};
+
+export const deleteDbancContact = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDbancContactUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDbancContactMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDbancContact>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDbancContact>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDbancContact"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDbancContact>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDbancContact(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDbancContactMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDbancContact>>
+>;
+
+export type DeleteDbancContactMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a contact
+ */
+export const useDeleteDbancContact = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDbancContact>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDbancContact>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDbancContactMutationOptions(options));
+};
+
+/**
+ * @summary List custom fields
+ */
+export const getListDbancCustomFieldsUrl = () => {
+  return `/api/dbanc/custom-fields`;
+};
+
+export const listDbancCustomFields = async (
+  options?: RequestInit,
+): Promise<DbancCustomFieldList> => {
+  return customFetch<DbancCustomFieldList>(getListDbancCustomFieldsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDbancCustomFieldsQueryKey = () => {
+  return [`/api/dbanc/custom-fields`] as const;
+};
+
+export const getListDbancCustomFieldsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDbancCustomFields>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listDbancCustomFields>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDbancCustomFieldsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listDbancCustomFields>>
+  > = ({ signal }) => listDbancCustomFields({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDbancCustomFields>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListDbancCustomFieldsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDbancCustomFields>>
+>;
+export type ListDbancCustomFieldsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List custom fields
+ */
+
+export function useListDbancCustomFields<
+  TData = Awaited<ReturnType<typeof listDbancCustomFields>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listDbancCustomFields>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDbancCustomFieldsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a custom field
+ */
+export const getCreateDbancCustomFieldUrl = () => {
+  return `/api/dbanc/custom-fields`;
+};
+
+export const createDbancCustomField = async (
+  createDbancCustomFieldBody: CreateDbancCustomFieldBody,
+  options?: RequestInit,
+): Promise<DbancCustomField> => {
+  return customFetch<DbancCustomField>(getCreateDbancCustomFieldUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createDbancCustomFieldBody),
+  });
+};
+
+export const getCreateDbancCustomFieldMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDbancCustomField>>,
+    TError,
+    { data: BodyType<CreateDbancCustomFieldBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createDbancCustomField>>,
+  TError,
+  { data: BodyType<CreateDbancCustomFieldBody> },
+  TContext
+> => {
+  const mutationKey = ["createDbancCustomField"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createDbancCustomField>>,
+    { data: BodyType<CreateDbancCustomFieldBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createDbancCustomField(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateDbancCustomFieldMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createDbancCustomField>>
+>;
+export type CreateDbancCustomFieldMutationBody =
+  BodyType<CreateDbancCustomFieldBody>;
+export type CreateDbancCustomFieldMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a custom field
+ */
+export const useCreateDbancCustomField = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDbancCustomField>>,
+    TError,
+    { data: BodyType<CreateDbancCustomFieldBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createDbancCustomField>>,
+  TError,
+  { data: BodyType<CreateDbancCustomFieldBody> },
+  TContext
+> => {
+  return useMutation(getCreateDbancCustomFieldMutationOptions(options));
+};
+
+/**
+ * @summary Update a custom field
+ */
+export const getUpdateDbancCustomFieldUrl = (id: number) => {
+  return `/api/dbanc/custom-fields/${id}`;
+};
+
+export const updateDbancCustomField = async (
+  id: number,
+  createDbancCustomFieldBody: CreateDbancCustomFieldBody,
+  options?: RequestInit,
+): Promise<DbancCustomField> => {
+  return customFetch<DbancCustomField>(getUpdateDbancCustomFieldUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createDbancCustomFieldBody),
+  });
+};
+
+export const getUpdateDbancCustomFieldMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDbancCustomField>>,
+    TError,
+    { id: number; data: BodyType<CreateDbancCustomFieldBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDbancCustomField>>,
+  TError,
+  { id: number; data: BodyType<CreateDbancCustomFieldBody> },
+  TContext
+> => {
+  const mutationKey = ["updateDbancCustomField"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDbancCustomField>>,
+    { id: number; data: BodyType<CreateDbancCustomFieldBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateDbancCustomField(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDbancCustomFieldMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDbancCustomField>>
+>;
+export type UpdateDbancCustomFieldMutationBody =
+  BodyType<CreateDbancCustomFieldBody>;
+export type UpdateDbancCustomFieldMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a custom field
+ */
+export const useUpdateDbancCustomField = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDbancCustomField>>,
+    TError,
+    { id: number; data: BodyType<CreateDbancCustomFieldBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDbancCustomField>>,
+  TError,
+  { id: number; data: BodyType<CreateDbancCustomFieldBody> },
+  TContext
+> => {
+  return useMutation(getUpdateDbancCustomFieldMutationOptions(options));
+};
+
+/**
+ * @summary Delete a custom field
+ */
+export const getDeleteDbancCustomFieldUrl = (id: number) => {
+  return `/api/dbanc/custom-fields/${id}`;
+};
+
+export const deleteDbancCustomField = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDbancCustomFieldUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDbancCustomFieldMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDbancCustomField>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDbancCustomField>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDbancCustomField"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDbancCustomField>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDbancCustomField(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDbancCustomFieldMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDbancCustomField>>
+>;
+
+export type DeleteDbancCustomFieldMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a custom field
+ */
+export const useDeleteDbancCustomField = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDbancCustomField>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDbancCustomField>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDbancCustomFieldMutationOptions(options));
+};
+
+/**
+ * @summary Get PXP script config
+ */
+export const getGetPxpConfigUrl = () => {
+  return `/api/pxp/config`;
+};
+
+export const getPxpConfig = async (
+  options?: RequestInit,
+): Promise<PxpConfig> => {
+  return customFetch<PxpConfig>(getGetPxpConfigUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPxpConfigQueryKey = () => {
+  return [`/api/pxp/config`] as const;
+};
+
+export const getGetPxpConfigQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPxpConfig>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPxpConfig>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPxpConfigQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPxpConfig>>> = ({
+    signal,
+  }) => getPxpConfig({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPxpConfig>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPxpConfigQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPxpConfig>>
+>;
+export type GetPxpConfigQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get PXP script config
+ */
+
+export function useGetPxpConfig<
+  TData = Awaited<ReturnType<typeof getPxpConfig>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPxpConfig>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPxpConfigQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update PXP script config
+ */
+export const getUpdatePxpConfigUrl = () => {
+  return `/api/pxp/config`;
+};
+
+export const updatePxpConfig = async (
+  updatePxpConfigBody: UpdatePxpConfigBody,
+  options?: RequestInit,
+): Promise<PxpConfig> => {
+  return customFetch<PxpConfig>(getUpdatePxpConfigUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updatePxpConfigBody),
+  });
+};
+
+export const getUpdatePxpConfigMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePxpConfig>>,
+    TError,
+    { data: BodyType<UpdatePxpConfigBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updatePxpConfig>>,
+  TError,
+  { data: BodyType<UpdatePxpConfigBody> },
+  TContext
+> => {
+  const mutationKey = ["updatePxpConfig"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updatePxpConfig>>,
+    { data: BodyType<UpdatePxpConfigBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updatePxpConfig(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdatePxpConfigMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updatePxpConfig>>
+>;
+export type UpdatePxpConfigMutationBody = BodyType<UpdatePxpConfigBody>;
+export type UpdatePxpConfigMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update PXP script config
+ */
+export const useUpdatePxpConfig = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePxpConfig>>,
+    TError,
+    { data: BodyType<UpdatePxpConfigBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updatePxpConfig>>,
+  TError,
+  { data: BodyType<UpdatePxpConfigBody> },
+  TContext
+> => {
+  return useMutation(getUpdatePxpConfigMutationOptions(options));
+};
+
+/**
+ * @summary List call logs
+ */
+export const getListPxpCallLogsUrl = (params?: ListPxpCallLogsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/pxp/call-logs?${stringifiedParams}`
+    : `/api/pxp/call-logs`;
+};
+
+export const listPxpCallLogs = async (
+  params?: ListPxpCallLogsParams,
+  options?: RequestInit,
+): Promise<PxpCallLogList> => {
+  return customFetch<PxpCallLogList>(getListPxpCallLogsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPxpCallLogsQueryKey = (params?: ListPxpCallLogsParams) => {
+  return [`/api/pxp/call-logs`, ...(params ? [params] : [])] as const;
+};
+
+export const getListPxpCallLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPxpCallLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListPxpCallLogsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPxpCallLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPxpCallLogsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPxpCallLogs>>> = ({
+    signal,
+  }) => listPxpCallLogs(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPxpCallLogs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPxpCallLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPxpCallLogs>>
+>;
+export type ListPxpCallLogsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List call logs
+ */
+
+export function useListPxpCallLogs<
+  TData = Awaited<ReturnType<typeof listPxpCallLogs>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListPxpCallLogsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPxpCallLogs>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPxpCallLogsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Log a completed call
+ */
+export const getCreatePxpCallLogUrl = () => {
+  return `/api/pxp/call-logs`;
+};
+
+export const createPxpCallLog = async (
+  createPxpCallLogBody: CreatePxpCallLogBody,
+  options?: RequestInit,
+): Promise<PxpCallLog> => {
+  return customFetch<PxpCallLog>(getCreatePxpCallLogUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createPxpCallLogBody),
+  });
+};
+
+export const getCreatePxpCallLogMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPxpCallLog>>,
+    TError,
+    { data: BodyType<CreatePxpCallLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPxpCallLog>>,
+  TError,
+  { data: BodyType<CreatePxpCallLogBody> },
+  TContext
+> => {
+  const mutationKey = ["createPxpCallLog"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPxpCallLog>>,
+    { data: BodyType<CreatePxpCallLogBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPxpCallLog(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePxpCallLogMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPxpCallLog>>
+>;
+export type CreatePxpCallLogMutationBody = BodyType<CreatePxpCallLogBody>;
+export type CreatePxpCallLogMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Log a completed call
+ */
+export const useCreatePxpCallLog = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPxpCallLog>>,
+    TError,
+    { data: BodyType<CreatePxpCallLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPxpCallLog>>,
+  TError,
+  { data: BodyType<CreatePxpCallLogBody> },
+  TContext
+> => {
+  return useMutation(getCreatePxpCallLogMutationOptions(options));
 };
 
 /**

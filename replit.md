@@ -40,6 +40,22 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
   - `/admin/altar-report` — Log and export altar responses (PDF/Excel)
   - `/admin/roster` — Add/remove master and alt roster workers
 
+### Dbanc — Prayer Contact Database
+- **Entry point**: `/admin/dbanc`
+- **Pages**:
+  - `/admin/dbanc` — Contact list dashboard with search, edit, delete
+  - `/admin/dbanc/new` — Add new contact (first name, last name, phone, carrier, gender, campus, prayer notes, custom fields)
+  - `/admin/dbanc/contacts/:id` — Edit existing contact
+  - `/admin/dbanc/fields` — Admin: manage custom "other info" fields (text / dropdown / yes-no types)
+
+### PXP — Prayer Follow-Up Call System
+- **Entry point**: `/admin/pxp`
+- **Pages**:
+  - `/admin/pxp` — Select caller name + campus, choose contact from Dbanc, start call
+  - `/admin/pxp/call?contactId=X&callerName=Y&campus=Z` — Branching script walkthrough; auto-fills {contact_name}, {caller_name}, {campus}; response buttons advance the script tree; logs outcome on completion
+  - `/admin/pxp/logs` — History of all logged calls
+  - `/admin/pxp/script` — Admin: edit every node of the script tree (text + response button labels)
+
 ### API Server (`artifacts/api-server`)
 - **Preview path**: `/api`
 - **Routes**:
@@ -53,8 +69,37 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
   - `POST /api/check-ins` — check in a worker `{ workerId, campus, service, serviceDate }`
   - `DELETE /api/check-ins/:id` — check out a worker
   - `GET/POST/DELETE /api/altar-reports` — altar response entries
+  - `GET /api/dbanc/contacts` — list all prayer contacts
+  - `POST /api/dbanc/contacts` — add contact `{ firstName, lastName, phone, carrier, gender, campus, notes, customData }`
+  - `GET/PUT /api/dbanc/contacts/:id` — get/update a contact
+  - `DELETE /api/dbanc/contacts/:id` — remove a contact
+  - `GET /api/dbanc/custom-fields` — list admin-defined custom fields
+  - `POST /api/dbanc/custom-fields` — add custom field `{ label, fieldType, options, sortOrder }`
+  - `PUT/DELETE /api/dbanc/custom-fields/:id` — update/remove custom field
+  - `GET /api/pxp/config` — get PXP config (church name + script tree JSON)
+  - `PUT /api/pxp/config` — update PXP config (save edited script tree)
+  - `GET /api/pxp/call-logs` — list call logs (optionally filter by contactId)
+  - `POST /api/pxp/call-logs` — log a completed call `{ contactId, callerName, campus, outcome, notes }`
 
 ## Database Schema
+
+### `dbanc_contacts`
+Prayer contact records:
+- `id`, `first_name`, `last_name`, `phone`, `carrier`, `gender`, `campus`, `notes` — core fields
+- `custom_data` — JSONB for admin-defined extra fields
+- `created_at`, `updated_at`
+
+### `dbanc_custom_fields`
+Admin-configurable extra contact fields:
+- `id`, `label`, `field_type` (text/select/boolean), `options` (JSONB array), `sort_order`, `created_at`
+
+### `pxp_config`
+PXP script tree and settings (one row, updated in place):
+- `id`, `church_name`, `script_tree` (JSONB branching tree), `updated_at`
+
+### `pxp_call_logs`
+Log of completed follow-up calls:
+- `id`, `contact_id`, `caller_name`, `campus`, `outcome`, `notes`, `called_at`
 
 ### `login_config`
 Stores the login code sequences (each insert creates a new row; latest is used):

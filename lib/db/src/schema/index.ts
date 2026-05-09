@@ -28,3 +28,7 @@ export * from "./campusPasswords";
 export * from "./passwordHistory";
 export * from "./teamPresets";
 export * from "./activityLogs";
+export * from "./dbancContacts";
+export * from "./dbancCustomFields";
+export * from "./pxpConfig";
+export * from "./pxpCallLogs";

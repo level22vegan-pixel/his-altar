@@ -251,6 +251,97 @@ export interface CreateActivityLogBody {
   action: string;
 }
 
+export type DbancContactCustomData = { [key: string]: unknown };
+
+export interface DbancContact {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  carrier: string;
+  gender: string;
+  campus: string;
+  notes: string;
+  customData: DbancContactCustomData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DbancContactList {
+  contacts: DbancContact[];
+}
+
+export type CreateDbancContactBodyCustomData = { [key: string]: unknown };
+
+export interface CreateDbancContactBody {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  carrier?: string;
+  gender?: string;
+  campus?: string;
+  notes?: string;
+  customData?: CreateDbancContactBodyCustomData;
+}
+
+export interface DbancCustomField {
+  id: number;
+  label: string;
+  fieldType: string;
+  options: string[];
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface DbancCustomFieldList {
+  fields: DbancCustomField[];
+}
+
+export interface CreateDbancCustomFieldBody {
+  label: string;
+  fieldType?: string;
+  options?: string[];
+  sortOrder?: number;
+}
+
+export type PxpConfigScriptTree = { [key: string]: unknown };
+
+export interface PxpConfig {
+  id: number;
+  churchName: string;
+  scriptTree: PxpConfigScriptTree;
+  updatedAt: string;
+}
+
+export type UpdatePxpConfigBodyScriptTree = { [key: string]: unknown };
+
+export interface UpdatePxpConfigBody {
+  churchName?: string;
+  scriptTree?: UpdatePxpConfigBodyScriptTree;
+}
+
+export interface PxpCallLog {
+  id: number;
+  contactId: number;
+  callerName: string;
+  campus: string;
+  outcome: string;
+  notes: string;
+  calledAt: string;
+}
+
+export interface PxpCallLogList {
+  logs: PxpCallLog[];
+}
+
+export interface CreatePxpCallLogBody {
+  contactId: number;
+  callerName: string;
+  campus: string;
+  outcome?: string;
+  notes?: string;
+}
+
 export type ListWorkersParams = {
   category?: string;
   campus?: string;
@@ -260,6 +351,10 @@ export type ListCheckInsParams = {
   campus: string;
   service: string;
   serviceDate: string;
+};
+
+export type ListPxpCallLogsParams = {
+  contactId?: number;
 };
 
 export type ListActivityLogsParams = {

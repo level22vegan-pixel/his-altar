@@ -254,6 +254,214 @@ export const DeleteCheckInResponse = zod.object({
 });
 
 /**
+ * @summary List all prayer contacts
+ */
+export const ListDbancContactsResponse = zod.object({
+  contacts: zod.array(
+    zod.object({
+      id: zod.number(),
+      firstName: zod.string(),
+      lastName: zod.string(),
+      phone: zod.string(),
+      carrier: zod.string(),
+      gender: zod.string(),
+      campus: zod.string(),
+      notes: zod.string(),
+      customData: zod.record(zod.string(), zod.unknown()),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Add a new prayer contact
+ */
+export const CreateDbancContactBody = zod.object({
+  firstName: zod.string(),
+  lastName: zod.string(),
+  phone: zod.string(),
+  carrier: zod.string().optional(),
+  gender: zod.string().optional(),
+  campus: zod.string().optional(),
+  notes: zod.string().optional(),
+  customData: zod.record(zod.string(), zod.unknown()).optional(),
+});
+
+/**
+ * @summary Get a single contact
+ */
+export const GetDbancContactParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetDbancContactResponse = zod.object({
+  id: zod.number(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  phone: zod.string(),
+  carrier: zod.string(),
+  gender: zod.string(),
+  campus: zod.string(),
+  notes: zod.string(),
+  customData: zod.record(zod.string(), zod.unknown()),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update a contact
+ */
+export const UpdateDbancContactParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDbancContactBody = zod.object({
+  firstName: zod.string(),
+  lastName: zod.string(),
+  phone: zod.string(),
+  carrier: zod.string().optional(),
+  gender: zod.string().optional(),
+  campus: zod.string().optional(),
+  notes: zod.string().optional(),
+  customData: zod.record(zod.string(), zod.unknown()).optional(),
+});
+
+export const UpdateDbancContactResponse = zod.object({
+  id: zod.number(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  phone: zod.string(),
+  carrier: zod.string(),
+  gender: zod.string(),
+  campus: zod.string(),
+  notes: zod.string(),
+  customData: zod.record(zod.string(), zod.unknown()),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a contact
+ */
+export const DeleteDbancContactParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List custom fields
+ */
+export const ListDbancCustomFieldsResponse = zod.object({
+  fields: zod.array(
+    zod.object({
+      id: zod.number(),
+      label: zod.string(),
+      fieldType: zod.string(),
+      options: zod.array(zod.string()),
+      sortOrder: zod.number(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Add a custom field
+ */
+export const CreateDbancCustomFieldBody = zod.object({
+  label: zod.string(),
+  fieldType: zod.string().optional(),
+  options: zod.array(zod.string()).optional(),
+  sortOrder: zod.number().optional(),
+});
+
+/**
+ * @summary Update a custom field
+ */
+export const UpdateDbancCustomFieldParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDbancCustomFieldBody = zod.object({
+  label: zod.string(),
+  fieldType: zod.string().optional(),
+  options: zod.array(zod.string()).optional(),
+  sortOrder: zod.number().optional(),
+});
+
+export const UpdateDbancCustomFieldResponse = zod.object({
+  id: zod.number(),
+  label: zod.string(),
+  fieldType: zod.string(),
+  options: zod.array(zod.string()),
+  sortOrder: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a custom field
+ */
+export const DeleteDbancCustomFieldParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get PXP script config
+ */
+export const GetPxpConfigResponse = zod.object({
+  id: zod.number(),
+  churchName: zod.string(),
+  scriptTree: zod.record(zod.string(), zod.unknown()),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update PXP script config
+ */
+export const UpdatePxpConfigBody = zod.object({
+  churchName: zod.string().optional(),
+  scriptTree: zod.record(zod.string(), zod.unknown()).optional(),
+});
+
+export const UpdatePxpConfigResponse = zod.object({
+  id: zod.number(),
+  churchName: zod.string(),
+  scriptTree: zod.record(zod.string(), zod.unknown()),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List call logs
+ */
+export const ListPxpCallLogsQueryParams = zod.object({
+  contactId: zod.coerce.number().optional(),
+});
+
+export const ListPxpCallLogsResponse = zod.object({
+  logs: zod.array(
+    zod.object({
+      id: zod.number(),
+      contactId: zod.number(),
+      callerName: zod.string(),
+      campus: zod.string(),
+      outcome: zod.string(),
+      notes: zod.string(),
+      calledAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Log a completed call
+ */
+export const CreatePxpCallLogBody = zod.object({
+  contactId: zod.number(),
+  callerName: zod.string(),
+  campus: zod.string(),
+  outcome: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
  * @summary List activity logs
  */
 export const ListActivityLogsQueryParams = zod.object({

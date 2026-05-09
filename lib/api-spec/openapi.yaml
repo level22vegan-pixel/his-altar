@@ -286,6 +286,219 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckIn"
+  /dbanc/contacts:
+    get:
+      operationId: listDbancContacts
+      tags: [dbanc]
+      summary: List all prayer contacts
+      responses:
+        "200":
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancContactList"
+    post:
+      operationId: createDbancContact
+      tags: [dbanc]
+      summary: Add a new prayer contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDbancContactBody"
+      responses:
+        "201":
+          description: Created contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancContact"
+  /dbanc/contacts/{id}:
+    get:
+      operationId: getDbancContact
+      tags: [dbanc]
+      summary: Get a single contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancContact"
+    put:
+      operationId: updateDbancContact
+      tags: [dbanc]
+      summary: Update a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDbancContactBody"
+      responses:
+        "200":
+          description: Updated contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancContact"
+    delete:
+      operationId: deleteDbancContact
+      tags: [dbanc]
+      summary: Delete a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /dbanc/custom-fields:
+    get:
+      operationId: listDbancCustomFields
+      tags: [dbanc]
+      summary: List custom fields
+      responses:
+        "200":
+          description: Custom fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancCustomFieldList"
+    post:
+      operationId: createDbancCustomField
+      tags: [dbanc]
+      summary: Add a custom field
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDbancCustomFieldBody"
+      responses:
+        "201":
+          description: Created field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancCustomField"
+  /dbanc/custom-fields/{id}:
+    put:
+      operationId: updateDbancCustomField
+      tags: [dbanc]
+      summary: Update a custom field
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDbancCustomFieldBody"
+      responses:
+        "200":
+          description: Updated field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancCustomField"
+    delete:
+      operationId: deleteDbancCustomField
+      tags: [dbanc]
+      summary: Delete a custom field
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /pxp/config:
+    get:
+      operationId: getPxpConfig
+      tags: [pxp]
+      summary: Get PXP script config
+      responses:
+        "200":
+          description: PXP config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpConfig"
+    put:
+      operationId: updatePxpConfig
+      tags: [pxp]
+      summary: Update PXP script config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePxpConfigBody"
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpConfig"
+  /pxp/call-logs:
+    get:
+      operationId: listPxpCallLogs
+      tags: [pxp]
+      summary: List call logs
+      parameters:
+        - name: contactId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Call logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpCallLogList"
+    post:
+      operationId: createPxpCallLog
+      tags: [pxp]
+      summary: Log a completed call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePxpCallLogBody"
+      responses:
+        "201":
+          description: Created log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpCallLog"
   /activity-logs:
     get:
       operationId: listActivityLogs
@@ -1102,3 +1315,203 @@ components:
       required:
         - tool
         - action
+    DbancContact:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        carrier:
+          type: string
+        gender:
+          type: string
+        campus:
+          type: string
+        notes:
+          type: string
+        customData:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - firstName
+        - lastName
+        - phone
+        - carrier
+        - gender
+        - campus
+        - notes
+        - customData
+        - createdAt
+        - updatedAt
+    DbancContactList:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/DbancContact"
+      required:
+        - contacts
+    CreateDbancContactBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        carrier:
+          type: string
+        gender:
+          type: string
+        campus:
+          type: string
+        notes:
+          type: string
+        customData:
+          type: object
+          additionalProperties: true
+      required:
+        - firstName
+        - lastName
+        - phone
+    DbancCustomField:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        fieldType:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - label
+        - fieldType
+        - options
+        - sortOrder
+        - createdAt
+    DbancCustomFieldList:
+      type: object
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/DbancCustomField"
+      required:
+        - fields
+    CreateDbancCustomFieldBody:
+      type: object
+      properties:
+        label:
+          type: string
+        fieldType:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        sortOrder:
+          type: integer
+      required:
+        - label
+    PxpConfig:
+      type: object
+      properties:
+        id:
+          type: integer
+        churchName:
+          type: string
+        scriptTree:
+          type: object
+          additionalProperties: true
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - churchName
+        - scriptTree
+        - updatedAt
+    UpdatePxpConfigBody:
+      type: object
+      properties:
+        churchName:
+          type: string
+        scriptTree:
+          type: object
+          additionalProperties: true
+    PxpCallLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        contactId:
+          type: integer
+        callerName:
+          type: string
+        campus:
+          type: string
+        outcome:
+          type: string
+        notes:
+          type: string
+        calledAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - contactId
+        - callerName
+        - campus
+        - outcome
+        - notes
+        - calledAt
+    PxpCallLogList:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/PxpCallLog"
+      required:
+        - logs
+    CreatePxpCallLogBody:
+      type: object
+      properties:
+        contactId:
+          type: integer
+        callerName:
+          type: string
+        campus:
+          type: string
+        outcome:
+          type: string
+        notes:
+          type: string
+      required:
+        - contactId
+        - callerName
+        - campus

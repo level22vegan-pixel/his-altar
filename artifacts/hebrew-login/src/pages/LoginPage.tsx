@@ -254,7 +254,7 @@ export default function LoginPage() {
                       color: holding
                         ? "hsl(38 90% 72%)"
                         : "hsl(38 40% 45%)",
-                      fontFamily: "'Frank Ruhl Libre', 'David Libre', serif",
+                      fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif",
                       textShadow: holding ? "0 0 18px hsl(38 80% 68% / 0.6)" : "none",
                       transition: "color 0.2s, text-shadow 0.2s",
                     }}
@@ -283,7 +283,7 @@ export default function LoginPage() {
                       ? "hsl(38 90% 72%)"
                       : "hsl(38 85% 68%)"
                     : "hsl(38 40% 45%)",
-                  fontFamily: "'Frank Ruhl Libre', 'David Libre', serif",
+                  fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif",
                 }}
                 aria-label={item.name}
               >

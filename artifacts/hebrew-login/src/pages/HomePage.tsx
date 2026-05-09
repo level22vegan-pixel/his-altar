@@ -139,7 +139,7 @@ export default function HomePage() {
         &larr; Login
       </button>
 
-      {(isAdmin || session?.role === "lead") && (
+      {(isAdmin || !!session) && (
         <button
           onClick={() => navigate("/admin")}
           className="absolute top-5 right-6 z-10 text-xs tracking-widest uppercase transition-opacity duration-200 opacity-50 hover:opacity-90"

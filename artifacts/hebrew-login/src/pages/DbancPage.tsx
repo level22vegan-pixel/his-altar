@@ -90,21 +90,9 @@ export default function DbancPage() {
         </div>
 
         {/* Action bar */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
-          <button onClick={() => navigate("/admin/dbanc/new")} style={{ ...BTN, flex: 1, minWidth: 140 }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
+          <button onClick={() => navigate("/admin/dbanc/new")} style={{ ...BTN, flex: 1 }}>
             + Add Contact
-          </button>
-          <button
-            onClick={() => navigate("/admin/dbanc/fields")}
-            style={{ ...BTN, background: "hsl(220 30% 22%)", border: "1px solid hsl(220 30% 32%)", fontSize: 11 }}
-          >
-            Custom Fields
-          </button>
-          <button
-            onClick={() => navigate("/admin/activity-log/dbanc")}
-            style={{ ...BTN, background: "hsl(220 25% 18%)", border: "1px solid hsl(220 25% 28%)", fontSize: 11 }}
-          >
-            📋 Log
           </button>
         </div>
 

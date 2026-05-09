@@ -312,45 +312,74 @@ export default function AdminPage() {
         {/* Extensions toolbox */}
         <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
           <p className="text-xs uppercase tracking-widest mb-3 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Extensions</p>
-          <div className="flex flex-col gap-2">
-            <div style={{ display: "flex", gap: 6 }}>
+          <div className="flex flex-col gap-3">
+
+            {/* Dbanc */}
+            <div style={{ borderRadius: 8, border: "1px solid hsl(38 25% 22%)", overflow: "hidden" }}>
               <button
                 onClick={() => navigate("/admin/dbanc")}
-                className="py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-                style={{ flex: 1, background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "none", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}
               >
                 <span>Dbanc</span>
-                <span style={{ opacity: 0.5 }}>→</span>
+                <span style={{ opacity: 0.45 }}>→</span>
               </button>
-              <button
-                onClick={() => navigate("/admin/activity-log/dbanc")}
-                title="View Dbanc activity log"
-                style={{ padding: "0 12px", background: "hsl(35 28% 16%)", border: "1px solid hsl(38 25% 24%)", borderRadius: 6, color: "hsl(38 50% 52%)", fontFamily: "Georgia, serif", fontSize: 14, cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}
-                onMouseOver={e => { e.currentTarget.style.background = "hsl(35 32% 20%)"; e.currentTarget.style.color = "hsl(38 65% 65%)"; }}
-                onMouseOut={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 50% 52%)"; }}
-              >
-                📋
-              </button>
+              <div style={{ display: "flex", borderTop: "1px solid hsl(38 20% 18%)" }}>
+                <button
+                  onClick={() => navigate("/admin/dbanc/fields")}
+                  style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", borderRight: "1px solid hsl(38 20% 18%)", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
+                >
+                  Custom Fields
+                </button>
+                <button
+                  onClick={() => navigate("/admin/activity-log/dbanc")}
+                  style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
+                >
+                  Log
+                </button>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
+
+            {/* PXP */}
+            <div style={{ borderRadius: 8, border: "1px solid hsl(38 25% 22%)", overflow: "hidden" }}>
               <button
                 onClick={() => navigate("/admin/pxp")}
-                className="py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-                style={{ flex: 1, background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "none", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}
               >
                 <span>PXP</span>
-                <span style={{ opacity: 0.5 }}>→</span>
+                <span style={{ opacity: 0.45 }}>→</span>
               </button>
-              <button
-                onClick={() => navigate("/admin/activity-log/pxp")}
-                title="View PXP activity log"
-                style={{ padding: "0 12px", background: "hsl(35 28% 16%)", border: "1px solid hsl(38 25% 24%)", borderRadius: 6, color: "hsl(38 50% 52%)", fontFamily: "Georgia, serif", fontSize: 14, cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}
-                onMouseOver={e => { e.currentTarget.style.background = "hsl(35 32% 20%)"; e.currentTarget.style.color = "hsl(38 65% 65%)"; }}
-                onMouseOut={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 50% 52%)"; }}
-              >
-                📋
-              </button>
+              <div style={{ display: "flex", borderTop: "1px solid hsl(38 20% 18%)" }}>
+                <button
+                  onClick={() => navigate("/admin/pxp/script")}
+                  style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", borderRight: "1px solid hsl(38 20% 18%)", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
+                >
+                  Script
+                </button>
+                <button
+                  onClick={() => navigate("/admin/pxp/logs")}
+                  style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", borderRight: "1px solid hsl(38 20% 18%)", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
+                >
+                  Call History
+                </button>
+                <button
+                  onClick={() => navigate("/admin/activity-log/pxp")}
+                  style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
+                >
+                  Log
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
 

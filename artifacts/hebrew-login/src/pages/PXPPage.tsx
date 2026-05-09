@@ -79,14 +79,6 @@ export default function PXPPage() {
         ← Admin
       </button>
 
-      {/* Script editor */}
-      <button
-        onClick={() => navigate("/admin/pxp/script")}
-        className="absolute top-5 right-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
-      >
-        Script Editor →
-      </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         {/* Header */}
@@ -219,20 +211,6 @@ export default function PXPPage() {
           {canStart ? `Start Call with ${selected?.firstName}` : "Complete steps above to start"}
         </button>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 16 }}>
-          <button
-            onClick={() => navigate("/admin/pxp/logs")}
-            style={{ background: "none", border: "none", color: "hsl(270 35% 48%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
-          >
-            Call History
-          </button>
-          <button
-            onClick={() => navigate("/admin/activity-log/pxp")}
-            style={{ background: "none", border: "none", color: "hsl(270 35% 48%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
-          >
-            📋 Access Log
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useListPxpCallLogs, useListDbancContacts } from "@workspace/api-client-react";
+import { getValidCallerSession, getValidCampusSession } from "@/lib/session";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 
@@ -55,12 +56,20 @@ const inputStyle = {
 
 export default function PXPLogsPage() {
   const [, navigate] = useLocation();
+
+  // Determine locked campus from whichever session is active
+  const callerSession = getValidCallerSession();
+  const campusSession = getValidCampusSession();
+  const lockedCampus  = callerSession?.campus ?? campusSession?.campus ?? null;
+
   const { data: logsData, isLoading } = useListPxpCallLogs({});
   const { data: contactsData } = useListDbancContacts();
 
-  const [filterCampus, setFilterCampus]   = useState("");
   const [filterService, setFilterService] = useState("");
   const [filterCaller, setFilterCaller]   = useState("");
+
+  // Campus filter is locked when a session is active; otherwise freely selectable
+  const [filterCampus, setFilterCampus] = useState(lockedCampus ?? "");
 
   const logs     = logsData?.logs ?? [];
   const contacts = contactsData?.contacts ?? [];
@@ -323,14 +332,21 @@ export default function PXPLogsPage() {
             Filter
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <select
-              style={inputStyle}
-              value={filterCampus}
-              onChange={e => { setFilterCampus(e.target.value); setFilterService(""); }}
-            >
-              <option value="">All campuses</option>
-              {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            {lockedCampus ? (
+              <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
+                <span style={{ color: "hsl(270 30% 42%)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Locked</span>
+              </div>
+            ) : (
+              <select
+                style={inputStyle}
+                value={filterCampus}
+                onChange={e => { setFilterCampus(e.target.value); setFilterService(""); }}
+              >
+                <option value="">All campuses</option>
+                {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
             <select
               style={{ ...inputStyle, color: filterService ? "hsl(270 70% 78%)" : undefined }}
               value={filterService}

@@ -273,11 +273,11 @@ export default function PXPLogsPage() {
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(270 50% 60% / 0.05) 1px, transparent 1px)", backgroundSize: "50px 50px" }} />
 
       <button
-        onClick={() => navigate("/admin/pxp")}
+        onClick={() => navigate(callerSession ? "/admin/pxp" : "/admin")}
         className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
         style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
       >
-        ← PXP
+        {callerSession ? "← PXP" : "← Admin"}
       </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">

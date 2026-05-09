@@ -5,6 +5,15 @@ import { getSessionUserName, getValidCampusSession, getValidCallerSession, clear
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
+const CAMPUS_SERVICES: Record<string, string[]> = {
+  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
+  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
+  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
+  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
+  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+};
+
 const inputStyle = {
   width: "100%",
   padding: "10px 14px",
@@ -41,6 +50,7 @@ export default function PXPPage() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [contactFilter, setContactFilter] = useState<"all" | "called">("all");
+  const [serviceFilter, setServiceFilter] = useState<string>("");
 
   const activeCampus = lockedCampus ?? callerCampus;
 
@@ -69,6 +79,7 @@ export default function PXPPage() {
   useEffect(() => {
     setSelectedCallerId(null);
     setManualName("");
+    setServiceFilter("");
   }, [callerCampus]);
 
   const callerName = isCallerSession
@@ -98,7 +109,8 @@ export default function PXPPage() {
   function handleStartCall() {
     if (!callerName || !selectedId || !activeCampus) return;
     if (!lockedCampus) localStorage.setItem("pxp_campus", callerCampus);
-    navigate(`/admin/pxp/call?contactId=${selectedId}&callerName=${encodeURIComponent(callerName)}&campus=${encodeURIComponent(activeCampus)}`);
+    const serviceParam = serviceFilter ? `&service=${encodeURIComponent(serviceFilter)}` : "";
+    navigate(`/admin/pxp/call?contactId=${selectedId}&callerName=${encodeURIComponent(callerName)}&campus=${encodeURIComponent(activeCampus)}${serviceParam}`);
   }
 
   function handleSignOut() {
@@ -243,6 +255,18 @@ export default function PXPPage() {
             Step 2 — Select Contact to Call
             {lockedCampus && <span style={{ marginLeft: 8, opacity: 0.6 }}>({lockedCampus})</span>}
           </p>
+
+          {/* Service Time Dropdown */}
+          <select
+            style={{ ...inputStyle, appearance: "none" as const, marginBottom: 12 }}
+            value={serviceFilter}
+            onChange={e => setServiceFilter(e.target.value)}
+          >
+            <option value="">All Services Today</option>
+            {(CAMPUS_SERVICES[activeCampus] ?? []).map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
 
           {/* Tab Slider: All / Called */}
           <div style={{ display: "flex", background: "hsl(270 30% 8%)", borderRadius: 8, padding: 3, marginBottom: 12, gap: 3 }}>

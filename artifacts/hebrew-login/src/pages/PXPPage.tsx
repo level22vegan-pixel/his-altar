@@ -263,18 +263,6 @@ export default function PXPPage() {
             {lockedCampus && <span style={{ marginLeft: 8, opacity: 0.6 }}>({lockedCampus})</span>}
           </p>
 
-          {/* Service Time Dropdown */}
-          <select
-            style={{ ...inputStyle, appearance: "none" as const, marginBottom: 12 }}
-            value={serviceFilter}
-            onChange={e => setServiceFilter(e.target.value)}
-          >
-            <option value="">All Services Today</option>
-            {(CAMPUS_SERVICES[activeCampus] ?? []).map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-
           {/* Tab Slider: All / Called */}
           <div style={{ display: "flex", background: "hsl(270 30% 8%)", borderRadius: 8, padding: 3, marginBottom: 12, gap: 3 }}>
             {(["all", "called"] as const).map(tab => (

@@ -412,6 +412,41 @@ export const DeleteDbancCustomFieldParams = zod.object({
 });
 
 /**
+ * @summary List registered callers
+ */
+export const ListPxpCallersQueryParams = zod.object({
+  campus: zod.coerce.string().optional().describe("Filter callers by campus"),
+});
+
+export const ListPxpCallersResponse = zod.object({
+  callers: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      campus: zod.string(),
+      phone: zod.string(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Register a new caller
+ */
+export const CreatePxpCallerBody = zod.object({
+  name: zod.string(),
+  campus: zod.string(),
+  phone: zod.string().optional(),
+});
+
+/**
+ * @summary Remove a caller
+ */
+export const DeletePxpCallerParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary Get PXP script config
  */
 export const GetPxpConfigResponse = zod.object({

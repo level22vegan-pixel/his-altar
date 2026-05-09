@@ -442,6 +442,56 @@ paths:
       responses:
         "204":
           description: Deleted
+  /pxp/callers:
+    get:
+      operationId: listPxpCallers
+      tags: [pxp]
+      summary: List registered callers
+      parameters:
+        - name: campus
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter callers by campus
+      responses:
+        "200":
+          description: List of callers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpCallerList"
+    post:
+      operationId: createPxpCaller
+      tags: [pxp]
+      summary: Register a new caller
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePxpCallerBody"
+      responses:
+        "201":
+          description: Created caller
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PxpCaller"
+  /pxp/callers/{id}:
+    delete:
+      operationId: deletePxpCaller
+      tags: [pxp]
+      summary: Remove a caller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
   /pxp/config:
     get:
       operationId: getPxpConfig
@@ -1449,6 +1499,47 @@ components:
           type: integer
       required:
         - label
+    PxpCaller:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        campus:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - campus
+        - phone
+        - createdAt
+    PxpCallerList:
+      type: object
+      properties:
+        callers:
+          type: array
+          items:
+            $ref: "#/components/schemas/PxpCaller"
+      required:
+        - callers
+    CreatePxpCallerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        campus:
+          type: string
+        phone:
+          type: string
+      required:
+        - name
+        - campus
     PxpConfig:
       type: object
       properties:

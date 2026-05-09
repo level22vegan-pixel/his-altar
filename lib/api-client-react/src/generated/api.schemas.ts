@@ -306,6 +306,24 @@ export interface CreateDbancCustomFieldBody {
   sortOrder?: number;
 }
 
+export interface PxpCaller {
+  id: number;
+  name: string;
+  campus: string;
+  phone: string;
+  createdAt: string;
+}
+
+export interface PxpCallerList {
+  callers: PxpCaller[];
+}
+
+export interface CreatePxpCallerBody {
+  name: string;
+  campus: string;
+  phone?: string;
+}
+
 export type PxpConfigScriptTree = { [key: string]: unknown };
 
 export interface PxpConfig {
@@ -358,6 +376,13 @@ export type ListCheckInsParams = {
 export type ListDbancContactsParams = {
   /**
    * Filter contacts by campus name
+   */
+  campus?: string;
+};
+
+export type ListPxpCallersParams = {
+  /**
+   * Filter callers by campus
    */
   campus?: string;
 };

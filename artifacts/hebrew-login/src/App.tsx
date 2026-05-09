@@ -20,6 +20,7 @@ import PXPPage from "@/pages/PXPPage";
 import PXPCallPage from "@/pages/PXPCallPage";
 import PXPLogsPage from "@/pages/PXPLogsPage";
 import PXPScriptPage from "@/pages/PXPScriptPage";
+import PXPCallersPage from "@/pages/PXPCallersPage";
 import ActivityLogPage from "@/pages/ActivityLogPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
@@ -79,6 +80,7 @@ function Router() {
         <Route path="/admin/pxp/call" component={PXPCallPage} />
         <Route path="/admin/pxp/logs" component={PXPLogsPage} />
         <Route path="/admin/pxp/script" component={PXPScriptPage} />
+        <Route path="/admin/pxp/callers" component={PXPCallersPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
         <Route component={NotFound} />

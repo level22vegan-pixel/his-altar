@@ -15,6 +15,7 @@ import { dbancContactsRouter } from "./dbancContacts";
 import { dbancCustomFieldsRouter } from "./dbancCustomFields";
 import { pxpConfigRouter } from "./pxpConfig";
 import { pxpCallLogsRouter } from "./pxpCallLogs";
+import { pxpCallersRouter } from "./pxpCallers";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use("/dbanc/contacts", dbancContactsRouter);
 router.use("/dbanc/custom-fields", dbancCustomFieldsRouter);
 router.use("/pxp/config", pxpConfigRouter);
 router.use("/pxp/call-logs", pxpCallLogsRouter);
+router.use("/pxp/callers", pxpCallersRouter);
 
 export default router;

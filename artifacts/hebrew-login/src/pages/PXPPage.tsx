@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useListDbancContacts, useCreateActivityLog } from "@workspace/api-client-react";
+import { useListDbancContacts, useListPxpCallers, useCreateActivityLog } from "@workspace/api-client-react";
 import { getSessionUserName, getValidCampusSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
@@ -31,15 +31,23 @@ export default function PXPPage() {
   const campusSession = getValidCampusSession();
   const lockedCampus = campusSession?.campus ?? null;
 
-  const [callerName, setCallerName] = useState(() => localStorage.getItem("pxp_caller") ?? "");
   // If campus user, always use their campus; otherwise restore from localStorage
-  const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? "");
+  const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? "HALLMARK");
+  const [selectedCallerId, setSelectedCallerId] = useState<number | "manual" | null>(null);
+  const [manualName, setManualName] = useState("");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  const activeCampus = lockedCampus ?? callerCampus;
+
+  const { data: callersData } = useListPxpCallers(
+    activeCampus ? { campus: activeCampus } : undefined
+  );
   const { data } = useListDbancContacts(
     lockedCampus ? { campus: lockedCampus } : undefined
   );
+
+  const callers = callersData?.callers ?? [];
 
   useEffect(() => {
     logAccess.mutate({ data: { tool: "pxp", action: "page_access", userName: getSessionUserName() } });
@@ -50,6 +58,17 @@ export default function PXPPage() {
   useEffect(() => {
     if (lockedCampus) setCallerCampus(lockedCampus);
   }, [lockedCampus]);
+
+  // Reset caller selection when campus changes
+  useEffect(() => {
+    setSelectedCallerId(null);
+    setManualName("");
+  }, [callerCampus]);
+
+  const callerName =
+    selectedCallerId === "manual"
+      ? manualName.trim()
+      : callers.find(c => c.id === selectedCallerId)?.name ?? "";
 
   const allContacts = data?.contacts ?? [];
 
@@ -66,13 +85,12 @@ export default function PXPPage() {
   const selected = contacts.find(c => c.id === selectedId) ?? allContacts.find(c => c.id === selectedId);
 
   function handleStartCall() {
-    if (!callerName.trim() || !selectedId || !callerCampus) return;
-    localStorage.setItem("pxp_caller", callerName.trim());
+    if (!callerName || !selectedId || !activeCampus) return;
     if (!lockedCampus) localStorage.setItem("pxp_campus", callerCampus);
-    navigate(`/admin/pxp/call?contactId=${selectedId}&callerName=${encodeURIComponent(callerName.trim())}&campus=${encodeURIComponent(callerCampus)}`);
+    navigate(`/admin/pxp/call?contactId=${selectedId}&callerName=${encodeURIComponent(callerName)}&campus=${encodeURIComponent(activeCampus)}`);
   }
 
-  const canStart = !!callerName.trim() && !!selectedId && !!callerCampus;
+  const canStart = !!callerName && !!selectedId && !!activeCampus;
 
   return (
     <div
@@ -118,27 +136,57 @@ export default function PXPPage() {
             Step 1 — Caller Info
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <input
-              style={inputStyle}
-              placeholder="Your name (will appear in script)"
-              value={callerName}
-              onChange={e => setCallerName(e.target.value)}
-            />
-            {lockedCampus ? (
-              /* Locked campus display for campus users */
-              <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
-                <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
-                <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
-              </div>
-            ) : (
+            {/* Campus selector — admin only */}
+            {!lockedCampus && (
               <select
                 style={{ ...inputStyle, appearance: "none" as const }}
                 value={callerCampus}
                 onChange={e => setCallerCampus(e.target.value)}
               >
-                <option value="">Your campus…</option>
                 {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+            )}
+            {lockedCampus && (
+              <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
+                <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
+              </div>
+            )}
+            {/* Caller dropdown */}
+            {callers.length > 0 ? (
+              <>
+                <select
+                  style={{ ...inputStyle, appearance: "none" as const }}
+                  value={selectedCallerId === "manual" ? "manual" : (selectedCallerId ?? "")}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v === "manual") setSelectedCallerId("manual");
+                    else if (v === "") setSelectedCallerId(null);
+                    else setSelectedCallerId(parseInt(v));
+                  }}
+                >
+                  <option value="">Select caller…</option>
+                  {callers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                  <option value="manual">— Enter name manually —</option>
+                </select>
+                {selectedCallerId === "manual" && (
+                  <input
+                    style={inputStyle}
+                    placeholder="Type caller name…"
+                    value={manualName}
+                    onChange={e => setManualName(e.target.value)}
+                  />
+                )}
+              </>
+            ) : (
+              <input
+                style={inputStyle}
+                placeholder="Caller name (no callers registered yet)"
+                value={manualName}
+                onChange={e => { setManualName(e.target.value); setSelectedCallerId("manual"); }}
+              />
             )}
           </div>
         </div>

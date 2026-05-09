@@ -32,3 +32,4 @@ export * from "./dbancContacts";
 export * from "./dbancCustomFields";
 export * from "./pxpConfig";
 export * from "./pxpCallLogs";
+export * from "./pxpCallers";

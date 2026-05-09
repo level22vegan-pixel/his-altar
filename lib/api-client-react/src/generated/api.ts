@@ -31,6 +31,7 @@ import type {
   CreateDbancContactBody,
   CreateDbancCustomFieldBody,
   CreatePxpCallLogBody,
+  CreatePxpCallerBody,
   CreateWorkerBody,
   DailyAltarReport,
   DailyAltarReportList,
@@ -46,6 +47,7 @@ import type {
   ListDailyAltarReportsParams,
   ListDbancContactsParams,
   ListPxpCallLogsParams,
+  ListPxpCallersParams,
   ListServiceReportsParams,
   ListWorkersParams,
   LoginCodeConfig,
@@ -53,6 +55,8 @@ import type {
   PasswordHistoryList,
   PxpCallLog,
   PxpCallLogList,
+  PxpCaller,
+  PxpCallerList,
   PxpConfig,
   SaveServiceNotesBody,
   ServiceNotes,
@@ -2123,6 +2127,270 @@ export const useDeleteDbancCustomField = <
   TContext
 > => {
   return useMutation(getDeleteDbancCustomFieldMutationOptions(options));
+};
+
+/**
+ * @summary List registered callers
+ */
+export const getListPxpCallersUrl = (params?: ListPxpCallersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/pxp/callers?${stringifiedParams}`
+    : `/api/pxp/callers`;
+};
+
+export const listPxpCallers = async (
+  params?: ListPxpCallersParams,
+  options?: RequestInit,
+): Promise<PxpCallerList> => {
+  return customFetch<PxpCallerList>(getListPxpCallersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPxpCallersQueryKey = (params?: ListPxpCallersParams) => {
+  return [`/api/pxp/callers`, ...(params ? [params] : [])] as const;
+};
+
+export const getListPxpCallersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPxpCallers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListPxpCallersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPxpCallers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPxpCallersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPxpCallers>>> = ({
+    signal,
+  }) => listPxpCallers(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPxpCallers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPxpCallersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPxpCallers>>
+>;
+export type ListPxpCallersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List registered callers
+ */
+
+export function useListPxpCallers<
+  TData = Awaited<ReturnType<typeof listPxpCallers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListPxpCallersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listPxpCallers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPxpCallersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Register a new caller
+ */
+export const getCreatePxpCallerUrl = () => {
+  return `/api/pxp/callers`;
+};
+
+export const createPxpCaller = async (
+  createPxpCallerBody: CreatePxpCallerBody,
+  options?: RequestInit,
+): Promise<PxpCaller> => {
+  return customFetch<PxpCaller>(getCreatePxpCallerUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createPxpCallerBody),
+  });
+};
+
+export const getCreatePxpCallerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPxpCaller>>,
+    TError,
+    { data: BodyType<CreatePxpCallerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPxpCaller>>,
+  TError,
+  { data: BodyType<CreatePxpCallerBody> },
+  TContext
+> => {
+  const mutationKey = ["createPxpCaller"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPxpCaller>>,
+    { data: BodyType<CreatePxpCallerBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPxpCaller(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePxpCallerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPxpCaller>>
+>;
+export type CreatePxpCallerMutationBody = BodyType<CreatePxpCallerBody>;
+export type CreatePxpCallerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Register a new caller
+ */
+export const useCreatePxpCaller = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPxpCaller>>,
+    TError,
+    { data: BodyType<CreatePxpCallerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPxpCaller>>,
+  TError,
+  { data: BodyType<CreatePxpCallerBody> },
+  TContext
+> => {
+  return useMutation(getCreatePxpCallerMutationOptions(options));
+};
+
+/**
+ * @summary Remove a caller
+ */
+export const getDeletePxpCallerUrl = (id: number) => {
+  return `/api/pxp/callers/${id}`;
+};
+
+export const deletePxpCaller = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeletePxpCallerUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeletePxpCallerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePxpCaller>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deletePxpCaller>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deletePxpCaller"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deletePxpCaller>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deletePxpCaller(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeletePxpCallerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deletePxpCaller>>
+>;
+
+export type DeletePxpCallerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove a caller
+ */
+export const useDeletePxpCaller = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePxpCaller>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deletePxpCaller>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeletePxpCallerMutationOptions(options));
 };
 
 /**

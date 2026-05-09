@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useListPxpCallLogs, useListDbancContacts } from "@workspace/api-client-react";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -14,8 +15,11 @@ function formatDate(iso: string) {
 
 function formatDateShort(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }) +
-    " " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return (
+    d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }) +
+    " " +
+    d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+  );
 }
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
@@ -28,6 +32,14 @@ const CAMPUS_SERVICES: Record<string, string[]> = {
   LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
   ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
 };
+
+// ── PDF colours (purple-dark theme) ──────────────────────────────────────────
+const PDF_BG          = [18, 12, 30]  as const;
+const PDF_PURPLE      = [160, 110, 220] as const;
+const PDF_PURPLE_DIM  = [100, 70, 150] as const;
+const PDF_WHITE       = [210, 200, 230] as const;
+const PDF_ROW_ALT     = [32, 22, 50]  as const;
+const PDF_HEADER_ROW  = [50, 30, 75]  as const;
 
 const inputStyle = {
   padding: "9px 14px",
@@ -46,42 +58,53 @@ export default function PXPLogsPage() {
   const { data: logsData, isLoading } = useListPxpCallLogs({});
   const { data: contactsData } = useListDbancContacts();
 
-  const [filterCampus, setFilterCampus] = useState("");
+  const [filterCampus, setFilterCampus]   = useState("");
   const [filterService, setFilterService] = useState("");
-  const [filterCaller, setFilterCaller] = useState("");
+  const [filterCaller, setFilterCaller]   = useState("");
 
-  const logs = logsData?.logs ?? [];
+  const logs     = logsData?.logs ?? [];
   const contacts = contactsData?.contacts ?? [];
   const contactsMap = Object.fromEntries(contacts.map(c => [c.id, c]));
 
-  // Collect unique caller names from logs
   const callerNames = [...new Set(logs.map(l => l.callerName).filter(Boolean))].sort();
 
-  // Filter logs
   const filteredLogs = logs.filter(log => {
     const contact = contactsMap[log.contactId];
-    if (filterCampus && (contact?.campus ?? log.campus) !== filterCampus) return false;
-    if (filterService && contact?.serviceTime !== filterService) return false;
-    if (filterCaller && log.callerName !== filterCaller) return false;
+    if (filterCampus  && (contact?.campus ?? log.campus) !== filterCampus) return false;
+    if (filterService && contact?.serviceTime !== filterService)            return false;
+    if (filterCaller  && log.callerName !== filterCaller)                  return false;
     return true;
   });
 
-  // Build one row per call log for export
+  // ── Tally ────────────────────────────────────────────────────────────────────
+  const uniqueContacts = new Set(filteredLogs.map(l => l.contactId)).size;
+  const uniqueCallers  = new Set(filteredLogs.map(l => l.callerName)).size;
+
+  const outcomeCounts: Record<string, number> = {};
+  for (const log of filteredLogs) {
+    const key = log.outcome?.trim() || "No outcome";
+    outcomeCounts[key] = (outcomeCounts[key] ?? 0) + 1;
+  }
+  const topOutcomes = Object.entries(outcomeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+
+  // ── Build export rows ─────────────────────────────────────────────────────────
   function buildRows() {
     return filteredLogs.map((log, i) => {
-      const contact = contactsMap[log.contactId];
+      const c = contactsMap[log.contactId];
       return {
         "#": i + 1,
-        "Contact Name": contact ? `${contact.firstName} ${contact.lastName}` : `Contact #${log.contactId}`,
-        "Phone": contact?.phone ?? "",
-        "Campus": contact?.campus ?? log.campus ?? "",
-        "Service Time": contact?.serviceTime ?? "",
-        "Gender": contact?.gender ?? "",
-        "Carrier": contact?.carrier ?? "",
-        "Caller": log.callerName,
-        "Date / Time": formatDateShort(log.calledAt),
-        "Outcome": log.outcome ?? "",
-        "Notes": log.notes ?? "",
+        "Contact Name":  c ? `${c.firstName} ${c.lastName}` : `Contact #${log.contactId}`,
+        "Phone":         c?.phone ?? "",
+        "Campus":        c?.campus ?? log.campus ?? "",
+        "Service Time":  c?.serviceTime ?? "",
+        "Gender":        c?.gender ?? "",
+        "Carrier":       c?.carrier ?? "",
+        "Caller":        log.callerName,
+        "Date / Time":   formatDateShort(log.calledAt),
+        "Outcome":       log.outcome ?? "",
+        "Notes":         log.notes ?? "",
       };
     });
   }
@@ -89,7 +112,6 @@ export default function PXPLogsPage() {
   function exportExcel() {
     const rows = buildRows();
     const ws = XLSX.utils.json_to_sheet(rows);
-    // Column widths
     ws["!cols"] = [
       { wch: 4 }, { wch: 22 }, { wch: 14 }, { wch: 12 }, { wch: 16 },
       { wch: 10 }, { wch: 12 }, { wch: 18 }, { wch: 22 }, { wch: 20 }, { wch: 30 },
@@ -101,18 +123,137 @@ export default function PXPLogsPage() {
 
   function exportCSV() {
     const rows = buildRows();
-    const ws = XLSX.utils.json_to_sheet(rows);
+    const ws  = XLSX.utils.json_to_sheet(rows);
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
     a.href = url;
     a.download = `pxp-called-contacts-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
+  function exportPDF() {
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "letter" });
+    const W   = doc.internal.pageSize.getWidth();   // 279 mm
+    const H   = doc.internal.pageSize.getHeight();  // 216 mm
+
+    // Background
+    doc.setFillColor(...PDF_BG);
+    doc.rect(0, 0, W, H, "F");
+
+    // Title bar
+    doc.setDrawColor(...PDF_PURPLE);
+    doc.setLineWidth(0.8);
+    doc.line(14, 18, W - 14, 18);
+    doc.setFont("times", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...PDF_PURPLE);
+
+    const subtitle = [
+      filterCampus  ? filterCampus  : "All Campuses",
+      filterService ? filterService : null,
+      filterCaller  ? `· ${filterCaller}` : null,
+    ].filter(Boolean).join(" · ");
+
+    doc.text("PXP — CALL HISTORY", W / 2, 13, { align: "center" });
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(...PDF_PURPLE_DIM);
+    doc.text(subtitle, W / 2, 23, { align: "center" });
+    doc.setDrawColor(...PDF_PURPLE_DIM);
+    doc.setLineWidth(0.3);
+    doc.line(14, 26, W - 14, 26);
+
+    // Tally summary line
+    doc.setFont("times", "italic");
+    doc.setFontSize(9);
+    doc.setTextColor(...PDF_WHITE);
+    doc.text(
+      `${filteredLogs.length} calls · ${uniqueContacts} contacts · ${uniqueCallers} callers`,
+      W / 2, 32, { align: "center" }
+    );
+
+    // Table header
+    // cols: Contact Name | Phone | Campus | Service | Caller | Date | Outcome | Notes
+    const cols  = ["Contact Name", "Phone", "Campus", "Service", "Caller", "Date / Time", "Outcome", "Notes"];
+    const colW  = [42, 26, 22, 26, 28, 36, 30, 50];
+    const startX = 14;
+    const rowH   = 7;
+    let y = 40;
+
+    doc.setFillColor(...PDF_HEADER_ROW);
+    doc.rect(startX, y - 5, W - 28, rowH, "F");
+    doc.setFont("times", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...PDF_PURPLE);
+    let x = startX + 2;
+    cols.forEach((col, i) => { doc.text(col.toUpperCase(), x, y); x += colW[i]; });
+    y += rowH;
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(8);
+
+    filteredLogs.forEach((log, ri) => {
+      if (y > H - 20) {
+        doc.addPage();
+        doc.setFillColor(...PDF_BG);
+        doc.rect(0, 0, W, H, "F");
+        y = 20;
+      }
+      if (ri % 2 === 0) {
+        doc.setFillColor(...PDF_ROW_ALT);
+        doc.rect(startX, y - 5, W - 28, rowH, "F");
+      }
+      const c = contactsMap[log.contactId];
+      const cells = [
+        c ? `${c.firstName} ${c.lastName}` : `Contact #${log.contactId}`,
+        c?.phone ?? "",
+        c?.campus ?? log.campus ?? "",
+        c?.serviceTime ?? "",
+        log.callerName,
+        formatDateShort(log.calledAt),
+        log.outcome ?? "",
+        log.notes ?? "",
+      ];
+      doc.setTextColor(...PDF_WHITE);
+      x = startX + 2;
+      cells.forEach((cell, i) => {
+        const maxChars = Math.floor(colW[i] / 2.1);
+        const truncated = cell.length > maxChars ? cell.slice(0, maxChars - 1) + "…" : cell;
+        doc.text(truncated, x, y);
+        x += colW[i];
+      });
+      y += rowH;
+    });
+
+    // Totals row
+    if (filteredLogs.length > 0) {
+      y += 2;
+      doc.setDrawColor(...PDF_PURPLE_DIM);
+      doc.setLineWidth(0.3);
+      doc.line(startX, y - 4, W - 14, y - 4);
+      doc.setFont("times", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...PDF_PURPLE);
+      doc.text(`TOTAL CALLS: ${filteredLogs.length}   UNIQUE CONTACTS: ${uniqueContacts}   UNIQUE CALLERS: ${uniqueCallers}`, startX + 2, y);
+    }
+
+    // Footer
+    doc.setDrawColor(...PDF_PURPLE_DIM);
+    doc.setLineWidth(0.3);
+    doc.line(14, H - 12, W - 14, H - 12);
+    doc.setFont("times", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(...PDF_PURPLE_DIM);
+    doc.text("PXP Call History — Confidential", W / 2, H - 7, { align: "center" });
+
+    doc.save(`pxp-call-history-${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
   const serviceOptions = filterCampus ? (CAMPUS_SERVICES[filterCampus] ?? []) : [];
+  const canExport = filteredLogs.length > 0;
 
   return (
     <div
@@ -131,16 +272,54 @@ export default function PXPLogsPage() {
       </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 4vw, 2rem)", color: "hsl(0 0% 97%)", letterSpacing: "0.2em", textTransform: "uppercase" }}>
             Call History
           </h1>
           <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, transparent, hsl(270 60% 55%), transparent)", margin: "8px auto 0" }} />
         </div>
 
+        {/* Tally strip */}
+        {logs.length > 0 && (
+          <div style={{ background: "hsl(270 35% 11%)", border: "1px solid hsl(270 30% 22%)", borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
+            {/* Main counts */}
+            <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 12 }}>
+              {[
+                { label: "Total Calls",    value: filteredLogs.length,  color: "hsl(270 70% 75%)" },
+                { label: "Contacts",       value: uniqueContacts,        color: "hsl(200 65% 68%)" },
+                { label: "Callers",        value: uniqueCallers,         color: "hsl(140 55% 55%)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ textAlign: "center" }}>
+                  <div style={{ color, fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 5vw, 2rem)", fontWeight: "bold", lineHeight: 1 }}>
+                    {value}
+                  </div>
+                  <div style={{ color: "hsl(270 25% 45%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Outcome breakdown */}
+            {topOutcomes.length > 0 && (
+              <>
+                <div style={{ height: 1, background: "hsl(270 25% 20%)", marginBottom: 10 }} />
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                  {topOutcomes.map(([outcome, count]) => (
+                    <div key={outcome} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", background: "hsl(270 30% 8%)", border: "1px solid hsl(270 25% 20%)", borderRadius: 20 }}>
+                      <span style={{ color: "hsl(270 60% 68%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{count}</span>
+                      <span style={{ color: "hsl(270 25% 48%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em" }}>{outcome}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Filters */}
-        <div style={{ background: "hsl(270 35% 11%)", border: "1px solid hsl(270 30% 22%)", borderRadius: 12, padding: 16, marginBottom: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ color: "hsl(270 40% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 2 }}>
+        <div style={{ background: "hsl(270 35% 11%)", border: "1px solid hsl(270 30% 22%)", borderRadius: 12, padding: 16, marginBottom: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ color: "hsl(270 40% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 0 }}>
             Filter
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -162,46 +341,36 @@ export default function PXPLogsPage() {
               {serviceOptions.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-          <select
-            style={inputStyle}
-            value={filterCaller}
-            onChange={e => setFilterCaller(e.target.value)}
-          >
+          <select style={inputStyle} value={filterCaller} onChange={e => setFilterCaller(e.target.value)}>
             <option value="">All callers</option>
             {callerNames.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
 
         {/* Export buttons */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          <button
-            onClick={exportExcel}
-            disabled={filteredLogs.length === 0}
-            style={{
-              flex: 1, padding: "11px 0", borderRadius: 10,
-              background: filteredLogs.length === 0 ? "hsl(270 25% 13%)" : "hsl(140 45% 18%)",
-              color: filteredLogs.length === 0 ? "hsl(270 20% 35%)" : "hsl(140 70% 65%)",
-              fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase",
-              border: `1px solid ${filteredLogs.length === 0 ? "hsl(270 20% 22%)" : "hsl(140 45% 30%)"}`,
-              cursor: filteredLogs.length === 0 ? "not-allowed" : "pointer",
-            }}
-          >
-            ↓ Excel
-          </button>
-          <button
-            onClick={exportCSV}
-            disabled={filteredLogs.length === 0}
-            style={{
-              flex: 1, padding: "11px 0", borderRadius: 10,
-              background: filteredLogs.length === 0 ? "hsl(270 25% 13%)" : "hsl(210 45% 18%)",
-              color: filteredLogs.length === 0 ? "hsl(270 20% 35%)" : "hsl(210 70% 70%)",
-              fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase",
-              border: `1px solid ${filteredLogs.length === 0 ? "hsl(270 20% 22%)" : "hsl(210 45% 32%)"}`,
-              cursor: filteredLogs.length === 0 ? "not-allowed" : "pointer",
-            }}
-          >
-            ↓ CSV
-          </button>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          {[
+            { label: "↓ PDF",   onClick: exportPDF,   bg: "hsl(270 50% 18%)", color: "hsl(270 70% 78%)", border: "hsl(270 45% 34%)" },
+            { label: "↓ Excel", onClick: exportExcel, bg: "hsl(140 45% 16%)", color: "hsl(140 65% 62%)", border: "hsl(140 42% 28%)" },
+            { label: "↓ CSV",   onClick: exportCSV,   bg: "hsl(210 45% 16%)", color: "hsl(210 65% 68%)", border: "hsl(210 42% 30%)" },
+          ].map(({ label, onClick, bg, color, border }) => (
+            <button
+              key={label}
+              onClick={onClick}
+              disabled={!canExport}
+              style={{
+                flex: 1, padding: "11px 0", borderRadius: 10,
+                background: canExport ? bg : "hsl(270 25% 12%)",
+                color: canExport ? color : "hsl(270 18% 33%)",
+                fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase",
+                border: `1px solid ${canExport ? border : "hsl(270 18% 20%)"}`,
+                cursor: canExport ? "pointer" : "not-allowed",
+                transition: "all 0.15s",
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Log list */}
@@ -219,23 +388,23 @@ export default function PXPLogsPage() {
                 <div
                   key={log.id}
                   style={{
-                    padding: "16px 20px",
+                    padding: "14px 18px",
                     borderBottom: i < filteredLogs.length - 1 ? "1px solid hsl(270 25% 14%)" : "none",
                     background: i % 2 === 0 ? "transparent" : "hsl(270 30% 8% / 0.5)",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                    <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ color: "hsl(0 0% 92%)", fontFamily: "Georgia, serif", fontSize: 14, fontWeight: "bold" }}>
                         {contact ? `${contact.firstName} ${contact.lastName}` : `Contact #${log.contactId}`}
                       </span>
                       {contact?.serviceTime && (
-                        <span style={{ marginLeft: 8, background: "hsl(270 45% 16%)", color: "hsl(270 60% 70%)", borderRadius: 4, padding: "1px 7px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                        <span style={{ background: "hsl(270 45% 16%)", color: "hsl(270 60% 70%)", borderRadius: 4, padding: "1px 7px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                           {contact.serviceTime}
                         </span>
                       )}
                     </div>
-                    <span style={{ color: "hsl(270 30% 45%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
+                    <span style={{ color: "hsl(270 30% 45%)", fontFamily: "Georgia, serif", fontSize: 11, flexShrink: 0, marginLeft: 8 }}>
                       {formatDate(log.calledAt)}
                     </span>
                   </div>
@@ -243,17 +412,17 @@ export default function PXPLogsPage() {
                     <span style={{ background: "hsl(270 45% 18%)", color: "hsl(270 60% 70%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       {log.callerName}
                     </span>
-                    <span style={{ background: "hsl(270 30% 14%)", color: "hsl(270 40% 55%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em" }}>
+                    <span style={{ background: "hsl(270 30% 14%)", color: "hsl(270 40% 55%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
                       {log.campus}
                     </span>
                     {log.outcome && (
-                      <span style={{ background: "hsl(270 25% 12%)", color: "hsl(270 35% 50%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
+                      <span style={{ background: "hsl(270 25% 12%)", color: "hsl(270 35% 52%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
                         {log.outcome}
                       </span>
                     )}
                   </div>
                   {log.notes && (
-                    <p style={{ color: "hsl(270 25% 48%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 6, lineHeight: 1.5 }}>
+                    <p style={{ color: "hsl(270 25% 48%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 5, lineHeight: 1.5 }}>
                       {log.notes}
                     </p>
                   )}
@@ -263,8 +432,9 @@ export default function PXPLogsPage() {
           )}
         </div>
 
-        <p style={{ textAlign: "center", marginTop: 12, color: "hsl(270 25% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
-          {filteredLogs.length} {filteredLogs.length === 1 ? "call" : "calls"}{filteredLogs.length !== logs.length ? ` of ${logs.length} total` : " logged"}
+        <p style={{ textAlign: "center", marginTop: 10, color: "hsl(270 25% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
+          {filteredLogs.length} {filteredLogs.length === 1 ? "call" : "calls"}
+          {filteredLogs.length !== logs.length ? ` of ${logs.length} total` : " logged"}
         </p>
       </div>
     </div>

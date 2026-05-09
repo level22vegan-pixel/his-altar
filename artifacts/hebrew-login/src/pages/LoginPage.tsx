@@ -112,7 +112,7 @@ export default function LoginPage() {
               const role = data.role;
               const campus = data.campus;
               if (campus) {
-                setCampusSession(campus, role);
+                setCampusSession(campus, role ?? "lead");
               } else {
                 setAdminSession();
               }

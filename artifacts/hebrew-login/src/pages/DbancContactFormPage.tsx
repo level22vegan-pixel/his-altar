@@ -6,6 +6,7 @@ import {
   useGetDbancContact,
   useListDbancCustomFields,
 } from "@workspace/api-client-react";
+import { getValidCampusSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
@@ -50,9 +51,12 @@ export default function DbancContactFormPage() {
   const params = useParams<{ id: string }>();
   const isEdit = !!params.id;
 
+  const campusSession = getValidCampusSession();
+  const lockedCampus = campusSession?.campus ?? null;
+
   const { data: existingData } = useGetDbancContact(
     parseInt(params.id ?? "0"),
-    { query: { enabled: isEdit } }
+    { query: { enabled: isEdit, queryKey: [`/api/dbanc/contacts/${params.id}`] } }
   );
   const { data: fieldsData } = useListDbancCustomFields();
   const createContact = useCreateDbancContact();
@@ -64,7 +68,7 @@ export default function DbancContactFormPage() {
     phone: "",
     carrier: "",
     gender: "",
-    campus: "",
+    campus: lockedCampus ?? "",
     notes: "",
     customData: {},
   });
@@ -191,10 +195,17 @@ export default function DbancContactFormPage() {
             </div>
             <div>
               <label style={labelStyle}>Campus</label>
-              <select style={{ ...inputStyle, appearance: "none" as const }} value={form.campus} onChange={e => setField("campus", e.target.value)}>
-                <option value="">Select campus…</option>
-                {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              {lockedCampus ? (
+                <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.8 }}>
+                  <span style={{ color: "hsl(220 60% 78%)" }}>{lockedCampus}</span>
+                  <span style={{ color: "hsl(220 30% 48%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>Locked</span>
+                </div>
+              ) : (
+                <select style={{ ...inputStyle, appearance: "none" as const }} value={form.campus} onChange={e => setField("campus", e.target.value)}>
+                  <option value="">Select campus…</option>
+                  {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
             </div>
           </div>
 

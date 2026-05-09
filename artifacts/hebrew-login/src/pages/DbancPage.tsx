@@ -6,9 +6,7 @@ import {
   useDeleteDbancContact,
   useCreateActivityLog,
 } from "@workspace/api-client-react";
-import { getSessionUserName } from "@/lib/session";
-
-const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Metro PCS", "Boost", "Cricket", "Other"];
+import { getSessionUserName, getValidCampusSession, getValidAdminSession } from "@/lib/session";
 
 function formatPhone(p: string) {
   const d = p.replace(/\D/g, "");
@@ -36,14 +34,21 @@ export default function DbancPage() {
   const { data, isLoading, refetch } = useListDbancContacts();
   const deleteContact = useDeleteDbancContact();
 
+  const campusSession = getValidCampusSession();
+  const isMasterAdmin = getValidAdminSession();
+  const lockedCampus = campusSession?.campus ?? null;
+
   useEffect(() => {
     logAccess.mutate({ data: { tool: "dbanc", action: "page_access", userName: getSessionUserName() } });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const contacts = (data?.contacts ?? []).filter(c => {
+    // Campus users only see their own campus
+    if (lockedCampus && c.campus !== lockedCampus) return false;
     const q = search.toLowerCase();
     return (
+      q === "" ||
       c.firstName.toLowerCase().includes(q) ||
       c.lastName.toLowerCase().includes(q) ||
       c.phone.includes(q) ||
@@ -89,6 +94,14 @@ export default function DbancPage() {
           <p style={{ color: "hsl(220 40% 70%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
             Prayer Contact Database
           </p>
+          {/* Campus lock badge */}
+          {lockedCampus && (
+            <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(220 60% 20%)", border: "1px solid hsl(220 50% 35%)", borderRadius: 20 }}>
+              <span style={{ color: "hsl(220 60% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                {lockedCampus} · {campusSession?.role === "lead" ? "Lead" : "Deputy Lead"}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Action bar */}
@@ -101,7 +114,7 @@ export default function DbancPage() {
         {/* Search */}
         <input
           type="text"
-          placeholder="Search by name, phone, or campus…"
+          placeholder={lockedCampus ? `Search ${lockedCampus} contacts…` : "Search by name, phone, or campus…"}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
@@ -126,7 +139,7 @@ export default function DbancPage() {
             <div style={{ padding: 32, textAlign: "center", color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 13 }}>Loading…</div>
           ) : contacts.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>
-              {search ? "No contacts match your search" : "No contacts yet — add the first one"}
+              {search ? "No contacts match your search" : lockedCampus ? `No contacts for ${lockedCampus} yet` : "No contacts yet — add the first one"}
             </div>
           ) : (
             contacts.map((c, i) => (
@@ -157,7 +170,7 @@ export default function DbancPage() {
                     {c.firstName} {c.lastName}
                   </div>
                   <div style={{ color: "hsl(220 40% 60%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
-                    {formatPhone(c.phone)}{c.carrier ? ` · ${c.carrier}` : ""}{c.campus ? ` · ${c.campus}` : ""}
+                    {formatPhone(c.phone)}{c.carrier ? ` · ${c.carrier}` : ""}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
                   </div>
                 </div>
 
@@ -170,12 +183,15 @@ export default function DbancPage() {
                   >
                     <Pencil size={13} />
                   </button>
-                  <button
-                    onClick={() => handleDelete(c.id, `${c.firstName} ${c.lastName}`)}
-                    style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 50% 18%)", border: "1px solid hsl(0 40% 28%)", color: "hsl(0 60% 65%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer" }}
-                  >
-                    ✕
-                  </button>
+                  {/* Delete only for master admin */}
+                  {isMasterAdmin && (
+                    <button
+                      onClick={() => handleDelete(c.id, `${c.firstName} ${c.lastName}`)}
+                      style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 50% 18%)", border: "1px solid hsl(0 40% 28%)", color: "hsl(0 60% 65%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer" }}
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
             ))
@@ -183,7 +199,7 @@ export default function DbancPage() {
         </div>
 
         <p style={{ textAlign: "center", marginTop: 12, color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
-          {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}
+          {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}{lockedCampus ? ` at ${lockedCampus}` : ""}
         </p>
       </div>
     </div>

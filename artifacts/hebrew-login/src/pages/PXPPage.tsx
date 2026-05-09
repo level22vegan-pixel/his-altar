@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListDbancContacts, useCreateActivityLog } from "@workspace/api-client-react";
-import { useEffect } from "react";
-import { getSessionUserName } from "@/lib/session";
+import { getSessionUserName, getValidCampusSession } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
@@ -29,8 +28,12 @@ export default function PXPPage() {
   const [, navigate] = useLocation();
   const logAccess = useCreateActivityLog();
 
+  const campusSession = getValidCampusSession();
+  const lockedCampus = campusSession?.campus ?? null;
+
   const [callerName, setCallerName] = useState(() => localStorage.getItem("pxp_caller") ?? "");
-  const [callerCampus, setCallerCampus] = useState(() => localStorage.getItem("pxp_campus") ?? "");
+  // If campus user, always use their campus; otherwise restore from localStorage
+  const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? "");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -41,7 +44,16 @@ export default function PXPPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const contacts = (data?.contacts ?? []).filter(c => {
+  // Keep campus in sync if session campus changes
+  useEffect(() => {
+    if (lockedCampus) setCallerCampus(lockedCampus);
+  }, [lockedCampus]);
+
+  const allContacts = data?.contacts ?? [];
+
+  const contacts = allContacts.filter(c => {
+    // Campus users only see their own campus contacts
+    if (lockedCampus && c.campus !== lockedCampus) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -51,12 +63,12 @@ export default function PXPPage() {
     );
   });
 
-  const selected = contacts.find(c => c.id === selectedId) ?? (data?.contacts ?? []).find(c => c.id === selectedId);
+  const selected = contacts.find(c => c.id === selectedId) ?? allContacts.find(c => c.id === selectedId);
 
   function handleStartCall() {
     if (!callerName.trim() || !selectedId || !callerCampus) return;
     localStorage.setItem("pxp_caller", callerName.trim());
-    localStorage.setItem("pxp_campus", callerCampus);
+    if (!lockedCampus) localStorage.setItem("pxp_campus", callerCampus);
     navigate(`/admin/pxp/call?contactId=${selectedId}&callerName=${encodeURIComponent(callerName.trim())}&campus=${encodeURIComponent(callerCampus)}`);
   }
 
@@ -80,7 +92,6 @@ export default function PXPPage() {
         ← Admin
       </button>
 
-
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         {/* Header */}
         <div className="text-center mb-8">
@@ -91,6 +102,14 @@ export default function PXPPage() {
           <p style={{ color: "hsl(270 40% 58%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", marginTop: 6, textTransform: "uppercase" }}>
             Prayer Follow-Up System
           </p>
+          {/* Campus lock badge */}
+          {lockedCampus && (
+            <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 50% 18%)", border: "1px solid hsl(270 45% 32%)", borderRadius: 20 }}>
+              <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                {lockedCampus} · {campusSession?.role === "lead" ? "Lead" : "Deputy Lead"}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Step 1: Caller info */}
@@ -105,14 +124,22 @@ export default function PXPPage() {
               value={callerName}
               onChange={e => setCallerName(e.target.value)}
             />
-            <select
-              style={{ ...inputStyle, appearance: "none" as const }}
-              value={callerCampus}
-              onChange={e => setCallerCampus(e.target.value)}
-            >
-              <option value="">Your campus…</option>
-              {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            {lockedCampus ? (
+              /* Locked campus display for campus users */
+              <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
+                <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
+              </div>
+            ) : (
+              <select
+                style={{ ...inputStyle, appearance: "none" as const }}
+                value={callerCampus}
+                onChange={e => setCallerCampus(e.target.value)}
+              >
+                <option value="">Your campus…</option>
+                {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
           </div>
         </div>
 
@@ -120,6 +147,7 @@ export default function PXPPage() {
         <div style={{ background: "hsl(270 35% 11%)", border: "1px solid hsl(270 30% 22%)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
           <p style={{ color: "hsl(270 40% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 14 }}>
             Step 2 — Select Contact to Call
+            {lockedCampus && <span style={{ marginLeft: 8, opacity: 0.6 }}>({lockedCampus})</span>}
           </p>
 
           <input
@@ -132,7 +160,7 @@ export default function PXPPage() {
           <div style={{ maxHeight: 260, overflowY: "auto", borderRadius: 8, border: "1px solid hsl(270 25% 18%)" }}>
             {contacts.length === 0 ? (
               <div style={{ padding: 24, textAlign: "center", color: "hsl(270 25% 40%)", fontFamily: "Georgia, serif", fontSize: 12 }}>
-                {search ? "No contacts match" : "No contacts in Dbanc yet"}
+                {search ? "No contacts match" : lockedCampus ? `No contacts for ${lockedCampus} yet` : "No contacts in Dbanc yet"}
               </div>
             ) : (
               contacts.map((c, i) => (
@@ -167,7 +195,7 @@ export default function PXPPage() {
                       {c.firstName} {c.lastName}
                     </div>
                     <div style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
-                      {formatPhone(c.phone)}{c.campus ? ` · ${c.campus}` : ""}
+                      {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
                     </div>
                   </div>
                   {c.id === selectedId && (
@@ -211,7 +239,6 @@ export default function PXPPage() {
         >
           {canStart ? `Start Call with ${selected?.firstName}` : "Complete steps above to start"}
         </button>
-
       </div>
     </div>
   );

@@ -33,8 +33,8 @@ export default function PXPCallPage() {
   const params = parseParams(window.location.search);
 
   const { data: contactData } = useGetDbancContact(
-    { id: params.contactId },
-    { query: { enabled: !!params.contactId } }
+    params.contactId ?? 0,
+    { query: { enabled: !!params.contactId, queryKey: [`/api/dbanc/contacts/${params.contactId}`] } }
   );
   const { data: configData } = useGetPxpConfig();
   const logCall = useCreatePxpCallLog();

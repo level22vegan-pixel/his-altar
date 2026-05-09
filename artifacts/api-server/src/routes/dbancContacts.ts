@@ -40,6 +40,7 @@ router.post("/", async (req, res) => {
       firstName, lastName, phone,
       carrier = "", gender = "", campus = "", notes = "", customData = {},
       crisisFlag = false, doNotContact = false, assignedCallerId, servicesNotes = "",
+      serviceTime = "",
     } = req.body as Record<string, unknown>;
     if (!firstName || !lastName || !phone) {
       res.status(400).json({ message: "firstName, lastName, and phone are required" });
@@ -54,6 +55,7 @@ router.post("/", async (req, res) => {
         crisisFlag: Boolean(crisisFlag), doNotContact: Boolean(doNotContact),
         assignedCallerId: assignedCallerId != null ? Number(assignedCallerId) : null,
         servicesNotes: String(servicesNotes),
+        serviceTime: String(serviceTime),
       })
       .returning();
     res.status(201).json(contact);
@@ -68,7 +70,7 @@ router.put("/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const {
       firstName, lastName, phone, carrier, gender, campus, notes, customData,
-      crisisFlag, doNotContact, assignedCallerId, servicesNotes,
+      crisisFlag, doNotContact, assignedCallerId, servicesNotes, serviceTime,
     } = req.body as Record<string, unknown>;
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (firstName !== undefined) updates.firstName = String(firstName);
@@ -83,6 +85,7 @@ router.put("/:id", async (req, res) => {
     if (doNotContact !== undefined) updates.doNotContact = Boolean(doNotContact);
     if (assignedCallerId !== undefined) updates.assignedCallerId = assignedCallerId != null ? Number(assignedCallerId) : null;
     if (servicesNotes !== undefined) updates.servicesNotes = String(servicesNotes);
+    if (serviceTime !== undefined) updates.serviceTime = String(serviceTime);
     const [contact] = await db
       .update(dbancContactsTable)
       .set(updates)

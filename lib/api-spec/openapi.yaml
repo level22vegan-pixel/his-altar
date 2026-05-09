@@ -291,6 +291,13 @@ paths:
       operationId: listDbancContacts
       tags: [dbanc]
       summary: List all prayer contacts
+      parameters:
+        - name: campus
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter contacts by campus name
       responses:
         "200":
           description: List of contacts

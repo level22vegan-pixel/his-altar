@@ -44,6 +44,7 @@ import type {
   ListActivityLogsParams,
   ListCheckInsParams,
   ListDailyAltarReportsParams,
+  ListDbancContactsParams,
   ListPxpCallLogsParams,
   ListServiceReportsParams,
   ListWorkersParams,
@@ -1352,41 +1353,60 @@ export const useDeleteCheckIn = <
 /**
  * @summary List all prayer contacts
  */
-export const getListDbancContactsUrl = () => {
-  return `/api/dbanc/contacts`;
+export const getListDbancContactsUrl = (params?: ListDbancContactsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dbanc/contacts?${stringifiedParams}`
+    : `/api/dbanc/contacts`;
 };
 
 export const listDbancContacts = async (
+  params?: ListDbancContactsParams,
   options?: RequestInit,
 ): Promise<DbancContactList> => {
-  return customFetch<DbancContactList>(getListDbancContactsUrl(), {
+  return customFetch<DbancContactList>(getListDbancContactsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListDbancContactsQueryKey = () => {
-  return [`/api/dbanc/contacts`] as const;
+export const getListDbancContactsQueryKey = (
+  params?: ListDbancContactsParams,
+) => {
+  return [`/api/dbanc/contacts`, ...(params ? [params] : [])] as const;
 };
 
 export const getListDbancContactsQueryOptions = <
   TData = Awaited<ReturnType<typeof listDbancContacts>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof listDbancContacts>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: ListDbancContactsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDbancContacts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListDbancContactsQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getListDbancContactsQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof listDbancContacts>>
-  > = ({ signal }) => listDbancContacts({ signal, ...requestOptions });
+  > = ({ signal }) => listDbancContacts(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof listDbancContacts>>,
@@ -1407,15 +1427,18 @@ export type ListDbancContactsQueryError = ErrorType<unknown>;
 export function useListDbancContacts<
   TData = Awaited<ReturnType<typeof listDbancContacts>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof listDbancContacts>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListDbancContactsQueryOptions(options);
+>(
+  params?: ListDbancContactsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDbancContacts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDbancContactsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

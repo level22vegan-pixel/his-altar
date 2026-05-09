@@ -31,12 +31,14 @@ export default function DbancPage() {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const logAccess = useCreateActivityLog();
-  const { data, isLoading, refetch } = useListDbancContacts();
-  const deleteContact = useDeleteDbancContact();
-
   const campusSession = getValidCampusSession();
   const isMasterAdmin = getValidAdminSession();
   const lockedCampus = campusSession?.campus ?? null;
+
+  const { data, isLoading, refetch } = useListDbancContacts(
+    lockedCampus ? { campus: lockedCampus } : undefined
+  );
+  const deleteContact = useDeleteDbancContact();
 
   useEffect(() => {
     logAccess.mutate({ data: { tool: "dbanc", action: "page_access", userName: getSessionUserName() } });
@@ -44,8 +46,6 @@ export default function DbancPage() {
   }, []);
 
   const contacts = (data?.contacts ?? []).filter(c => {
-    // Campus users only see their own campus
-    if (lockedCampus && c.campus !== lockedCampus) return false;
     const q = search.toLowerCase();
     return (
       q === "" ||

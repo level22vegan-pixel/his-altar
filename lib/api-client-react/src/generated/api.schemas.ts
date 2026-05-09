@@ -355,6 +355,13 @@ export type ListCheckInsParams = {
   serviceDate: string;
 };
 
+export type ListDbancContactsParams = {
+  /**
+   * Filter contacts by campus name
+   */
+  campus?: string;
+};
+
 export type ListPxpCallLogsParams = {
   contactId?: number;
 };

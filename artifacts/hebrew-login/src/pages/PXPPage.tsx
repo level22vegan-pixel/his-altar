@@ -37,7 +37,9 @@ export default function PXPPage() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const { data } = useListDbancContacts();
+  const { data } = useListDbancContacts(
+    lockedCampus ? { campus: lockedCampus } : undefined
+  );
 
   useEffect(() => {
     logAccess.mutate({ data: { tool: "pxp", action: "page_access", userName: getSessionUserName() } });
@@ -52,8 +54,6 @@ export default function PXPPage() {
   const allContacts = data?.contacts ?? [];
 
   const contacts = allContacts.filter(c => {
-    // Campus users only see their own campus contacts
-    if (lockedCampus && c.campus !== lockedCampus) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (

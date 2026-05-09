@@ -6,10 +6,12 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const contacts = await db
-      .select()
-      .from(dbancContactsTable)
-      .orderBy(desc(dbancContactsTable.createdAt));
+    const { campus } = req.query as { campus?: string };
+    let query = db.select().from(dbancContactsTable).$dynamic();
+    if (campus) {
+      query = query.where(eq(dbancContactsTable.campus, campus));
+    }
+    const contacts = await query.orderBy(desc(dbancContactsTable.createdAt));
     res.json({ contacts });
   } catch (err) {
     req.log.error({ err }, "Error listing dbanc contacts");

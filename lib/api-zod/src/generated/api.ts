@@ -256,6 +256,13 @@ export const DeleteCheckInResponse = zod.object({
 /**
  * @summary List all prayer contacts
  */
+export const ListDbancContactsQueryParams = zod.object({
+  campus: zod.coerce
+    .string()
+    .optional()
+    .describe("Filter contacts by campus name"),
+});
+
 export const ListDbancContactsResponse = zod.object({
   contacts: zod.array(
     zod.object({

@@ -8,6 +8,8 @@ import {
 } from "@workspace/api-client-react";
 import { getSessionUserName, getValidCampusSession, getValidAdminSession } from "@/lib/session";
 
+const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+
 function formatPhone(p: string) {
   const d = p.replace(/\D/g, "");
   if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
@@ -30,13 +32,18 @@ const BTN = {
 export default function DbancPage() {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
+  const [campusFilter, setCampusFilter] = useState("");
   const logAccess = useCreateActivityLog();
+
   const campusSession = getValidCampusSession();
   const isMasterAdmin = getValidAdminSession();
   const lockedCampus = campusSession?.campus ?? null;
 
+  // Master admin uses the campusFilter state; campus users use their locked campus
+  const activeCampus = lockedCampus ?? (campusFilter || undefined);
+
   const { data, isLoading, refetch } = useListDbancContacts(
-    lockedCampus ? { campus: lockedCampus } : undefined
+    activeCampus ? { campus: activeCampus } : undefined
   );
   const deleteContact = useDeleteDbancContact();
 
@@ -94,7 +101,7 @@ export default function DbancPage() {
           <p style={{ color: "hsl(220 40% 70%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
             Prayer Contact Database
           </p>
-          {/* Campus lock badge */}
+          {/* Campus lock badge for campus users */}
           {lockedCampus && (
             <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(220 60% 20%)", border: "1px solid hsl(220 50% 35%)", borderRadius: 20 }}>
               <span style={{ color: "hsl(220 60% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
@@ -103,6 +110,64 @@ export default function DbancPage() {
             </div>
           )}
         </div>
+
+        {/* Campus filter tabs — master admin only */}
+        {isMasterAdmin && (
+          <div style={{ marginBottom: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                overflowX: "auto",
+                paddingBottom: 4,
+                scrollbarWidth: "none",
+              }}
+            >
+              {/* All tab */}
+              <button
+                onClick={() => setCampusFilter("")}
+                style={{
+                  flexShrink: 0,
+                  padding: "6px 16px",
+                  borderRadius: 20,
+                  border: campusFilter === "" ? "1px solid hsl(38 60% 55%)" : "1px solid hsl(220 30% 28%)",
+                  background: campusFilter === "" ? "hsl(35 45% 18%)" : "hsl(220 40% 10%)",
+                  color: campusFilter === "" ? "hsl(38 70% 68%)" : "hsl(220 30% 55%)",
+                  fontFamily: "Georgia, serif",
+                  fontSize: 11,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                All
+              </button>
+              {CAMPUSES.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCampusFilter(campusFilter === c ? "" : c)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "6px 16px",
+                    borderRadius: 20,
+                    border: campusFilter === c ? "1px solid hsl(220 60% 55%)" : "1px solid hsl(220 30% 28%)",
+                    background: campusFilter === c ? "hsl(220 55% 22%)" : "hsl(220 40% 10%)",
+                    color: campusFilter === c ? "hsl(220 70% 78%)" : "hsl(220 30% 55%)",
+                    fontFamily: "Georgia, serif",
+                    fontSize: 11,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Action bar */}
         <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
@@ -114,7 +179,13 @@ export default function DbancPage() {
         {/* Search */}
         <input
           type="text"
-          placeholder={lockedCampus ? `Search ${lockedCampus} contacts…` : "Search by name, phone, or campus…"}
+          placeholder={
+            lockedCampus
+              ? `Search ${lockedCampus} contacts…`
+              : campusFilter
+              ? `Search ${campusFilter} contacts…`
+              : "Search by name, phone, or campus…"
+          }
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
@@ -139,7 +210,11 @@ export default function DbancPage() {
             <div style={{ padding: 32, textAlign: "center", color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 13 }}>Loading…</div>
           ) : contacts.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>
-              {search ? "No contacts match your search" : lockedCampus ? `No contacts for ${lockedCampus} yet` : "No contacts yet — add the first one"}
+              {search
+                ? "No contacts match your search"
+                : activeCampus
+                ? `No contacts for ${activeCampus} yet`
+                : "No contacts yet — add the first one"}
             </div>
           ) : (
             contacts.map((c, i) => (
@@ -199,7 +274,8 @@ export default function DbancPage() {
         </div>
 
         <p style={{ textAlign: "center", marginTop: 12, color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
-          {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}{lockedCampus ? ` at ${lockedCampus}` : ""}
+          {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}
+          {activeCampus ? ` at ${activeCampus}` : ""}
         </p>
       </div>
     </div>

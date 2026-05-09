@@ -32,7 +32,7 @@ const BTN = {
 export default function DbancPage() {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
-  const [campusFilter, setCampusFilter] = useState("");
+  const [campusFilter, setCampusFilter] = useState("HALLMARK");
   const logAccess = useCreateActivityLog();
 
   const campusSession = getValidCampusSession();

@@ -45,6 +45,8 @@ export default function PXPCallPage() {
   const [callDone, setCallDone] = useState(false);
   const [logging, setLogging] = useState(false);
   const [logged, setLogged] = useState(false);
+  const [servicesOffered, setServicesOffered] = useState("");
+  const [feedback, setFeedback] = useState("");
 
   const contact = contactData;
   const scriptTree = configData?.scriptTree as ScriptNode | undefined;
@@ -95,6 +97,8 @@ export default function PXPCallPage() {
         campus: params.campus,
         outcome,
         notes: "",
+        servicesOffered,
+        feedback,
       },
     });
     setLogged(true);
@@ -189,6 +193,23 @@ export default function PXPCallPage() {
                 Outcome: {outcome || "Completed"}
               </p>
             </div>
+
+            {!logged && (
+              <>
+                <textarea
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid hsl(270 30% 28%)", background: "hsl(270 40% 10%)", color: "hsl(0 0% 92%)", fontFamily: "Georgia, serif", fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 72 }}
+                  placeholder="Services offered (prayer, counseling, food, referral…)"
+                  value={servicesOffered}
+                  onChange={e => setServicesOffered(e.target.value)}
+                />
+                <textarea
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid hsl(270 30% 28%)", background: "hsl(270 40% 10%)", color: "hsl(0 0% 92%)", fontFamily: "Georgia, serif", fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 72 }}
+                  placeholder="Contact's feedback or response…"
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                />
+              </>
+            )}
 
             {!logged ? (
               <button

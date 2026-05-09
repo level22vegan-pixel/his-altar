@@ -265,6 +265,10 @@ export interface DbancContact {
   campus: string;
   notes: string;
   customData: DbancContactCustomData;
+  crisisFlag: boolean;
+  doNotContact: boolean;
+  assignedCallerId?: number | null;
+  servicesNotes: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -284,6 +288,10 @@ export interface CreateDbancContactBody {
   campus?: string;
   notes?: string;
   customData?: CreateDbancContactBodyCustomData;
+  crisisFlag?: boolean;
+  doNotContact?: boolean;
+  assignedCallerId?: number | null;
+  servicesNotes?: string;
 }
 
 export interface DbancCustomField {
@@ -348,6 +356,8 @@ export interface PxpCallLog {
   campus: string;
   outcome: string;
   notes: string;
+  servicesOffered: string;
+  feedback: string;
   calledAt: string;
 }
 
@@ -361,6 +371,8 @@ export interface CreatePxpCallLogBody {
   campus: string;
   outcome?: string;
   notes?: string;
+  servicesOffered?: string;
+  feedback?: string;
 }
 
 export type ListWorkersParams = {

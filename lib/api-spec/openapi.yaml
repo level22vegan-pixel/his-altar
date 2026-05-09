@@ -1417,6 +1417,15 @@ components:
         customData:
           type: object
           additionalProperties: true
+        crisisFlag:
+          type: boolean
+        doNotContact:
+          type: boolean
+        assignedCallerId:
+          type: integer
+          nullable: true
+        servicesNotes:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -1433,6 +1442,9 @@ components:
         - campus
         - notes
         - customData
+        - crisisFlag
+        - doNotContact
+        - servicesNotes
         - createdAt
         - updatedAt
     DbancContactList:
@@ -1464,6 +1476,15 @@ components:
         customData:
           type: object
           additionalProperties: true
+        crisisFlag:
+          type: boolean
+        doNotContact:
+          type: boolean
+        assignedCallerId:
+          type: integer
+          nullable: true
+        servicesNotes:
+          type: string
       required:
         - firstName
         - lastName
@@ -1602,6 +1623,10 @@ components:
           type: string
         notes:
           type: string
+        servicesOffered:
+          type: string
+        feedback:
+          type: string
         calledAt:
           type: string
           format: date-time
@@ -1612,6 +1637,8 @@ components:
         - campus
         - outcome
         - notes
+        - servicesOffered
+        - feedback
         - calledAt
     PxpCallLogList:
       type: object
@@ -1634,6 +1661,10 @@ components:
         outcome:
           type: string
         notes:
+          type: string
+        servicesOffered:
+          type: string
+        feedback:
           type: string
       required:
         - contactId

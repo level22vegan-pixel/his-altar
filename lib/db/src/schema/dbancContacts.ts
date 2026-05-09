@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, jsonb, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +12,10 @@ export const dbancContactsTable = pgTable("dbanc_contacts", {
   campus: text("campus").notNull().default(""),
   notes: text("notes").notNull().default(""),
   customData: jsonb("custom_data").notNull().default({}),
+  crisisFlag: boolean("crisis_flag").notNull().default(false),
+  doNotContact: boolean("do_not_contact").notNull().default(false),
+  assignedCallerId: integer("assigned_caller_id"),
+  servicesNotes: text("services_notes").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

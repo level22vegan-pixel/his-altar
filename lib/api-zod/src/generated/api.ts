@@ -275,6 +275,10 @@ export const ListDbancContactsResponse = zod.object({
       campus: zod.string(),
       notes: zod.string(),
       customData: zod.record(zod.string(), zod.unknown()),
+      crisisFlag: zod.boolean(),
+      doNotContact: zod.boolean(),
+      assignedCallerId: zod.number().nullish(),
+      servicesNotes: zod.string(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
     }),
@@ -293,6 +297,10 @@ export const CreateDbancContactBody = zod.object({
   campus: zod.string().optional(),
   notes: zod.string().optional(),
   customData: zod.record(zod.string(), zod.unknown()).optional(),
+  crisisFlag: zod.boolean().optional(),
+  doNotContact: zod.boolean().optional(),
+  assignedCallerId: zod.number().nullish(),
+  servicesNotes: zod.string().optional(),
 });
 
 /**
@@ -312,6 +320,10 @@ export const GetDbancContactResponse = zod.object({
   campus: zod.string(),
   notes: zod.string(),
   customData: zod.record(zod.string(), zod.unknown()),
+  crisisFlag: zod.boolean(),
+  doNotContact: zod.boolean(),
+  assignedCallerId: zod.number().nullish(),
+  servicesNotes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -332,6 +344,10 @@ export const UpdateDbancContactBody = zod.object({
   campus: zod.string().optional(),
   notes: zod.string().optional(),
   customData: zod.record(zod.string(), zod.unknown()).optional(),
+  crisisFlag: zod.boolean().optional(),
+  doNotContact: zod.boolean().optional(),
+  assignedCallerId: zod.number().nullish(),
+  servicesNotes: zod.string().optional(),
 });
 
 export const UpdateDbancContactResponse = zod.object({
@@ -344,6 +360,10 @@ export const UpdateDbancContactResponse = zod.object({
   campus: zod.string(),
   notes: zod.string(),
   customData: zod.record(zod.string(), zod.unknown()),
+  crisisFlag: zod.boolean(),
+  doNotContact: zod.boolean(),
+  assignedCallerId: zod.number().nullish(),
+  servicesNotes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -504,6 +524,8 @@ export const ListPxpCallLogsResponse = zod.object({
       campus: zod.string(),
       outcome: zod.string(),
       notes: zod.string(),
+      servicesOffered: zod.string(),
+      feedback: zod.string(),
       calledAt: zod.coerce.date(),
     }),
   ),
@@ -518,6 +540,8 @@ export const CreatePxpCallLogBody = zod.object({
   campus: zod.string(),
   outcome: zod.string().optional(),
   notes: zod.string().optional(),
+  servicesOffered: zod.string().optional(),
+  feedback: zod.string().optional(),
 });
 
 /**

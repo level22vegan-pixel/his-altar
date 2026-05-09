@@ -20,14 +20,25 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { contactId, callerName, campus, outcome = "", notes = "" } = req.body as Record<string, unknown>;
+    const {
+      contactId, callerName, campus,
+      outcome = "", notes = "", servicesOffered = "", feedback = "",
+    } = req.body as Record<string, unknown>;
     if (!contactId || !callerName || !campus) {
       res.status(400).json({ message: "contactId, callerName, and campus are required" });
       return;
     }
     const [log] = await db
       .insert(pxpCallLogsTable)
-      .values({ contactId: Number(contactId), callerName: String(callerName), campus: String(campus), outcome: String(outcome), notes: String(notes) })
+      .values({
+        contactId: Number(contactId),
+        callerName: String(callerName),
+        campus: String(campus),
+        outcome: String(outcome),
+        notes: String(notes),
+        servicesOffered: String(servicesOffered),
+        feedback: String(feedback),
+      })
       .returning();
     res.status(201).json(log);
   } catch (err) {

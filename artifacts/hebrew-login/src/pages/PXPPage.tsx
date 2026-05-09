@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useListDbancContacts, useListPxpCallers, useCreateActivityLog } from "@workspace/api-client-react";
+import { useListDbancContacts, useListPxpCallers, useCreateActivityLog, useListPxpCallLogs } from "@workspace/api-client-react";
 import { getSessionUserName, getValidCampusSession, getValidCallerSession, clearAllSessions } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
@@ -31,17 +31,16 @@ export default function PXPPage() {
   const campusSession = getValidCampusSession();
   const callerSession = getValidCallerSession();
 
-  // Caller session takes precedence over campus session for caller info
   const lockedCampus = callerSession?.campus ?? campusSession?.campus ?? null;
   const lockedCallerName = callerSession?.callerName ?? null;
   const isCallerSession = !!callerSession;
 
-  // If campus user or caller, always use their campus; otherwise restore from localStorage
   const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? "HALLMARK");
   const [selectedCallerId, setSelectedCallerId] = useState<number | "manual" | null>(null);
   const [manualName, setManualName] = useState("");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [contactFilter, setContactFilter] = useState<"all" | "called">("all");
 
   const activeCampus = lockedCampus ?? callerCampus;
 
@@ -51,26 +50,27 @@ export default function PXPPage() {
   const { data } = useListDbancContacts(
     lockedCampus ? { campus: lockedCampus } : undefined
   );
+  const { data: logsData } = useListPxpCallLogs({});
 
   const callers = callersData?.callers ?? [];
+
+  // Build a set of contactIds that have been called at least once
+  const calledContactIds = new Set((logsData?.logs ?? []).map(l => l.contactId));
 
   useEffect(() => {
     logAccess.mutate({ data: { tool: "pxp", action: "page_access", userName: getSessionUserName() } });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep campus in sync if session campus changes
   useEffect(() => {
     if (lockedCampus) setCallerCampus(lockedCampus);
   }, [lockedCampus]);
 
-  // Reset caller selection when campus changes
   useEffect(() => {
     setSelectedCallerId(null);
     setManualName("");
   }, [callerCampus]);
 
-  // For caller session, name is locked from session
   const callerName = isCallerSession
     ? lockedCallerName ?? ""
     : selectedCallerId === "manual"
@@ -79,7 +79,11 @@ export default function PXPPage() {
 
   const allContacts = data?.contacts ?? [];
 
-  const contacts = allContacts.filter(c => {
+  const filteredByTab = contactFilter === "called"
+    ? allContacts.filter(c => calledContactIds.has(c.id))
+    : allContacts;
+
+  const contacts = filteredByTab.filter(c => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -103,17 +107,16 @@ export default function PXPPage() {
   }
 
   const canStart = !!callerName && !!selectedId && !!activeCampus;
+  const calledCount = allContacts.filter(c => calledContactIds.has(c.id)).length;
 
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
       style={{ background: "radial-gradient(ellipse at 50% 20%, hsl(270 50% 14%) 0%, hsl(260 45% 8%) 100%)" }}
     >
-      {/* Top accent */}
       <div className="absolute top-0 left-0 right-0 h-1" style={{ background: "linear-gradient(90deg, hsl(270 70% 55%), hsl(300 60% 55%), hsl(270 70% 55%))" }} />
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(270 50% 60% / 0.06) 1px, transparent 1px)", backgroundSize: "50px 50px" }} />
 
-      {/* Back / Sign out */}
       {isCallerSession ? (
         <button
           onClick={handleSignOut}
@@ -143,7 +146,6 @@ export default function PXPPage() {
             Prayer Follow-Up System
           </p>
 
-          {/* Caller session badge */}
           {isCallerSession && (
             <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 50% 18%)", border: "1px solid hsl(270 45% 32%)", borderRadius: 20 }}>
               <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
@@ -152,7 +154,6 @@ export default function PXPPage() {
             </div>
           )}
 
-          {/* Campus session badge */}
           {!isCallerSession && lockedCampus && (
             <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 50% 18%)", border: "1px solid hsl(270 45% 32%)", borderRadius: 20 }}>
               <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
@@ -168,7 +169,6 @@ export default function PXPPage() {
             Step 1 — Caller Info
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Caller session: both campus and name are locked */}
             {isCallerSession ? (
               <>
                 <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
@@ -182,7 +182,6 @@ export default function PXPPage() {
               </>
             ) : (
               <>
-                {/* Campus selector — admin only */}
                 {!lockedCampus && (
                   <select
                     style={{ ...inputStyle, appearance: "none" as const }}
@@ -198,7 +197,6 @@ export default function PXPPage() {
                     <span style={{ color: "hsl(270 30% 48%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
                   </div>
                 )}
-                {/* Caller dropdown */}
                 {callers.length > 0 ? (
                   <>
                     <select
@@ -246,6 +244,32 @@ export default function PXPPage() {
             {lockedCampus && <span style={{ marginLeft: 8, opacity: 0.6 }}>({lockedCampus})</span>}
           </p>
 
+          {/* Tab Slider: All / Called */}
+          <div style={{ display: "flex", background: "hsl(270 30% 8%)", borderRadius: 8, padding: 3, marginBottom: 12, gap: 3 }}>
+            {(["all", "called"] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setContactFilter(tab)}
+                style={{
+                  flex: 1,
+                  padding: "7px 0",
+                  borderRadius: 6,
+                  background: contactFilter === tab ? "hsl(270 50% 22%)" : "transparent",
+                  color: contactFilter === tab ? "hsl(270 70% 78%)" : "hsl(270 25% 42%)",
+                  fontFamily: "Georgia, serif",
+                  fontSize: 11,
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  border: contactFilter === tab ? "1px solid hsl(270 45% 35%)" : "1px solid transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                {tab === "all" ? `All (${allContacts.length})` : `Called (${calledCount})`}
+              </button>
+            ))}
+          </div>
+
           <input
             style={{ ...inputStyle, marginBottom: 12 }}
             placeholder="Search contacts…"
@@ -253,52 +277,110 @@ export default function PXPPage() {
             onChange={e => setSearch(e.target.value)}
           />
 
-          <div style={{ maxHeight: 260, overflowY: "auto", borderRadius: 8, border: "1px solid hsl(270 25% 18%)" }}>
+          <div style={{ maxHeight: 280, overflowY: "auto", borderRadius: 8, border: "1px solid hsl(270 25% 18%)" }}>
             {contacts.length === 0 ? (
               <div style={{ padding: 24, textAlign: "center", color: "hsl(270 25% 40%)", fontFamily: "Georgia, serif", fontSize: 12 }}>
-                {search ? "No contacts match" : lockedCampus ? `No contacts for ${lockedCampus} yet` : "No contacts in Dbanc yet"}
+                {search
+                  ? "No contacts match"
+                  : contactFilter === "called"
+                    ? "No contacts have been called yet"
+                    : lockedCampus
+                      ? `No contacts for ${lockedCampus} yet`
+                      : "No contacts in Dbanc yet"}
               </div>
             ) : (
-              contacts.map((c, i) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 16px",
-                    background: c.id === selectedId ? "hsl(270 50% 18%)" : i % 2 === 0 ? "transparent" : "hsl(270 30% 9%)",
-                    border: "none",
-                    borderBottom: i < contacts.length - 1 ? "1px solid hsl(270 25% 14%)" : "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    outline: c.id === selectedId ? "2px solid hsl(270 60% 45%)" : "none",
-                    outlineOffset: -2,
-                  }}
-                >
-                  <div style={{
-                    width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-                    background: c.id === selectedId ? "hsl(270 60% 35%)" : `hsl(${(c.id * 47) % 360} 50% 30%)`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "hsl(0 0% 95%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold",
-                  }}>
-                    {c.firstName[0]}{c.lastName[0]}
+              contacts.map((c, i) => {
+                const isCalled = calledContactIds.has(c.id);
+                const isSelected = c.id === selectedId;
+                return (
+                  <div
+                    key={c.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      borderBottom: i < contacts.length - 1 ? "1px solid hsl(270 25% 14%)" : "none",
+                      background: isSelected ? "hsl(270 50% 18%)" : i % 2 === 0 ? "transparent" : "hsl(270 30% 9%)",
+                      outline: isSelected ? "2px solid hsl(270 60% 45%)" : "none",
+                      outlineOffset: -2,
+                    }}
+                  >
+                    {/* Main selectable row */}
+                    <button
+                      onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "11px 14px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div style={{
+                        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                        background: isSelected ? "hsl(270 60% 35%)" : `hsl(${(c.id * 47) % 360} 50% 28%)`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "hsl(0 0% 95%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold",
+                      }}>
+                        {c.firstName[0]}{c.lastName[0]}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ color: isSelected ? "hsl(270 80% 85%)" : "hsl(0 0% 90%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>
+                            {c.firstName} {c.lastName}
+                          </span>
+                          {isCalled && (
+                            <span style={{ background: "hsl(270 40% 18%)", color: "hsl(270 55% 62%)", borderRadius: 4, padding: "1px 6px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                              Called
+                            </span>
+                          )}
+                          {c.crisisFlag && (
+                            <span style={{ background: "hsl(0 60% 16%)", color: "hsl(0 75% 65%)", borderRadius: 4, padding: "1px 6px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em" }}>
+                              ⚠ Crisis
+                            </span>
+                          )}
+                          {c.doNotContact && (
+                            <span style={{ background: "hsl(35 45% 12%)", color: "hsl(35 70% 55%)", borderRadius: 4, padding: "1px 6px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em" }}>
+                              ✕ DNC
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
+                          {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span style={{ color: "hsl(270 70% 65%)", fontSize: 15 }}>✓</span>
+                      )}
+                    </button>
+
+                    {/* Profile button */}
+                    <button
+                      onClick={e => { e.stopPropagation(); navigate(`/admin/pxp/contacts/${c.id}`); }}
+                      title="View profile"
+                      style={{
+                        padding: "11px 12px",
+                        background: "none",
+                        border: "none",
+                        borderLeft: "1px solid hsl(270 25% 16%)",
+                        color: "hsl(270 35% 45%)",
+                        cursor: "pointer",
+                        fontFamily: "Georgia, serif",
+                        fontSize: 13,
+                        flexShrink: 0,
+                        transition: "color 0.15s",
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.color = "hsl(270 60% 70%)"; }}
+                      onMouseOut={e => { e.currentTarget.style.color = "hsl(270 35% 45%)"; }}
+                    >
+                      →
+                    </button>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: c.id === selectedId ? "hsl(270 80% 85%)" : "hsl(0 0% 90%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>
-                      {c.firstName} {c.lastName}
-                    </div>
-                    <div style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
-                      {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
-                    </div>
-                  </div>
-                  {c.id === selectedId && (
-                    <span style={{ color: "hsl(270 70% 65%)", fontSize: 16 }}>✓</span>
-                  )}
-                </button>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -306,6 +388,9 @@ export default function PXPPage() {
             <div style={{ marginTop: 10, padding: "8px 12px", background: "hsl(270 50% 14%)", borderRadius: 6, border: "1px solid hsl(270 40% 25%)" }}>
               <span style={{ color: "hsl(270 60% 70%)", fontFamily: "Georgia, serif", fontSize: 12 }}>
                 Selected: <strong>{selected.firstName} {selected.lastName}</strong> · {formatPhone(selected.phone)}
+                {selected.doNotContact && (
+                  <span style={{ marginLeft: 8, color: "hsl(35 70% 58%)" }}>⚠ Do Not Contact</span>
+                )}
               </span>
             </div>
           )}

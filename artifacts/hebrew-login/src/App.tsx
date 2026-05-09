@@ -21,6 +21,7 @@ import PXPCallPage from "@/pages/PXPCallPage";
 import PXPLogsPage from "@/pages/PXPLogsPage";
 import PXPScriptPage from "@/pages/PXPScriptPage";
 import PXPCallersPage from "@/pages/PXPCallersPage";
+import PXPContactProfilePage from "@/pages/PXPContactProfilePage";
 import CallerLoginPage from "@/pages/CallerLoginPage";
 import CallerPasswordsPage from "@/pages/CallerPasswordsPage";
 import ActivityLogPage from "@/pages/ActivityLogPage";
@@ -83,6 +84,7 @@ function Router() {
         <Route path="/admin/pxp/logs" component={PXPLogsPage} />
         <Route path="/admin/pxp/script" component={PXPScriptPage} />
         <Route path="/admin/pxp/callers" component={PXPCallersPage} />
+        <Route path="/admin/pxp/contacts/:id" component={PXPContactProfilePage} />
         <Route path="/admin/caller-passwords" component={CallerPasswordsPage} />
         <Route path="/caller-login" component={CallerLoginPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>

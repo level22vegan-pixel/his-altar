@@ -36,14 +36,25 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { firstName, lastName, phone, carrier = "", gender = "", campus = "", notes = "", customData = {} } = req.body as Record<string, unknown>;
+    const {
+      firstName, lastName, phone,
+      carrier = "", gender = "", campus = "", notes = "", customData = {},
+      crisisFlag = false, doNotContact = false, assignedCallerId, servicesNotes = "",
+    } = req.body as Record<string, unknown>;
     if (!firstName || !lastName || !phone) {
       res.status(400).json({ message: "firstName, lastName, and phone are required" });
       return;
     }
     const [contact] = await db
       .insert(dbancContactsTable)
-      .values({ firstName: String(firstName), lastName: String(lastName), phone: String(phone), carrier: String(carrier), gender: String(gender), campus: String(campus), notes: String(notes), customData: customData as Record<string, unknown> })
+      .values({
+        firstName: String(firstName), lastName: String(lastName), phone: String(phone),
+        carrier: String(carrier), gender: String(gender), campus: String(campus),
+        notes: String(notes), customData: customData as Record<string, unknown>,
+        crisisFlag: Boolean(crisisFlag), doNotContact: Boolean(doNotContact),
+        assignedCallerId: assignedCallerId != null ? Number(assignedCallerId) : null,
+        servicesNotes: String(servicesNotes),
+      })
       .returning();
     res.status(201).json(contact);
   } catch (err) {
@@ -55,7 +66,10 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { firstName, lastName, phone, carrier, gender, campus, notes, customData } = req.body as Record<string, unknown>;
+    const {
+      firstName, lastName, phone, carrier, gender, campus, notes, customData,
+      crisisFlag, doNotContact, assignedCallerId, servicesNotes,
+    } = req.body as Record<string, unknown>;
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (firstName !== undefined) updates.firstName = String(firstName);
     if (lastName !== undefined) updates.lastName = String(lastName);
@@ -65,6 +79,10 @@ router.put("/:id", async (req, res) => {
     if (campus !== undefined) updates.campus = String(campus);
     if (notes !== undefined) updates.notes = String(notes);
     if (customData !== undefined) updates.customData = customData;
+    if (crisisFlag !== undefined) updates.crisisFlag = Boolean(crisisFlag);
+    if (doNotContact !== undefined) updates.doNotContact = Boolean(doNotContact);
+    if (assignedCallerId !== undefined) updates.assignedCallerId = assignedCallerId != null ? Number(assignedCallerId) : null;
+    if (servicesNotes !== undefined) updates.servicesNotes = String(servicesNotes);
     const [contact] = await db
       .update(dbancContactsTable)
       .set(updates)

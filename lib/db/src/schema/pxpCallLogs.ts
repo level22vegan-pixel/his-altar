@@ -9,6 +9,8 @@ export const pxpCallLogsTable = pgTable("pxp_call_logs", {
   campus: text("campus").notNull(),
   outcome: text("outcome").notNull().default(""),
   notes: text("notes").notNull().default(""),
+  servicesOffered: text("services_offered").notNull().default(""),
+  feedback: text("feedback").notNull().default(""),
   calledAt: timestamp("called_at").notNull().defaultNow(),
 });
 

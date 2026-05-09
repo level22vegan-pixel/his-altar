@@ -263,8 +263,14 @@ export default function PXPContactProfilePage() {
             </h1>
             <p style={{ color: "hsl(270 35% 52%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.08em", marginTop: 2 }}>
               {formatPhone(contact.phone)}{contact.campus ? ` · ${contact.campus}` : ""}
-              {contact.serviceTime ? ` · ${contact.serviceTime}` : ""}
             </p>
+            {contact.serviceTime && (
+              <div style={{ display: "inline-block", marginTop: 5, padding: "3px 10px", background: "hsl(270 45% 16%)", border: "1px solid hsl(270 40% 30%)", borderRadius: 20 }}>
+                <span style={{ color: "hsl(270 65% 76%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                  🕐 {contact.serviceTime}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

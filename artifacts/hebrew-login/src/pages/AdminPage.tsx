@@ -347,17 +347,6 @@ export default function AdminPage() {
                     Log
                   </button>
                 )}
-                {/* Campus users see a simple new-contact shortcut */}
-                {isCampusUser && (
-                  <button
-                    onClick={() => navigate("/admin/dbanc/new")}
-                    style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
-                    onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
-                    onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
-                  >
-                    + New Contact
-                  </button>
-                )}
               </div>
             </div>
 

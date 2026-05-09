@@ -146,13 +146,15 @@ export default function DbancContactFormPage() {
       <div className="absolute bottom-2 left-0 right-0 h-1" style={{ background: "hsl(0 0% 95%)" }} />
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(0 0% 100% / 0.3) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
-      <button
-        onClick={() => navigate(isPublic ? "/" : "/admin/dbanc")}
-        className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(0 0% 90%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
-      >
-        {isPublic ? "← Back" : "← Dbanc"}
-      </button>
+      {!isPublic && (
+        <button
+          onClick={() => navigate("/admin/dbanc")}
+          className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+          style={{ color: "hsl(0 0% 90%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        >
+          ← Dbanc
+        </button>
+      )}
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         <div className="text-center mb-8">

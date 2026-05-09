@@ -64,8 +64,31 @@ export default function PXPPage() {
 
   const callers = callersData?.callers ?? [];
 
-  // Build a set of contactIds that have been called at least once
-  const calledContactIds = new Set((logsData?.logs ?? []).map(l => l.contactId));
+  const allLogs = logsData?.logs ?? [];
+
+  // Build a set of contactIds that have been called at least once (for tab filter)
+  const calledContactIds = new Set(allLogs.map(l => l.contactId));
+
+  // Build a map of contactId → attempts sorted oldest first (max 3 shown)
+  const contactAttempts = new Map<number, typeof allLogs>();
+  for (const log of allLogs) {
+    if (!contactAttempts.has(log.contactId)) contactAttempts.set(log.contactId, []);
+    contactAttempts.get(log.contactId)!.push(log);
+  }
+  for (const [id, attempts] of contactAttempts) {
+    contactAttempts.set(id, [...attempts].sort((a, b) => new Date(a.calledAt).getTime() - new Date(b.calledAt).getTime()));
+  }
+
+  function outcomeColor(outcome: string) {
+    const o = outcome.toLowerCase();
+    if (o.includes("pray") || o.includes("connect") || o.includes("spoke") || o.includes("success") || o.includes("accept") || o.includes("saved") || o.includes("yes"))
+      return "hsl(140 55% 38%)";
+    if (o.includes("no answer") || o.includes("voicemail") || o.includes("missed") || o.includes("busy") || o.includes("later") || o.includes("callback"))
+      return "hsl(38 75% 45%)";
+    if (o.includes("ended early") || o.includes("declin") || o.includes("refus") || o.includes("hung") || o.includes("no") || o.includes("not interest"))
+      return "hsl(0 60% 42%)";
+    return "hsl(270 55% 45%)";
+  }
 
   useEffect(() => {
     logAccess.mutate({ data: { tool: "pxp", action: "page_access", userName: getSessionUserName() } });
@@ -309,8 +332,8 @@ export default function PXPPage() {
               </div>
             ) : (
               contacts.map((c, i) => {
-                const isCalled = calledContactIds.has(c.id);
                 const isSelected = c.id === selectedId;
+                const attempts = contactAttempts.get(c.id) ?? [];
                 return (
                   <div
                     key={c.id}
@@ -347,15 +370,10 @@ export default function PXPPage() {
                         {c.firstName[0]}{c.lastName[0]}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
                           <span style={{ color: isSelected ? "hsl(270 80% 85%)" : "hsl(0 0% 90%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>
                             {c.firstName} {c.lastName}
                           </span>
-                          {isCalled && (
-                            <span style={{ background: "hsl(270 40% 18%)", color: "hsl(270 55% 62%)", borderRadius: 4, padding: "1px 6px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                              Called
-                            </span>
-                          )}
                           {c.crisisFlag && (
                             <span style={{ background: "hsl(0 60% 16%)", color: "hsl(0 75% 65%)", borderRadius: 4, padding: "1px 6px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em" }}>
                               ⚠ Crisis
@@ -367,8 +385,31 @@ export default function PXPPage() {
                             </span>
                           )}
                         </div>
-                        <div style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
-                          {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {/* 3-attempt status boxes */}
+                          <div style={{ display: "flex", gap: 4 }}>
+                            {[0, 1, 2].map(idx => {
+                              const attempt = attempts[idx];
+                              const color = attempt ? outcomeColor(attempt.outcome) : undefined;
+                              return (
+                                <div
+                                  key={idx}
+                                  title={attempt ? `Call ${idx + 1}: ${attempt.outcome}` : `Call ${idx + 1}: not attempted`}
+                                  style={{
+                                    width: 14,
+                                    height: 14,
+                                    borderRadius: 3,
+                                    background: color ?? "transparent",
+                                    border: `1.5px solid ${color ?? "hsl(270 25% 32%)"}`,
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                          <span style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
+                            {formatPhone(c.phone)}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
+                          </span>
                         </div>
                       </div>
                       {isSelected && (

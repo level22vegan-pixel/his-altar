@@ -111,7 +111,7 @@ export default function PXPPage() {
       ? manualName.trim()
       : callers.find(c => c.id === selectedCallerId)?.name ?? "";
 
-  const allContacts = data?.contacts ?? [];
+  const allContacts = [...(data?.contacts ?? [])].sort((a, b) => b.id - a.id);
 
   const filteredByTab = contactFilter === "called"
     ? allContacts.filter(c => calledContactIds.has(c.id))

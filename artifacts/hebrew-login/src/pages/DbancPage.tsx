@@ -52,7 +52,9 @@ export default function DbancPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const contacts = (data?.contacts ?? []).filter(c => {
+  const contacts = [...(data?.contacts ?? [])]
+    .sort((a, b) => b.id - a.id)
+    .filter(c => {
     const q = search.toLowerCase();
     return (
       q === "" ||

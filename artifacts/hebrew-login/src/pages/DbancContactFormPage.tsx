@@ -51,7 +51,7 @@ export default function DbancContactFormPage() {
   const isEdit = !!params.id;
 
   const { data: existingData } = useGetDbancContact(
-    { id: parseInt(params.id ?? "0") },
+    parseInt(params.id ?? "0"),
     { query: { enabled: isEdit } }
   );
   const { data: fieldsData } = useListDbancCustomFields();

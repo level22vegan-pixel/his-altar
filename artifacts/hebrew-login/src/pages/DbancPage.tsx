@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { Pencil } from "lucide-react";
 import {
   useListDbancContacts,
   useDeleteDbancContact,
@@ -164,9 +165,10 @@ export default function DbancPage() {
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   <button
                     onClick={() => navigate(`/admin/dbanc/contacts/${c.id}`)}
-                    style={{ padding: "5px 12px", borderRadius: 6, background: "hsl(220 50% 22%)", border: "1px solid hsl(220 40% 32%)", color: "hsl(220 60% 75%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer" }}
+                    title="Edit contact"
+                    style={{ padding: "6px 10px", borderRadius: 6, background: "hsl(220 50% 22%)", border: "1px solid hsl(220 40% 32%)", color: "hsl(220 60% 75%)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                   >
-                    Edit
+                    <Pencil size={13} />
                   </button>
                   <button
                     onClick={() => handleDelete(c.id, `${c.firstName} ${c.lastName}`)}

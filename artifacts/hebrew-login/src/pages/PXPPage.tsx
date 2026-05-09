@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useListDbancContacts, useCreateActivityLog } from "@workspace/api-client-react";
 import { useEffect } from "react";
+import { getSessionUserName } from "@/lib/session";
 
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
@@ -36,7 +37,7 @@ export default function PXPPage() {
   const { data } = useListDbancContacts();
 
   useEffect(() => {
-    logAccess.mutate({ data: { tool: "pxp", action: "page_access" } });
+    logAccess.mutate({ data: { tool: "pxp", action: "page_access", userName: getSessionUserName() } });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

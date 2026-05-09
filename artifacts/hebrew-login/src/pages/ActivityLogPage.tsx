@@ -6,22 +6,24 @@ const TOOL_LABELS: Record<string, string> = {
   pxp: "PXP",
 };
 
-const TOOL_COLORS: Record<string, { accent: string; dim: string }> = {
-  dbanc: { accent: "hsl(220 70% 58%)", dim: "hsl(220 50% 38%)" },
-  pxp:   { accent: "hsl(38 70% 58%)",  dim: "hsl(38 45% 38%)"  },
+const TOOL_COLORS: Record<string, { accent: string }> = {
+  dbanc: { accent: "hsl(220 70% 58%)" },
+  pxp:   { accent: "hsl(38 70% 58%)"  },
 };
 
 function formatDate(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    + " · "
-    + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return (
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) +
+    " · " +
+    d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+  );
 }
 
 export default function ActivityLogPage({ tool }: { tool: string }) {
   const [, navigate] = useLocation();
   const label = TOOL_LABELS[tool] ?? tool.toUpperCase();
-  const colors = TOOL_COLORS[tool] ?? { accent: "hsl(38 70% 58%)", dim: "hsl(38 45% 38%)" };
+  const colors = TOOL_COLORS[tool] ?? { accent: "hsl(38 70% 58%)" };
 
   const { data, isLoading } = useListActivityLogs(
     { tool },
@@ -70,35 +72,73 @@ export default function ActivityLogPage({ tool }: { tool: string }) {
               No activity recorded yet
             </div>
           ) : (
-            <div className="flex flex-col divide-y" style={{ borderColor: "hsl(38 15% 18%)" }}>
+            <div className="flex flex-col">
+              {/* Header row */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  padding: "8px 18px",
+                  borderBottom: "1px solid hsl(38 18% 18%)",
+                  background: "hsl(35 22% 13%)",
+                }}
+              >
+                {["Action", "User", "When"].map(h => (
+                  <span key={h} style={{ color: "hsl(38 30% 38%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                    {h}
+                  </span>
+                ))}
+              </div>
+
               {logs.map((log, i) => (
                 <div
                   key={log.id}
-                  className="flex items-center justify-between px-5 py-3"
-                  style={{ background: i % 2 === 0 ? "transparent" : "hsl(35 18% 9%)" }}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    alignItems: "center",
+                    padding: "11px 18px",
+                    borderBottom: i < logs.length - 1 ? "1px solid hsl(38 15% 15%)" : "none",
+                    background: i % 2 === 0 ? "transparent" : "hsl(35 18% 9%)",
+                    gap: 4,
+                  }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span
-                      style={{
-                        background: colors.accent + "22",
-                        color: colors.accent,
-                        borderRadius: 4,
-                        padding: "2px 8px",
-                        fontFamily: "Georgia, serif",
-                        fontSize: 10,
-                        letterSpacing: "0.12em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {log.action.replace(/_/g, " ")}
-                    </span>
-                  </div>
+                  {/* Action badge */}
                   <span
                     style={{
-                      color: "hsl(38 28% 38%)",
+                      background: colors.accent + "1a",
+                      color: colors.accent,
+                      borderRadius: 4,
+                      padding: "3px 8px",
+                      fontFamily: "Georgia, serif",
+                      fontSize: 10,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      display: "inline-block",
+                    }}
+                  >
+                    {log.action.replace(/_/g, " ")}
+                  </span>
+
+                  {/* User name */}
+                  <span
+                    style={{
+                      color: "hsl(38 55% 62%)",
                       fontFamily: "Georgia, serif",
                       fontSize: 11,
-                      letterSpacing: "0.05em",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {log.userName || "—"}
+                  </span>
+
+                  {/* Timestamp */}
+                  <span
+                    style={{
+                      color: "hsl(38 25% 36%)",
+                      fontFamily: "Georgia, serif",
+                      fontSize: 10,
+                      letterSpacing: "0.03em",
                     }}
                   >
                     {formatDate(log.accessedAt)}

@@ -474,6 +474,7 @@ export const ListActivityLogsResponse = zod.object({
       id: zod.number(),
       tool: zod.string(),
       action: zod.string(),
+      userName: zod.string(),
       accessedAt: zod.coerce.date(),
     }),
   ),
@@ -485,6 +486,7 @@ export const ListActivityLogsResponse = zod.object({
 export const CreateActivityLogBody = zod.object({
   tool: zod.string(),
   action: zod.string(),
+  userName: zod.string().optional(),
 });
 
 /**

@@ -239,6 +239,7 @@ export interface ActivityLog {
   id: number;
   tool: string;
   action: string;
+  userName: string;
   accessedAt: string;
 }
 
@@ -249,6 +250,7 @@ export interface ActivityLogList {
 export interface CreateActivityLogBody {
   tool: string;
   action: string;
+  userName?: string;
 }
 
 export type DbancContactCustomData = { [key: string]: unknown };

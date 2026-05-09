@@ -5,6 +5,7 @@ import {
   useDeleteDbancContact,
   useCreateActivityLog,
 } from "@workspace/api-client-react";
+import { getSessionUserName } from "@/lib/session";
 
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Metro PCS", "Boost", "Cricket", "Other"];
 
@@ -35,7 +36,7 @@ export default function DbancPage() {
   const deleteContact = useDeleteDbancContact();
 
   useEffect(() => {
-    logAccess.mutate({ data: { tool: "dbanc", action: "page_access" } });
+    logAccess.mutate({ data: { tool: "dbanc", action: "page_access", userName: getSessionUserName() } });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

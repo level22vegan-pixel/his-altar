@@ -1288,6 +1288,8 @@ components:
           type: string
         action:
           type: string
+        userName:
+          type: string
         accessedAt:
           type: string
           format: date-time
@@ -1295,6 +1297,7 @@ components:
         - id
         - tool
         - action
+        - userName
         - accessedAt
     ActivityLogList:
       type: object
@@ -1311,6 +1314,8 @@ components:
         tool:
           type: string
         action:
+          type: string
+        userName:
           type: string
       required:
         - tool

@@ -2,8 +2,9 @@ import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 export const activityLogsTable = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
-  tool: text("tool").notNull(),        // 'dbanc' | 'pxp'
-  action: text("action").notNull(),    // e.g. 'page_access'
+  tool: text("tool").notNull(),
+  action: text("action").notNull(),
+  userName: text("user_name").notNull().default(""),
   accessedAt: timestamp("accessed_at").notNull().defaultNow(),
 });
 

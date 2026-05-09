@@ -54,3 +54,13 @@ export function getValidAdminSession(): boolean {
 export function hasValidSession(): boolean {
   return getValidAdminSession() || getValidCampusSession() !== null;
 }
+
+export function getSessionUserName(): string {
+  if (getValidAdminSession()) return "Admin (HALLMARK)";
+  const campus = getValidCampusSession();
+  if (campus) {
+    const roleLabel = campus.role === "lead" ? "Lead" : "Deputy";
+    return `${roleLabel} (${campus.campus})`;
+  }
+  return "Unknown";
+}

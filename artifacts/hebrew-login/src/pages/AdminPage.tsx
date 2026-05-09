@@ -372,6 +372,14 @@ export default function AdminPage() {
                   </button>
                 )}
                 <button
+                  onClick={() => navigate("/admin/pxp/callers")}
+                  style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", borderRight: "1px solid hsl(38 20% 18%)", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(35 25% 13%)"; e.currentTarget.style.color = "hsl(38 45% 52%)"; }}
+                >
+                  Callers
+                </button>
+                <button
                   onClick={() => navigate("/admin/pxp/logs")}
                   style={{ flex: 1, padding: "7px 10px", background: "hsl(35 25% 13%)", border: "none", borderRight: !isCampusUser ? "1px solid hsl(38 20% 18%)" : "none", color: "hsl(38 45% 52%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
                   onMouseOver={e => { e.currentTarget.style.background = "hsl(35 28% 16%)"; e.currentTarget.style.color = "hsl(38 60% 62%)"; }}

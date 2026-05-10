@@ -132,12 +132,12 @@ export default function DbancContactFormPage() {
   const workerInputRef = useRef<HTMLInputElement>(null);
 
   const { data: masterData } = useListWorkers(
-    { category: "master" },
-    { query: { queryKey: ["workers-master-all"] } }
+    { category: "master", campus: form.campus || undefined },
+    { query: { enabled: !!form.campus, queryKey: ["workers-master", form.campus] } }
   );
   const { data: altData } = useListWorkers(
-    { category: "alt" },
-    { query: { queryKey: ["workers-alt-all"] } }
+    { category: "alt", campus: form.campus || undefined },
+    { query: { enabled: !!form.campus, queryKey: ["workers-alt", form.campus] } }
   );
 
   const allWorkerNames: string[] = [
@@ -348,7 +348,7 @@ export default function DbancContactFormPage() {
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              placeholder="Search roster or type a name…"
+              placeholder={form.campus ? "Search roster or type a name…" : "Select campus first to see roster suggestions…"}
               autoComplete="off"
             />
             {showSuggestions && filteredWorkers.length > 0 && (

@@ -376,7 +376,7 @@ paths:
       responses:
         "204":
           description: Deleted
-  /dbanc/prayer-summary:
+  /dbanc/contacts/prayer-summary:
     get:
       operationId: getDbancPrayerSummary
       tags: [dbanc]

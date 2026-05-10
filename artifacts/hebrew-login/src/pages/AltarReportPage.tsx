@@ -810,7 +810,7 @@ function ServiceSection({
     queries: serviceReports.map(r => ({
       queryKey: ["dbanc-prayer-summary", r.campus, service, dateStr],
       queryFn: () =>
-        fetch(`/api/dbanc/prayer-summary?campus=${encodeURIComponent(r.campus)}&service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`)
+        fetch(`/api/dbanc/contacts/prayer-summary?campus=${encodeURIComponent(r.campus)}&service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`)
           .then(res => res.json()) as Promise<{ salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }>,
       staleTime: 60000,
     })),

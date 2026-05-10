@@ -19,21 +19,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const [contact] = await db
-      .select()
-      .from(dbancContactsTable)
-      .where(eq(dbancContactsTable.id, id));
-    if (!contact) { res.status(404).json({ error: "Not found" }); return; }
-    res.json(contact);
-  } catch (err) {
-    req.log.error({ err }, "Error getting dbanc contact");
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 router.get("/prayer-summary", async (req, res) => {
   try {
     const { campus, service, date } = req.query as { campus?: string; service?: string; date?: string };
@@ -66,6 +51,21 @@ router.get("/prayer-summary", async (req, res) => {
     res.json({ salvations, recommitments, cameForPrayer, totalPrayers: salvations + recommitments + cameForPrayer });
   } catch (err) {
     req.log.error({ err }, "Error fetching dbanc prayer summary");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [contact] = await db
+      .select()
+      .from(dbancContactsTable)
+      .where(eq(dbancContactsTable.id, id));
+    if (!contact) { res.status(404).json({ error: "Not found" }); return; }
+    res.json(contact);
+  } catch (err) {
+    req.log.error({ err }, "Error getting dbanc contact");
     res.status(500).json({ message: "Server error" });
   }
 });

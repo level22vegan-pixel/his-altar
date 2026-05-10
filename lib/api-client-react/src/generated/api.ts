@@ -39,6 +39,8 @@ import type {
   DbancContactList,
   DbancCustomField,
   DbancCustomFieldList,
+  DbancPrayerSummary,
+  GetDbancPrayerSummaryParams,
   GetServiceNotesParams,
   GetTeamPresetParams,
   HealthStatus,
@@ -1794,6 +1796,106 @@ export const useDeleteDbancContact = <
 > => {
   return useMutation(getDeleteDbancContactMutationOptions(options));
 };
+
+/**
+ * @summary Get Dbanc prayer type counts for a service slot
+ */
+export const getGetDbancPrayerSummaryUrl = (
+  params: GetDbancPrayerSummaryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dbanc/prayer-summary?${stringifiedParams}`
+    : `/api/dbanc/prayer-summary`;
+};
+
+export const getDbancPrayerSummary = async (
+  params: GetDbancPrayerSummaryParams,
+  options?: RequestInit,
+): Promise<DbancPrayerSummary> => {
+  return customFetch<DbancPrayerSummary>(getGetDbancPrayerSummaryUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDbancPrayerSummaryQueryKey = (
+  params?: GetDbancPrayerSummaryParams,
+) => {
+  return [`/api/dbanc/prayer-summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetDbancPrayerSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDbancPrayerSummary>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetDbancPrayerSummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDbancPrayerSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDbancPrayerSummaryQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDbancPrayerSummary>>
+  > = ({ signal }) =>
+    getDbancPrayerSummary(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDbancPrayerSummary>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDbancPrayerSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDbancPrayerSummary>>
+>;
+export type GetDbancPrayerSummaryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get Dbanc prayer type counts for a service slot
+ */
+
+export function useGetDbancPrayerSummary<
+  TData = Awaited<ReturnType<typeof getDbancPrayerSummary>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetDbancPrayerSummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDbancPrayerSummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDbancPrayerSummaryQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List custom fields

@@ -531,11 +531,15 @@ function StatFields({
 
 // ── Day Entry Card (view + inline edit) ───────────────────────────────────────
 function DayEntry({
-  report, onDelete, onSave,
+  report, onDelete, onSave, dbancPrayers, dbancSalvations, dbancRecommitments, dbancCameForPrayer,
 }: {
   report: DailyAltarReport;
   onDelete: (id: number) => void;
   onSave: (id: number, data: { salvations: number; prayers: number; altarMembers: number }) => void;
+  dbancPrayers?: number;
+  dbancSalvations?: number;
+  dbancRecommitments?: number;
+  dbancCameForPrayer?: number;
 }) {
   const [editing, setEditing] = useState(false);
   const [salvations, setSalvations] = useState(String(report.salvations));
@@ -571,13 +575,24 @@ function DayEntry({
         </div>
       </div>
       {!editing && (
-        <div style={{ display: "flex", gap: 20, padding: "0 14px 12px" }}>
-          {statColors.map(s => (
-            <div key={s.label} style={{ textAlign: "center" }}>
-              <div style={{ color: s.color, fontFamily: "Georgia, serif", fontSize: 20, fontWeight: "bold", lineHeight: 1 }}>{s.value}</div>
-              <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
+        <div style={{ padding: "0 14px 12px" }}>
+          <div style={{ display: "flex", gap: 20 }}>
+            {statColors.map(s => (
+              <div key={s.label} style={{ textAlign: "center" }}>
+                <div style={{ color: s.color, fontFamily: "Georgia, serif", fontSize: 20, fontWeight: "bold", lineHeight: 1 }}>{s.value}</div>
+                <div style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          {typeof dbancPrayers === "number" && dbancPrayers > 0 && (
+            <div style={{ marginTop: 10, padding: "6px 10px", background: "hsl(220 50% 10%)", border: "1px solid hsl(220 40% 20%)", borderRadius: 5, display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <span style={{ color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", alignSelf: "center" }}>From Dbanc</span>
+              <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{dbancSalvations}<span style={{ color: "hsl(220 40% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Salv</span></span>
+              {(dbancRecommitments ?? 0) > 0 && <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{dbancRecommitments}<span style={{ color: "hsl(220 40% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Recommit</span></span>}
+              {(dbancCameForPrayer ?? 0) > 0 && <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{dbancCameForPrayer}<span style={{ color: "hsl(220 40% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Prayer</span></span>}
+              <span style={{ color: "hsl(220 50% 70%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold", marginLeft: "auto" }}>{dbancPrayers} total</span>
             </div>
-          ))}
+          )}
         </div>
       )}
       {editing && (
@@ -790,10 +805,38 @@ function ServiceSection({
     ? !existingCampuses.includes(activeCampus)
     : existingCampuses.length < campusesForSlot(service).length;
 
-  const totals = serviceReports.reduce(
+  // Fetch Dbanc prayer summaries for each campus that has an entry
+  const dbancQueries = useQueries({
+    queries: serviceReports.map(r => ({
+      queryKey: ["dbanc-prayer-summary", r.campus, service, dateStr],
+      queryFn: () =>
+        fetch(`/api/dbanc/prayer-summary?campus=${encodeURIComponent(r.campus)}&service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`)
+          .then(res => res.json()) as Promise<{ salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }>,
+      staleTime: 60000,
+    })),
+  });
+
+  const dbancMap: Record<string, { salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }> = {};
+  serviceReports.forEach((r, i) => {
+    const d = dbancQueries[i]?.data;
+    if (d) dbancMap[r.campus] = d;
+  });
+
+  const dbancTotals = Object.values(dbancMap).reduce(
+    (a, d) => ({ salvations: a.salvations + d.salvations, prayers: a.prayers + d.totalPrayers }),
+    { salvations: 0, prayers: 0 }
+  );
+
+  const manualTotals = serviceReports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
     { salvations: 0, prayers: 0, altarMembers: 0 }
   );
+
+  const totals = {
+    salvations: manualTotals.salvations + dbancTotals.salvations,
+    prayers: manualTotals.prayers + dbancTotals.prayers,
+    altarMembers: manualTotals.altarMembers,
+  };
 
   return (
     <div style={{ marginBottom: 8 }}>
@@ -842,9 +885,21 @@ function ServiceSection({
       {/* Campus entries */}
       {serviceReports.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-          {serviceReports.map(r => (
-            <DayEntry key={r.id} report={r} onDelete={onDelete} onSave={(id, data) => onEdit(id, service, data)} />
-          ))}
+          {serviceReports.map(r => {
+            const d = dbancMap[r.campus];
+            return (
+              <DayEntry
+                key={r.id}
+                report={r}
+                onDelete={onDelete}
+                onSave={(id, data) => onEdit(id, service, data)}
+                dbancPrayers={d?.totalPrayers}
+                dbancSalvations={d?.salvations}
+                dbancRecommitments={d?.recommitments}
+                dbancCameForPrayer={d?.cameForPrayer}
+              />
+            );
+          })}
         </div>
       )}
 

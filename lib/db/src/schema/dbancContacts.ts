@@ -13,6 +13,7 @@ export const dbancContactsTable = pgTable("dbanc_contacts", {
   serviceTime: text("service_time").notNull().default(""),
   notes: text("notes").notNull().default(""),
   customData: jsonb("custom_data").notNull().default({}),
+  prayerType: text("prayer_type").notNull().default(""),
   crisisFlag: boolean("crisis_flag").notNull().default(false),
   doNotContact: boolean("do_not_contact").notNull().default(false),
   assignedCallerId: integer("assigned_caller_id"),

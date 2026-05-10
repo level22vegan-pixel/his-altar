@@ -376,6 +376,37 @@ paths:
       responses:
         "204":
           description: Deleted
+  /dbanc/prayer-summary:
+    get:
+      operationId: getDbancPrayerSummary
+      tags: [dbanc]
+      summary: Get Dbanc prayer type counts for a service slot
+      parameters:
+        - name: campus
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by campus
+        - name: service
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Service slot, e.g. "8am" or "7pm"
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Date in YYYY-MM-DD format
+      responses:
+        "200":
+          description: Prayer type counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DbancPrayerSummary"
   /dbanc/custom-fields:
     get:
       operationId: listDbancCustomFields
@@ -1426,6 +1457,8 @@ components:
         assignedCallerId:
           type: integer
           nullable: true
+        prayerType:
+          type: string
         servicesNotes:
           type: string
         createdAt:
@@ -1443,6 +1476,7 @@ components:
         - gender
         - campus
         - serviceTime
+        - prayerType
         - notes
         - customData
         - crisisFlag
@@ -1488,6 +1522,8 @@ components:
         assignedCallerId:
           type: integer
           nullable: true
+        prayerType:
+          type: string
         servicesNotes:
           type: string
       required:
@@ -1495,6 +1531,22 @@ components:
         - lastName
         - phone
         - serviceTime
+    DbancPrayerSummary:
+      type: object
+      properties:
+        salvations:
+          type: integer
+        recommitments:
+          type: integer
+        cameForPrayer:
+          type: integer
+        totalPrayers:
+          type: integer
+      required:
+        - salvations
+        - recommitments
+        - cameForPrayer
+        - totalPrayers
     DbancCustomField:
       type: object
       properties:

@@ -279,6 +279,7 @@ export const ListDbancContactsResponse = zod.object({
       crisisFlag: zod.boolean(),
       doNotContact: zod.boolean(),
       assignedCallerId: zod.number().nullish(),
+      prayerType: zod.string(),
       servicesNotes: zod.string(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
@@ -302,6 +303,7 @@ export const CreateDbancContactBody = zod.object({
   crisisFlag: zod.boolean().optional(),
   doNotContact: zod.boolean().optional(),
   assignedCallerId: zod.number().nullish(),
+  prayerType: zod.string().optional(),
   servicesNotes: zod.string().optional(),
 });
 
@@ -326,6 +328,7 @@ export const GetDbancContactResponse = zod.object({
   crisisFlag: zod.boolean(),
   doNotContact: zod.boolean(),
   assignedCallerId: zod.number().nullish(),
+  prayerType: zod.string(),
   servicesNotes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -351,6 +354,7 @@ export const UpdateDbancContactBody = zod.object({
   crisisFlag: zod.boolean().optional(),
   doNotContact: zod.boolean().optional(),
   assignedCallerId: zod.number().nullish(),
+  prayerType: zod.string().optional(),
   servicesNotes: zod.string().optional(),
 });
 
@@ -368,6 +372,7 @@ export const UpdateDbancContactResponse = zod.object({
   crisisFlag: zod.boolean(),
   doNotContact: zod.boolean(),
   assignedCallerId: zod.number().nullish(),
+  prayerType: zod.string(),
   servicesNotes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -378,6 +383,24 @@ export const UpdateDbancContactResponse = zod.object({
  */
 export const DeleteDbancContactParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get Dbanc prayer type counts for a service slot
+ */
+export const GetDbancPrayerSummaryQueryParams = zod.object({
+  campus: zod.coerce.string().optional().describe("Filter by campus"),
+  service: zod.coerce
+    .string()
+    .describe('Service slot, e.g. \"8am\" or \"7pm\"'),
+  date: zod.coerce.string().describe("Date in YYYY-MM-DD format"),
+});
+
+export const GetDbancPrayerSummaryResponse = zod.object({
+  salvations: zod.number(),
+  recommitments: zod.number(),
+  cameForPrayer: zod.number(),
+  totalPrayers: zod.number(),
 });
 
 /**

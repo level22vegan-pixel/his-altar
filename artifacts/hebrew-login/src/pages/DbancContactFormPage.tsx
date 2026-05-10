@@ -11,6 +11,7 @@ import { getValidCampusSession } from "@/lib/session";
 const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
 const GENDERS = ["Male", "Female", "Prefer not to say"];
+const PRAYER_TYPES = ["Salvation", "Recommitment", "Came for Prayer"];
 
 const CAMPUS_SERVICES: Record<string, string[]> = {
   HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
@@ -52,6 +53,7 @@ interface FormData {
   gender: string;
   campus: string;
   serviceTime: string;
+  prayerType: string;
   notes: string;
   customData: Record<string, string>;
 }
@@ -82,6 +84,7 @@ export default function DbancContactFormPage() {
     gender: "",
     campus: lockedCampus ?? "",
     serviceTime: "",
+    prayerType: "",
     notes: "",
     customData: {},
   });
@@ -98,6 +101,7 @@ export default function DbancContactFormPage() {
         gender: existingData.gender,
         campus: existingData.campus,
         serviceTime: existingData.serviceTime ?? "",
+        prayerType: existingData.prayerType ?? "",
         notes: existingData.notes,
         customData: (existingData.customData as Record<string, string>) ?? {},
       });
@@ -116,8 +120,8 @@ export default function DbancContactFormPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim() || !form.serviceTime) {
-      setError("First name, last name, phone, and service time are required.");
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim() || !form.serviceTime || !form.prayerType) {
+      setError("First name, last name, phone, service time, and prayer type are required.");
       return;
     }
     setSaving(true);
@@ -245,6 +249,25 @@ export default function DbancContactFormPage() {
               {(CAMPUS_SERVICES[form.campus] ?? Object.values(CAMPUS_SERVICES).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
+            </select>
+          </div>
+
+          {/* Prayer Type */}
+          <div>
+            <label style={{ ...labelStyle, color: form.prayerType ? "hsl(220 40% 65%)" : "hsl(0 65% 62%)" }}>
+              Prayer Type *
+            </label>
+            <select
+              style={{
+                ...inputStyle,
+                appearance: "none" as const,
+                borderColor: !form.prayerType ? "hsl(0 55% 38%)" : "hsl(220 40% 26%)",
+              }}
+              value={form.prayerType}
+              onChange={e => setField("prayerType", e.target.value)}
+            >
+              <option value="">Select prayer type…</option>
+              {PRAYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
 

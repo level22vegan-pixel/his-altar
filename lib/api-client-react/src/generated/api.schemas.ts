@@ -269,6 +269,7 @@ export interface DbancContact {
   crisisFlag: boolean;
   doNotContact: boolean;
   assignedCallerId?: number | null;
+  prayerType: string;
   servicesNotes: string;
   createdAt: string;
   updatedAt: string;
@@ -293,7 +294,15 @@ export interface CreateDbancContactBody {
   crisisFlag?: boolean;
   doNotContact?: boolean;
   assignedCallerId?: number | null;
+  prayerType?: string;
   servicesNotes?: string;
+}
+
+export interface DbancPrayerSummary {
+  salvations: number;
+  recommitments: number;
+  cameForPrayer: number;
+  totalPrayers: number;
 }
 
 export interface DbancCustomField {
@@ -393,6 +402,21 @@ export type ListDbancContactsParams = {
    * Filter contacts by campus name
    */
   campus?: string;
+};
+
+export type GetDbancPrayerSummaryParams = {
+  /**
+   * Filter by campus
+   */
+  campus?: string;
+  /**
+   * Service slot, e.g. "8am" or "7pm"
+   */
+  service: string;
+  /**
+   * Date in YYYY-MM-DD format
+   */
+  date: string;
 };
 
 export type ListPxpCallersParams = {

@@ -531,15 +531,11 @@ function StatFields({
 
 // ── Day Entry Card (view + inline edit) ───────────────────────────────────────
 function DayEntry({
-  report, onDelete, onSave, dbancPrayers, dbancSalvations, dbancRecommitments, dbancCameForPrayer,
+  report, onDelete, onSave,
 }: {
   report: DailyAltarReport;
   onDelete: (id: number) => void;
   onSave: (id: number, data: { salvations: number; prayers: number; altarMembers: number }) => void;
-  dbancPrayers?: number;
-  dbancSalvations?: number;
-  dbancRecommitments?: number;
-  dbancCameForPrayer?: number;
 }) {
   const [editing, setEditing] = useState(false);
   const [salvations, setSalvations] = useState(String(report.salvations));
@@ -584,15 +580,6 @@ function DayEntry({
               </div>
             ))}
           </div>
-          {typeof dbancPrayers === "number" && dbancPrayers > 0 && (
-            <div style={{ marginTop: 10, padding: "6px 10px", background: "hsl(220 50% 10%)", border: "1px solid hsl(220 40% 20%)", borderRadius: 5, display: "flex", flexWrap: "wrap", gap: 12 }}>
-              <span style={{ color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", alignSelf: "center" }}>From Dbanc</span>
-              <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{dbancSalvations}<span style={{ color: "hsl(220 40% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Salv</span></span>
-              {(dbancRecommitments ?? 0) > 0 && <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{dbancRecommitments}<span style={{ color: "hsl(220 40% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Recommit</span></span>}
-              {(dbancCameForPrayer ?? 0) > 0 && <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{dbancCameForPrayer}<span style={{ color: "hsl(220 40% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Prayer</span></span>}
-              <span style={{ color: "hsl(220 50% 70%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold", marginLeft: "auto" }}>{dbancPrayers} total</span>
-            </div>
-          )}
         </div>
       )}
       {editing && (
@@ -873,44 +860,17 @@ function ServiceSection({
         <ServiceNotesPanel dateStr={dateStr} service={service} onClose={() => setShowNotes(false)} />
       )}
 
-      {/* Dbanc responses — always visible when contacts exist, no manual entry needed */}
-      {dbancHasData && (
-        <div style={{ background: "hsl(220 45% 10%)", border: "1px solid hsl(220 38% 20%)", borderRadius: 7, padding: "10px 12px", marginBottom: 10 }}>
-          <div style={{ color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
-            From Dbanc — {dbancData?.totalPrayers} prayer{(dbancData?.totalPrayers ?? 0) !== 1 ? "s" : ""} recorded
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            {Object.entries(dbancByCampus).map(([camp, counts]) => (
-              <div key={camp} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ color: "hsl(220 40% 65%)", fontFamily: "Georgia, serif", fontSize: 11, minWidth: 90 }}>{camp}</span>
-                <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold" }}>{counts.salvations}<span style={{ color: "hsl(220 35% 48%)", fontSize: 9, marginLeft: 2 }}>Salv</span></span>
-                {counts.recommitments > 0 && <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold" }}>{counts.recommitments}<span style={{ color: "hsl(220 35% 48%)", fontSize: 9, marginLeft: 2 }}>Recommit</span></span>}
-                {counts.cameForPrayer > 0 && <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold" }}>{counts.cameForPrayer}<span style={{ color: "hsl(220 35% 48%)", fontSize: 9, marginLeft: 2 }}>Prayer</span></span>}
-                <span style={{ color: "hsl(220 50% 65%)", fontFamily: "Georgia, serif", fontSize: 10, marginLeft: "auto" }}>{counts.totalPrayers} total</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Campus entries */}
       {serviceReports.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-          {serviceReports.map(r => {
-            const d = dbancByCampus[r.campus];
-            return (
-              <DayEntry
-                key={r.id}
-                report={r}
-                onDelete={onDelete}
-                onSave={(id, data) => onEdit(id, service, data)}
-                dbancPrayers={d?.totalPrayers}
-                dbancSalvations={d?.salvations}
-                dbancRecommitments={d?.recommitments}
-                dbancCameForPrayer={d?.cameForPrayer}
-              />
-            );
-          })}
+          {serviceReports.map(r => (
+            <DayEntry
+              key={r.id}
+              report={r}
+              onDelete={onDelete}
+              onSave={(id, data) => onEdit(id, service, data)}
+            />
+          ))}
         </div>
       )}
 

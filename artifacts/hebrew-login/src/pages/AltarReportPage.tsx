@@ -969,6 +969,32 @@ function DayDetail({
     if (n) notesMap[service] = n;
   });
 
+  // Day-level totals: manual entries + Dbanc (React Query deduplicates fetches shared with ServiceSection)
+  const dbancDayResults = useQueries({
+    queries: dayServices.map(service => ({
+      queryKey: ["dbanc-prayer-summary", service, dateStr],
+      queryFn: () =>
+        fetch(`/api/dbanc/contacts/prayer-summary?service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`)
+          .then(r => r.json()) as Promise<{ salvations: number; totalPrayers: number }>,
+      staleTime: 60000,
+    })),
+  });
+
+  const manualDayTotals = dayReports.reduce(
+    (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
+    { salvations: 0, prayers: 0, altarMembers: 0 }
+  );
+  const dbancDayTotals = dbancDayResults.reduce(
+    (a, q) => ({ salvations: a.salvations + (q.data?.salvations ?? 0), prayers: a.prayers + (q.data?.totalPrayers ?? 0) }),
+    { salvations: 0, prayers: 0 }
+  );
+  const dayTotals = {
+    salvations: manualDayTotals.salvations + dbancDayTotals.salvations,
+    prayers: manualDayTotals.prayers + dbancDayTotals.prayers,
+    altarMembers: manualDayTotals.altarMembers,
+  };
+  const hasDayTotals = dayTotals.salvations > 0 || dayTotals.prayers > 0 || dayTotals.altarMembers > 0;
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", justifyContent: "flex-end" }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "hsl(30 18% 5% / 0.75)", backdropFilter: "blur(2px)" }} />
@@ -1000,6 +1026,16 @@ function DayDetail({
               <button onClick={onClose} style={{ color: GOLD_DIM, background: "none", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1, opacity: 0.6 }}>✕</button>
             </div>
           </div>
+
+          {/* Day total summary row */}
+          {hasDayTotals && (
+            <div style={{ display: "flex", gap: 24, alignItems: "center", padding: "10px 16px", marginBottom: 14, background: "hsl(38 30% 13%)", border: `1px solid hsl(38 28% 22%)`, borderRadius: 8 }}>
+              <span style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", marginRight: 4 }}>Day Total</span>
+              <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{dayTotals.salvations}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Salv</span></span>
+              <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{dayTotals.prayers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Prayer</span></span>
+              {dayTotals.altarMembers > 0 && <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 18, fontWeight: "bold", lineHeight: 1 }}>{dayTotals.altarMembers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 4 }}>Altar</span></span>}
+            </div>
+          )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {dayServices.map(service => (

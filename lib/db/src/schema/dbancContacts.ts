@@ -19,6 +19,7 @@ export const dbancContactsTable = pgTable("dbanc_contacts", {
   doNotContact: boolean("do_not_contact").notNull().default(false),
   assignedCallerId: integer("assigned_caller_id"),
   servicesNotes: text("services_notes").notNull().default(""),
+  prayedForBy: text("prayed_for_by").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -282,6 +282,7 @@ export const ListDbancContactsResponse = zod.object({
       prayerType: zod.string(),
       serviceDate: zod.string(),
       servicesNotes: zod.string(),
+      prayedForBy: zod.string(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
     }),
@@ -306,6 +307,7 @@ export const CreateDbancContactBody = zod.object({
   assignedCallerId: zod.number().nullish(),
   prayerType: zod.string().optional(),
   servicesNotes: zod.string().optional(),
+  prayedForBy: zod.string().optional(),
 });
 
 /**
@@ -332,6 +334,7 @@ export const GetDbancContactResponse = zod.object({
   prayerType: zod.string(),
   serviceDate: zod.string(),
   servicesNotes: zod.string(),
+  prayedForBy: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -358,6 +361,7 @@ export const UpdateDbancContactBody = zod.object({
   assignedCallerId: zod.number().nullish(),
   prayerType: zod.string().optional(),
   servicesNotes: zod.string().optional(),
+  prayedForBy: zod.string().optional(),
 });
 
 export const UpdateDbancContactResponse = zod.object({
@@ -377,6 +381,7 @@ export const UpdateDbancContactResponse = zod.object({
   prayerType: zod.string(),
   serviceDate: zod.string(),
   servicesNotes: zod.string(),
+  prayedForBy: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });

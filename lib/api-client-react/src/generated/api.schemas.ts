@@ -272,6 +272,7 @@ export interface DbancContact {
   prayerType: string;
   serviceDate: string;
   servicesNotes: string;
+  prayedForBy: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -297,6 +298,7 @@ export interface CreateDbancContactBody {
   assignedCallerId?: number | null;
   prayerType?: string;
   servicesNotes?: string;
+  prayedForBy?: string;
 }
 
 export type DbancPrayerSummaryByCampus = {

@@ -1463,6 +1463,8 @@ components:
           type: string
         servicesNotes:
           type: string
+        prayedForBy:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -1485,6 +1487,7 @@ components:
         - crisisFlag
         - doNotContact
         - servicesNotes
+        - prayedForBy
         - createdAt
         - updatedAt
     DbancContactList:
@@ -1528,6 +1531,8 @@ components:
         prayerType:
           type: string
         servicesNotes:
+          type: string
+        prayedForBy:
           type: string
       required:
         - firstName

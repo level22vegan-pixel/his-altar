@@ -84,7 +84,7 @@ router.post("/", async (req, res) => {
       firstName, lastName, phone,
       carrier = "", gender = "", campus = "", notes = "", customData = {},
       crisisFlag = false, doNotContact = false, assignedCallerId, servicesNotes = "",
-      serviceTime = "", prayerType = "", serviceDate = "",
+      serviceTime = "", prayerType = "", serviceDate = "", prayedForBy = "",
     } = req.body as Record<string, unknown>;
     if (!firstName || !lastName || !phone) {
       res.status(400).json({ message: "firstName, lastName, and phone are required" });
@@ -102,6 +102,7 @@ router.post("/", async (req, res) => {
         serviceTime: String(serviceTime),
         prayerType: String(prayerType),
         serviceDate: String(serviceDate),
+        prayedForBy: String(prayedForBy),
       })
       .returning();
     res.status(201).json(contact);
@@ -116,7 +117,7 @@ router.put("/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const {
       firstName, lastName, phone, carrier, gender, campus, notes, customData,
-      crisisFlag, doNotContact, assignedCallerId, servicesNotes, serviceTime, prayerType, serviceDate,
+      crisisFlag, doNotContact, assignedCallerId, servicesNotes, serviceTime, prayerType, serviceDate, prayedForBy,
     } = req.body as Record<string, unknown>;
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (firstName !== undefined) updates.firstName = String(firstName);
@@ -134,6 +135,7 @@ router.put("/:id", async (req, res) => {
     if (serviceTime !== undefined) updates.serviceTime = String(serviceTime);
     if (prayerType !== undefined) updates.prayerType = String(prayerType);
     if (serviceDate !== undefined) updates.serviceDate = String(serviceDate);
+    if (prayedForBy !== undefined) updates.prayedForBy = String(prayedForBy);
     const [contact] = await db
       .update(dbancContactsTable)
       .set(updates)

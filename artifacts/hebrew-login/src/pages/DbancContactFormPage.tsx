@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useParams, useSearch } from "wouter";
 import {
   useCreateDbancContact,
   useUpdateDbancContact,
   useGetDbancContact,
   useListDbancCustomFields,
+  useListWorkers,
 } from "@workspace/api-client-react";
 import { getValidCampusSession } from "@/lib/session";
 
@@ -55,6 +56,7 @@ interface FormData {
   serviceTime: string;
   prayerType: string;
   serviceDate: string;
+  prayedForBy: string;
   notes: string;
   customData: Record<string, string>;
 }
@@ -117,11 +119,35 @@ export default function DbancContactFormPage() {
     serviceTime: "",
     prayerType: "",
     serviceDate: localDateStr(),
+    prayedForBy: "",
     notes: "",
     customData: {},
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Worker search for "Prayed For By" field
+  const [workerQuery, setWorkerQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const workerInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: masterData } = useListWorkers(
+    { category: "master", campus: form.campus },
+    { query: { enabled: !!form.campus, queryKey: ["workers-master", form.campus] } }
+  );
+  const { data: altData } = useListWorkers(
+    { category: "alt", campus: form.campus },
+    { query: { enabled: !!form.campus, queryKey: ["workers-alt", form.campus] } }
+  );
+
+  const allWorkerNames: string[] = [
+    ...(masterData?.workers ?? []).map(w => w.name),
+    ...(altData?.workers ?? []).map(w => w.name),
+  ].filter((n, i, a) => a.indexOf(n) === i).sort();
+
+  const filteredWorkers = workerQuery.trim()
+    ? allWorkerNames.filter(n => n.toLowerCase().includes(workerQuery.toLowerCase()))
+    : allWorkerNames;
 
   useEffect(() => {
     if (existingData) {
@@ -135,9 +161,11 @@ export default function DbancContactFormPage() {
         serviceTime: existingData.serviceTime ?? "",
         prayerType: existingData.prayerType ?? "",
         serviceDate: (existingData as unknown as Record<string, unknown>).serviceDate as string ?? localDateStr(),
+        prayedForBy: existingData.prayedForBy ?? "",
         notes: existingData.notes,
         customData: (existingData.customData as Record<string, string>) ?? {},
       });
+      setWorkerQuery(existingData.prayedForBy ?? "");
     }
   }, [existingData]);
 
@@ -301,6 +329,55 @@ export default function DbancContactFormPage() {
               <option value="">Select prayer type…</option>
               {PRAYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
+          </div>
+
+          {/* Prayed For By */}
+          <div style={{ position: "relative" }}>
+            <label style={labelStyle}>Prayed For By</label>
+            <input
+              ref={workerInputRef}
+              style={inputStyle}
+              value={workerQuery}
+              onChange={e => {
+                setWorkerQuery(e.target.value);
+                setField("prayedForBy", e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder={form.campus ? "Search roster or type a name…" : "Select campus first, or type a name…"}
+              autoComplete="off"
+            />
+            {showSuggestions && filteredWorkers.length > 0 && (
+              <div style={{
+                position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                background: "hsl(220 50% 10%)", border: "1px solid hsl(220 40% 26%)",
+                borderTop: "none", borderRadius: "0 0 8px 8px",
+                maxHeight: 180, overflowY: "auto",
+              }}>
+                {filteredWorkers.map(name => (
+                  <button
+                    key={name}
+                    type="button"
+                    onMouseDown={() => {
+                      setWorkerQuery(name);
+                      setField("prayedForBy", name);
+                      setShowSuggestions(false);
+                    }}
+                    style={{
+                      display: "block", width: "100%", textAlign: "left",
+                      padding: "10px 14px", background: "none", border: "none",
+                      color: "hsl(0 0% 88%)", fontFamily: "Georgia, serif", fontSize: 13,
+                      cursor: "pointer", borderBottom: "1px solid hsl(220 35% 18%)",
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.background = "hsl(220 45% 18%)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "none"; }}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Notes */}

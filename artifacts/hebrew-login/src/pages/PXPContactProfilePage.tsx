@@ -320,10 +320,14 @@ export default function PXPContactProfilePage() {
                 <div style={{ color: "hsl(0 0% 82%)", fontFamily: "Georgia, serif", fontSize: 12, lineHeight: 1.6 }}>{contact.notes}</div>
               </div>
             )}
-            {isCallerSession && (
+            {(contact.prayedForBy || isCallerSession) && (
               <div style={{ marginTop: 10, padding: "10px 12px", background: "hsl(270 30% 8%)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: "hsl(270 60% 72%)", fontFamily: "Georgia, serif", fontSize: 12 }}>{callerSession?.callerName}</span>
-                <span style={{ color: "hsl(270 30% 42%)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Assigned Caller</span>
+                <span style={{ color: "hsl(270 60% 72%)", fontFamily: "Georgia, serif", fontSize: 12 }}>
+                  {contact.prayedForBy || callerSession?.callerName}
+                </span>
+                <span style={{ color: "hsl(270 30% 42%)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  {contact.prayedForBy ? "Prayed For By" : "Assigned Caller"}
+                </span>
               </div>
             )}
           </div>

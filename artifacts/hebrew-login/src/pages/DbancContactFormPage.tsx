@@ -187,7 +187,7 @@ export default function DbancContactFormPage() {
       {!isPublic && (
         <button
           onClick={() => navigate("/admin/dbanc")}
-          className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+          className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
           style={{ color: "hsl(0 0% 90%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
         >
           ← Dbanc
@@ -362,26 +362,49 @@ export default function DbancContactFormPage() {
             <p style={{ color: "hsl(0 65% 62%)", fontFamily: "Georgia, serif", fontSize: 12, textAlign: "center" }}>{error}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              padding: "13px 0",
-              borderRadius: 10,
-              background: saving ? "hsl(220 30% 18%)" : "linear-gradient(135deg, hsl(220 65% 34%), hsl(220 60% 26%))",
-              color: "hsl(0 0% 97%)",
-              fontFamily: "Georgia, serif",
-              fontSize: 13,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              border: "1px solid hsl(220 50% 40%)",
-              cursor: saving ? "not-allowed" : "pointer",
-              width: "100%",
-              marginTop: 6,
-            }}
-          >
-            {saving ? "Saving…" : isEdit ? "Save Changes" : "Add Contact"}
-          </button>
+          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+            {isEdit && (
+              <button
+                type="button"
+                onClick={() => navigate("/admin/dbanc")}
+                style={{
+                  flex: "0 0 auto",
+                  padding: "13px 20px",
+                  borderRadius: 10,
+                  background: "none",
+                  color: "hsl(0 0% 65%)",
+                  fontFamily: "Georgia, serif",
+                  fontSize: 13,
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  border: "1px solid hsl(0 0% 28%)",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                flex: 1,
+                padding: "13px 0",
+                borderRadius: 10,
+                background: saving ? "hsl(220 30% 18%)" : "linear-gradient(135deg, hsl(220 65% 34%), hsl(220 60% 26%))",
+                color: "hsl(0 0% 97%)",
+                fontFamily: "Georgia, serif",
+                fontSize: 13,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                border: "1px solid hsl(220 50% 40%)",
+                cursor: saving ? "not-allowed" : "pointer",
+              }}
+            >
+              {saving ? "Saving…" : isEdit ? "Save Changes" : "Add Contact"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

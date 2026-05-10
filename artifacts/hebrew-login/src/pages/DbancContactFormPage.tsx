@@ -287,14 +287,13 @@ export default function DbancContactFormPage() {
 
           {/* Prayer Type */}
           <div>
-            <label style={{ ...labelStyle, color: form.prayerType ? "hsl(220 40% 65%)" : "hsl(0 65% 62%)" }}>
+            <label style={labelStyle}>
               Prayer Type *
             </label>
             <select
               style={{
                 ...inputStyle,
                 appearance: "none" as const,
-                borderColor: !form.prayerType ? "hsl(0 55% 38%)" : "hsl(220 40% 26%)",
               }}
               value={form.prayerType}
               onChange={e => setField("prayerType", e.target.value)}

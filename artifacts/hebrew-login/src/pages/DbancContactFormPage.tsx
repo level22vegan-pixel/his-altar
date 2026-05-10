@@ -311,7 +311,7 @@ export default function DbancContactFormPage() {
               style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }}
               value={form.notes}
               onChange={e => setField("notes", e.target.value)}
-              placeholder="What did they come forward for?"
+              placeholder="Optional"
             />
           </div>
 

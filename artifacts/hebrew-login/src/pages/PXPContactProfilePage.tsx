@@ -326,7 +326,7 @@ export default function PXPContactProfilePage() {
                   {contact.prayedForBy || callerSession?.callerName}
                 </span>
                 <span style={{ color: "hsl(270 30% 42%)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                  {contact.prayedForBy ? "Prayed For By" : "Assigned Caller"}
+                  {contact.prayedForBy ? "Altar Worker" : "Assigned Caller"}
                 </span>
               </div>
             )}

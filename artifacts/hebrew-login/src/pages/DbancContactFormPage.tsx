@@ -331,12 +331,15 @@ export default function DbancContactFormPage() {
             </select>
           </div>
 
-          {/* Prayed For By */}
-          <div style={{ position: "relative" }}>
-            <label style={labelStyle}>Prayed For By</label>
+          {/* Altar Worker */}
+          <div>
+            <label style={labelStyle}>Altar Worker</label>
             <input
               ref={workerInputRef}
-              style={inputStyle}
+              style={{
+                ...inputStyle,
+                borderRadius: showSuggestions && filteredWorkers.length > 0 ? "8px 8px 0 0" : 8,
+              }}
               value={workerQuery}
               onChange={e => {
                 setWorkerQuery(e.target.value);
@@ -345,15 +348,17 @@ export default function DbancContactFormPage() {
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              placeholder={form.campus ? "Search roster or type a name…" : "Select campus first, or type a name…"}
+              placeholder={form.campus ? "Search roster or type a name…" : "Type a name or select campus to search roster…"}
               autoComplete="off"
             />
             {showSuggestions && filteredWorkers.length > 0 && (
               <div style={{
-                position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
-                background: "hsl(220 50% 10%)", border: "1px solid hsl(220 40% 26%)",
-                borderTop: "none", borderRadius: "0 0 8px 8px",
-                maxHeight: 180, overflowY: "auto",
+                background: "hsl(220 50% 10%)",
+                border: "1px solid hsl(220 40% 26%)",
+                borderTop: "none",
+                borderRadius: "0 0 8px 8px",
+                maxHeight: 200,
+                overflowY: "auto",
               }}>
                 {filteredWorkers.map(name => (
                   <button

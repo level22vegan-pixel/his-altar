@@ -4,6 +4,7 @@ import {
   useCreateDbancContact,
   useUpdateDbancContact,
   useGetDbancContact,
+  useListDbancContacts,
   useListDbancCustomFields,
   useListWorkers,
 } from "@workspace/api-client-react";
@@ -139,10 +140,15 @@ export default function DbancContactFormPage() {
     { category: "alt", campus: form.campus || undefined },
     { query: { enabled: !!form.campus, queryKey: ["workers-alt", form.campus] } }
   );
+  const { data: contactsData } = useListDbancContacts(
+    { campus: form.campus || undefined },
+    { query: { enabled: !!form.campus, queryKey: ["dbanc-contacts-campus", form.campus] } }
+  );
 
   const allWorkerNames: string[] = [
     ...(masterData?.workers ?? []).map(w => w.name),
     ...(altData?.workers ?? []).map(w => w.name),
+    ...(contactsData?.contacts ?? []).map(c => c.prayedForBy).filter((n): n is string => !!n),
   ].filter((n, i, a) => a.indexOf(n) === i).sort();
 
   const filteredWorkers = workerQuery.trim()

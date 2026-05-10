@@ -54,8 +54,39 @@ interface FormData {
   campus: string;
   serviceTime: string;
   prayerType: string;
+  serviceDate: string;
   notes: string;
   customData: Record<string, string>;
+}
+
+function localDateStr(d?: Date): string {
+  const date = d ?? new Date();
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// Auto-compute the nearest service date for a given service time string.
+// "Sunday *" → nearest Sunday (today if Sunday, else next Sunday)
+// "Wednesday *" → nearest Wednesday (today if Wed, else next)
+// fallback → today
+function serviceDateForTime(serviceTime: string): string {
+  const d = new Date();
+  const dow = d.getDay(); // 0=Sun, 3=Wed
+  if (serviceTime.toLowerCase().startsWith("sunday")) {
+    const diff = dow === 0 ? 0 : 7 - dow;
+    const target = new Date(d);
+    target.setDate(d.getDate() + diff);
+    return localDateStr(target);
+  }
+  if (serviceTime.toLowerCase().startsWith("wednesday")) {
+    const diff = dow <= 3 ? 3 - dow : 10 - dow;
+    const target = new Date(d);
+    target.setDate(d.getDate() + diff);
+    return localDateStr(target);
+  }
+  return localDateStr(d);
 }
 
 export default function DbancContactFormPage() {
@@ -85,6 +116,7 @@ export default function DbancContactFormPage() {
     campus: lockedCampus ?? "",
     serviceTime: "",
     prayerType: "",
+    serviceDate: localDateStr(),
     notes: "",
     customData: {},
   });
@@ -102,6 +134,7 @@ export default function DbancContactFormPage() {
         campus: existingData.campus,
         serviceTime: existingData.serviceTime ?? "",
         prayerType: existingData.prayerType ?? "",
+        serviceDate: (existingData as unknown as Record<string, unknown>).serviceDate as string ?? localDateStr(),
         notes: existingData.notes,
         customData: (existingData.customData as Record<string, string>) ?? {},
       });
@@ -243,7 +276,7 @@ export default function DbancContactFormPage() {
                 borderColor: !form.serviceTime ? "hsl(220 55% 38%)" : "hsl(220 40% 26%)",
               }}
               value={form.serviceTime}
-              onChange={e => setField("serviceTime", e.target.value)}
+              onChange={e => { setField("serviceTime", e.target.value); if (e.target.value) setField("serviceDate", serviceDateForTime(e.target.value)); }}
             >
               <option value="">Select service time…</option>
               {(CAMPUS_SERVICES[form.campus] ?? Object.values(CAMPUS_SERVICES).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(s => (

@@ -805,27 +805,18 @@ function ServiceSection({
     ? !existingCampuses.includes(activeCampus)
     : existingCampuses.length < campusesForSlot(service).length;
 
-  // Fetch Dbanc prayer summaries for each campus that has an entry
-  const dbancQueries = useQueries({
-    queries: serviceReports.map(r => ({
-      queryKey: ["dbanc-prayer-summary", r.campus, service, dateStr],
-      queryFn: () =>
-        fetch(`/api/dbanc/contacts/prayer-summary?campus=${encodeURIComponent(r.campus)}&service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`)
-          .then(res => res.json()) as Promise<{ salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }>,
-      staleTime: 60000,
-    })),
+  // Single fetch for all Dbanc data for this service/date (all campuses)
+  type DbancSummary = { salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number; byCampus: Record<string, { salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }> };
+  const { data: dbancData } = useQuery<DbancSummary>({
+    queryKey: ["dbanc-prayer-summary", service, dateStr],
+    queryFn: () =>
+      fetch(`/api/dbanc/contacts/prayer-summary?service=${encodeURIComponent(service)}&date=${encodeURIComponent(dateStr)}`)
+        .then(r => r.json()),
+    staleTime: 60000,
   });
 
-  const dbancMap: Record<string, { salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }> = {};
-  serviceReports.forEach((r, i) => {
-    const d = dbancQueries[i]?.data;
-    if (d) dbancMap[r.campus] = d;
-  });
-
-  const dbancTotals = Object.values(dbancMap).reduce(
-    (a, d) => ({ salvations: a.salvations + d.salvations, prayers: a.prayers + d.totalPrayers }),
-    { salvations: 0, prayers: 0 }
-  );
+  const dbancByCampus = dbancData?.byCampus ?? {};
+  const dbancHasData = (dbancData?.totalPrayers ?? 0) > 0;
 
   const manualTotals = serviceReports.reduce(
     (a, r) => ({ salvations: a.salvations + r.salvations, prayers: a.prayers + r.prayers, altarMembers: a.altarMembers + r.altarMembers }),
@@ -833,8 +824,8 @@ function ServiceSection({
   );
 
   const totals = {
-    salvations: manualTotals.salvations + dbancTotals.salvations,
-    prayers: manualTotals.prayers + dbancTotals.prayers,
+    salvations: manualTotals.salvations + (dbancData?.salvations ?? 0),
+    prayers: manualTotals.prayers + (dbancData?.totalPrayers ?? 0),
     altarMembers: manualTotals.altarMembers,
   };
 
@@ -847,12 +838,12 @@ function ServiceSection({
           {service}
         </div>
 
-        {/* Inline totals */}
-        {hasServiceData && (
+        {/* Inline totals — shown whenever any data exists */}
+        {(hasServiceData || dbancHasData) && (
           <div style={{ display: "flex", gap: 12, flex: 1 }}>
             <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.salvations}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Salv</span></span>
             <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.prayers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Prayer</span></span>
-            <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.altarMembers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Altar</span></span>
+            {hasServiceData && <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 12, fontWeight: "bold" }}>{totals.altarMembers}<span style={{ color: GOLD_DIM, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", marginLeft: 3 }}>Altar</span></span>}
           </div>
         )}
 
@@ -882,11 +873,31 @@ function ServiceSection({
         <ServiceNotesPanel dateStr={dateStr} service={service} onClose={() => setShowNotes(false)} />
       )}
 
+      {/* Dbanc responses — always visible when contacts exist, no manual entry needed */}
+      {dbancHasData && (
+        <div style={{ background: "hsl(220 45% 10%)", border: "1px solid hsl(220 38% 20%)", borderRadius: 7, padding: "10px 12px", marginBottom: 10 }}>
+          <div style={{ color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 8 }}>
+            From Dbanc — {dbancData?.totalPrayers} prayer{(dbancData?.totalPrayers ?? 0) !== 1 ? "s" : ""} recorded
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {Object.entries(dbancByCampus).map(([camp, counts]) => (
+              <div key={camp} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ color: "hsl(220 40% 65%)", fontFamily: "Georgia, serif", fontSize: 11, minWidth: 90 }}>{camp}</span>
+                <span style={{ color: "hsl(130 55% 52%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold" }}>{counts.salvations}<span style={{ color: "hsl(220 35% 48%)", fontSize: 9, marginLeft: 2 }}>Salv</span></span>
+                {counts.recommitments > 0 && <span style={{ color: "hsl(200 60% 62%)", fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold" }}>{counts.recommitments}<span style={{ color: "hsl(220 35% 48%)", fontSize: 9, marginLeft: 2 }}>Recommit</span></span>}
+                {counts.cameForPrayer > 0 && <span style={{ color: GOLD, fontFamily: "Georgia, serif", fontSize: 11, fontWeight: "bold" }}>{counts.cameForPrayer}<span style={{ color: "hsl(220 35% 48%)", fontSize: 9, marginLeft: 2 }}>Prayer</span></span>}
+                <span style={{ color: "hsl(220 50% 65%)", fontFamily: "Georgia, serif", fontSize: 10, marginLeft: "auto" }}>{counts.totalPrayers} total</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Campus entries */}
       {serviceReports.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
           {serviceReports.map(r => {
-            const d = dbancMap[r.campus];
+            const d = dbancByCampus[r.campus];
             return (
               <DayEntry
                 key={r.id}

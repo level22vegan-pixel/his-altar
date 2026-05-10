@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, dbancContactsTable } from "@workspace/db";
-import { eq, desc, and, like, gte, lt } from "drizzle-orm";
+import { eq, desc, and, like, or, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -26,29 +26,37 @@ router.get("/prayer-summary", async (req, res) => {
       res.status(400).json({ message: "service and date are required" });
       return;
     }
-    // Date range: all of that calendar day (UTC)
-    const dayStart = new Date(`${date}T00:00:00.000Z`);
-    const dayEnd = new Date(`${date}T23:59:59.999Z`);
 
-    const conditions = [
-      like(dbancContactsTable.serviceTime, `%${service}%`),
-      gte(dbancContactsTable.createdAt, dayStart),
-      lt(dbancContactsTable.createdAt, new Date(dayEnd.getTime() + 1)),
+    // Match contacts by explicit serviceDate when set, or fall back to UTC created_at date (±1 day for timezone safety)
+    const dateCondition = or(
+      eq(dbancContactsTable.serviceDate, date),
+      and(
+        eq(dbancContactsTable.serviceDate, ""),
+        sql`${dbancContactsTable.createdAt}::date BETWEEN (${date}::date - interval '1 day')::date AND (${date}::date + interval '1 day')::date`
+      )
+    );
+
+    const conditions: ReturnType<typeof eq>[] = [
+      like(dbancContactsTable.serviceTime, `%${service}%`) as ReturnType<typeof eq>,
+      dateCondition as ReturnType<typeof eq>,
     ];
     if (campus) conditions.push(eq(dbancContactsTable.campus, campus));
 
     const contacts = await db
-      .select({ prayerType: dbancContactsTable.prayerType })
+      .select({ prayerType: dbancContactsTable.prayerType, campus: dbancContactsTable.campus })
       .from(dbancContactsTable)
       .where(and(...conditions));
 
     let salvations = 0, recommitments = 0, cameForPrayer = 0;
+    const byCampus: Record<string, { salvations: number; recommitments: number; cameForPrayer: number; totalPrayers: number }> = {};
     for (const c of contacts) {
-      if (c.prayerType === "Salvation") salvations++;
-      else if (c.prayerType === "Recommitment") recommitments++;
-      else if (c.prayerType === "Came for Prayer") cameForPrayer++;
+      if (!byCampus[c.campus]) byCampus[c.campus] = { salvations: 0, recommitments: 0, cameForPrayer: 0, totalPrayers: 0 };
+      if (c.prayerType === "Salvation") { salvations++; byCampus[c.campus].salvations++; }
+      else if (c.prayerType === "Recommitment") { recommitments++; byCampus[c.campus].recommitments++; }
+      else if (c.prayerType === "Came for Prayer") { cameForPrayer++; byCampus[c.campus].cameForPrayer++; }
+      if (c.prayerType) byCampus[c.campus].totalPrayers++;
     }
-    res.json({ salvations, recommitments, cameForPrayer, totalPrayers: salvations + recommitments + cameForPrayer });
+    res.json({ salvations, recommitments, cameForPrayer, totalPrayers: salvations + recommitments + cameForPrayer, byCampus });
   } catch (err) {
     req.log.error({ err }, "Error fetching dbanc prayer summary");
     res.status(500).json({ message: "Server error" });
@@ -76,7 +84,7 @@ router.post("/", async (req, res) => {
       firstName, lastName, phone,
       carrier = "", gender = "", campus = "", notes = "", customData = {},
       crisisFlag = false, doNotContact = false, assignedCallerId, servicesNotes = "",
-      serviceTime = "", prayerType = "",
+      serviceTime = "", prayerType = "", serviceDate = "",
     } = req.body as Record<string, unknown>;
     if (!firstName || !lastName || !phone) {
       res.status(400).json({ message: "firstName, lastName, and phone are required" });
@@ -93,6 +101,7 @@ router.post("/", async (req, res) => {
         servicesNotes: String(servicesNotes),
         serviceTime: String(serviceTime),
         prayerType: String(prayerType),
+        serviceDate: String(serviceDate),
       })
       .returning();
     res.status(201).json(contact);
@@ -107,7 +116,7 @@ router.put("/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const {
       firstName, lastName, phone, carrier, gender, campus, notes, customData,
-      crisisFlag, doNotContact, assignedCallerId, servicesNotes, serviceTime, prayerType,
+      crisisFlag, doNotContact, assignedCallerId, servicesNotes, serviceTime, prayerType, serviceDate,
     } = req.body as Record<string, unknown>;
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (firstName !== undefined) updates.firstName = String(firstName);
@@ -124,6 +133,7 @@ router.put("/:id", async (req, res) => {
     if (servicesNotes !== undefined) updates.servicesNotes = String(servicesNotes);
     if (serviceTime !== undefined) updates.serviceTime = String(serviceTime);
     if (prayerType !== undefined) updates.prayerType = String(prayerType);
+    if (serviceDate !== undefined) updates.serviceDate = String(serviceDate);
     const [contact] = await db
       .update(dbancContactsTable)
       .set(updates)

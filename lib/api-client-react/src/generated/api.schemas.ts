@@ -270,6 +270,7 @@ export interface DbancContact {
   doNotContact: boolean;
   assignedCallerId?: number | null;
   prayerType: string;
+  serviceDate: string;
   servicesNotes: string;
   createdAt: string;
   updatedAt: string;
@@ -298,11 +299,21 @@ export interface CreateDbancContactBody {
   servicesNotes?: string;
 }
 
+export type DbancPrayerSummaryByCampus = {
+  [key: string]: {
+    salvations?: number;
+    recommitments?: number;
+    cameForPrayer?: number;
+    totalPrayers?: number;
+  };
+};
+
 export interface DbancPrayerSummary {
   salvations: number;
   recommitments: number;
   cameForPrayer: number;
   totalPrayers: number;
+  byCampus: DbancPrayerSummaryByCampus;
 }
 
 export interface DbancCustomField {

@@ -1459,6 +1459,8 @@ components:
           nullable: true
         prayerType:
           type: string
+        serviceDate:
+          type: string
         servicesNotes:
           type: string
         createdAt:
@@ -1477,6 +1479,7 @@ components:
         - campus
         - serviceTime
         - prayerType
+        - serviceDate
         - notes
         - customData
         - crisisFlag
@@ -1542,11 +1545,25 @@ components:
           type: integer
         totalPrayers:
           type: integer
+        byCampus:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              salvations:
+                type: integer
+              recommitments:
+                type: integer
+              cameForPrayer:
+                type: integer
+              totalPrayers:
+                type: integer
       required:
         - salvations
         - recommitments
         - cameForPrayer
         - totalPrayers
+        - byCampus
     DbancCustomField:
       type: object
       properties:

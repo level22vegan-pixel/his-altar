@@ -280,6 +280,7 @@ export const ListDbancContactsResponse = zod.object({
       doNotContact: zod.boolean(),
       assignedCallerId: zod.number().nullish(),
       prayerType: zod.string(),
+      serviceDate: zod.string(),
       servicesNotes: zod.string(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
@@ -329,6 +330,7 @@ export const GetDbancContactResponse = zod.object({
   doNotContact: zod.boolean(),
   assignedCallerId: zod.number().nullish(),
   prayerType: zod.string(),
+  serviceDate: zod.string(),
   servicesNotes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -373,6 +375,7 @@ export const UpdateDbancContactResponse = zod.object({
   doNotContact: zod.boolean(),
   assignedCallerId: zod.number().nullish(),
   prayerType: zod.string(),
+  serviceDate: zod.string(),
   servicesNotes: zod.string(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
@@ -401,6 +404,15 @@ export const GetDbancPrayerSummaryResponse = zod.object({
   recommitments: zod.number(),
   cameForPrayer: zod.number(),
   totalPrayers: zod.number(),
+  byCampus: zod.record(
+    zod.string(),
+    zod.object({
+      salvations: zod.number().optional(),
+      recommitments: zod.number().optional(),
+      cameForPrayer: zod.number().optional(),
+      totalPrayers: zod.number().optional(),
+    }),
+  ),
 });
 
 /**

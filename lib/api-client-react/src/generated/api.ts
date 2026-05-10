@@ -1814,8 +1814,8 @@ export const getGetDbancPrayerSummaryUrl = (
   const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0
-    ? `/api/dbanc/prayer-summary?${stringifiedParams}`
-    : `/api/dbanc/prayer-summary`;
+    ? `/api/dbanc/contacts/prayer-summary?${stringifiedParams}`
+    : `/api/dbanc/contacts/prayer-summary`;
 };
 
 export const getDbancPrayerSummary = async (
@@ -1831,7 +1831,10 @@ export const getDbancPrayerSummary = async (
 export const getGetDbancPrayerSummaryQueryKey = (
   params?: GetDbancPrayerSummaryParams,
 ) => {
-  return [`/api/dbanc/prayer-summary`, ...(params ? [params] : [])] as const;
+  return [
+    `/api/dbanc/contacts/prayer-summary`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getGetDbancPrayerSummaryQueryOptions = <

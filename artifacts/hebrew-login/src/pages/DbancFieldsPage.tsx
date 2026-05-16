@@ -9,9 +9,9 @@ import {
 const inputStyle = {
   padding: "9px 13px",
   borderRadius: 7,
-  border: "1px solid hsl(220 40% 26%)",
-  background: "hsl(220 50% 10%)",
-  color: "hsl(0 0% 92%)",
+  border: "1px solid hsl(215 32% 24%)",
+  background: "hsl(215 22% 10%)",
+  color: "hsl(215 58% 86%)",
   fontFamily: "Georgia, serif",
   fontSize: 13,
   outline: "none",
@@ -61,36 +61,35 @@ export default function DbancFieldsPage() {
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(220 65% 14%) 0%, hsl(220 55% 10%) 40%, hsl(0 60% 14%) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(215 15% 11%) 0%, hsl(215 10% 7%) 60%, hsl(220 12% 9%) 100%)" }}
     >
-      <div className="absolute top-0 left-0 right-0 h-2" style={{ background: "hsl(0 72% 45%)" }} />
-      <div className="absolute top-2 left-0 right-0 h-1" style={{ background: "hsl(0 0% 95%)" }} />
-      <div className="absolute bottom-0 left-0 right-0 h-2" style={{ background: "hsl(0 72% 45%)" }} />
-      <div className="absolute bottom-2 left-0 right-0 h-1" style={{ background: "hsl(0 0% 95%)" }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(0 0% 100% / 0.3) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-
       <button
         onClick={() => navigate("/admin/dbanc")}
-        className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(0 0% 90%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
+        style={{ color: "hsl(215 60% 80%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
       >
         ← Dbanc
       </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         <div className="text-center mb-8">
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 4vw, 2rem)", color: "hsl(0 0% 97%)", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+          <h1 style={{
+            fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 4vw, 2rem)",
+            letterSpacing: "0.2em", textTransform: "uppercase",
+            background: "linear-gradient(135deg, hsl(210 90% 80%), hsl(225 80% 62%))",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          }}>
             Custom Fields
           </h1>
-          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, hsl(0 72% 50%), hsl(0 0% 95%), hsl(220 70% 50%))", margin: "8px auto 0" }} />
-          <p style={{ color: "hsl(220 40% 60%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
+          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, hsl(215 70% 52%), hsl(225 80% 68%))", margin: "8px auto 0" }} />
+          <p style={{ color: "hsl(215 42% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
             Additional contact information fields
           </p>
         </div>
 
         {/* Add new field form */}
-        <div style={{ background: "hsl(220 40% 10% / 0.8)", border: "1px solid hsl(220 30% 22%)", borderRadius: 10, padding: 20, marginBottom: 24 }}>
-          <p style={{ color: "hsl(220 40% 60%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 14 }}>Add New Field</p>
+        <div style={{ background: "hsl(215 20% 11% / 0.85)", border: "1px solid hsl(215 28% 20%)", borderRadius: 10, padding: 20, marginBottom: 24 }}>
+          <p style={{ color: "hsl(215 42% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 14 }}>Add New Field</p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
@@ -125,13 +124,13 @@ export default function DbancFieldsPage() {
               style={{
                 padding: "10px 0",
                 borderRadius: 8,
-                background: !label.trim() ? "hsl(220 25% 16%)" : "linear-gradient(135deg, hsl(220 65% 34%), hsl(220 60% 26%))",
-                color: "hsl(0 0% 97%)",
+                background: !label.trim() ? "hsl(215 20% 14%)" : "linear-gradient(135deg, hsl(215 65% 34%), hsl(215 60% 26%))",
+                color: "hsl(215 75% 90%)",
                 fontFamily: "Georgia, serif",
                 fontSize: 12,
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                border: "1px solid hsl(220 40% 32%)",
+                border: "1px solid hsl(215 45% 34%)",
                 cursor: !label.trim() ? "not-allowed" : "pointer",
               }}
             >
@@ -141,9 +140,9 @@ export default function DbancFieldsPage() {
         </div>
 
         {/* Existing fields */}
-        <div style={{ borderRadius: 10, border: "1px solid hsl(220 30% 22%)", background: "hsl(220 50% 10% / 0.7)", overflow: "hidden" }}>
+        <div style={{ borderRadius: 10, border: "1px solid hsl(215 28% 20%)", background: "hsl(215 20% 10% / 0.75)", overflow: "hidden" }}>
           {fields.length === 0 ? (
-            <div style={{ padding: 36, textAlign: "center", color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.1em" }}>
+            <div style={{ padding: 36, textAlign: "center", color: "hsl(215 28% 38%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.1em" }}>
               No custom fields yet
             </div>
           ) : (
@@ -154,13 +153,13 @@ export default function DbancFieldsPage() {
                   display: "flex",
                   alignItems: "center",
                   padding: "14px 18px",
-                  borderBottom: i < fields.length - 1 ? "1px solid hsl(220 30% 16%)" : "none",
+                  borderBottom: i < fields.length - 1 ? "1px solid hsl(215 25% 15%)" : "none",
                   gap: 12,
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: "hsl(0 0% 92%)", fontFamily: "Georgia, serif", fontSize: 14 }}>{f.label}</div>
-                  <div style={{ color: "hsl(220 35% 50%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
+                  <div style={{ color: "hsl(215 62% 84%)", fontFamily: "Georgia, serif", fontSize: 14 }}>{f.label}</div>
+                  <div style={{ color: "hsl(215 38% 52%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
                     {FIELD_TYPES.find(t => t.value === f.fieldType)?.label ?? f.fieldType}
                     {f.fieldType === "select" && (f.options as string[]).length > 0 && (
                       <span> · {(f.options as string[]).join(", ")}</span>

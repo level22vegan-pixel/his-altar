@@ -17,9 +17,9 @@ function formatPhone(p: string) {
 }
 
 const BTN = {
-  background: "linear-gradient(135deg, hsl(220 65% 30%), hsl(220 60% 22%))",
-  color: "hsl(0 0% 97%)",
-  border: "1px solid hsl(220 50% 40%)",
+  background: "linear-gradient(135deg, hsl(215 65% 32%), hsl(215 60% 22%))",
+  color: "hsl(215 80% 92%)",
+  border: "1px solid hsl(215 55% 42%)",
   fontFamily: "Georgia, serif",
   letterSpacing: "0.15em",
   cursor: "pointer",
@@ -74,22 +74,13 @@ export default function DbancPage() {
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(220 65% 14%) 0%, hsl(220 55% 10%) 40%, hsl(0 60% 14%) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(215 15% 11%) 0%, hsl(215 10% 7%) 60%, hsl(220 12% 9%) 100%)" }}
     >
-      {/* Patriotic stripes */}
-      <div className="absolute top-0 left-0 right-0 h-2" style={{ background: "hsl(0 72% 45%)" }} />
-      <div className="absolute top-2 left-0 right-0 h-1" style={{ background: "hsl(0 0% 95%)" }} />
-      <div className="absolute bottom-0 left-0 right-0 h-2" style={{ background: "hsl(0 72% 45%)" }} />
-      <div className="absolute bottom-2 left-0 right-0 h-1" style={{ background: "hsl(0 0% 95%)" }} />
-
-      {/* Stars */}
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(0 0% 100% / 0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-
       {/* Back */}
       <button
         onClick={() => navigate("/admin")}
         className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(0 0% 90%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        style={{ color: "hsl(215 60% 80%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
       >
         ← Admin
       </button>
@@ -97,17 +88,22 @@ export default function DbancPage() {
       <div className="relative z-10 w-full max-w-2xl px-4 pt-14 pb-20">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.8rem, 5vw, 2.6rem)", color: "hsl(0 0% 97%)", letterSpacing: "0.22em", textTransform: "uppercase", textShadow: "0 2px 18px hsl(220 80% 30% / 0.7)" }}>
+          <h1 style={{
+            fontFamily: "Georgia, serif", fontSize: "clamp(1.8rem, 5vw, 2.6rem)",
+            letterSpacing: "0.22em", textTransform: "uppercase",
+            background: "linear-gradient(135deg, hsl(210 90% 80%), hsl(225 80% 62%))",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>
             Dbanc
           </h1>
-          <div style={{ width: 60, height: 2, background: "linear-gradient(90deg, hsl(0 72% 50%), hsl(0 0% 95%), hsl(220 70% 50%))", margin: "8px auto 0", borderRadius: 2 }} />
-          <p style={{ color: "hsl(220 40% 70%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
+          <div style={{ width: 60, height: 2, background: "linear-gradient(90deg, hsl(215 70% 52%), hsl(225 80% 68%))", margin: "8px auto 0", borderRadius: 2 }} />
+          <p style={{ color: "hsl(215 45% 62%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
             Prayer Contact Database
           </p>
-          {/* Campus lock badge for campus users */}
           {lockedCampus && (
-            <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(220 60% 20%)", border: "1px solid hsl(220 50% 35%)", borderRadius: 20 }}>
-              <span style={{ color: "hsl(220 60% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+            <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(215 50% 16%)", border: "1px solid hsl(215 50% 30%)", borderRadius: 20 }}>
+              <span style={{ color: "hsl(215 65% 72%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
                 {lockedCampus} · {campusSession?.role === "lead" ? "Lead" : "Deputy Lead"}
               </span>
             </div>
@@ -117,31 +113,16 @@ export default function DbancPage() {
         {/* Campus filter tabs — master admin only */}
         {isMasterAdmin && (
           <div style={{ marginBottom: 16 }}>
-            <div
-              style={{
-                display: "flex",
-                gap: 6,
-                overflowX: "auto",
-                paddingBottom: 4,
-                scrollbarWidth: "none",
-              }}
-            >
-              {/* All tab */}
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
               <button
                 onClick={() => setCampusFilter("")}
                 style={{
-                  flexShrink: 0,
-                  padding: "6px 16px",
-                  borderRadius: 20,
-                  border: campusFilter === "" ? "1px solid hsl(38 60% 55%)" : "1px solid hsl(220 30% 28%)",
-                  background: campusFilter === "" ? "hsl(35 45% 18%)" : "hsl(220 40% 10%)",
-                  color: campusFilter === "" ? "hsl(38 70% 68%)" : "hsl(220 30% 55%)",
-                  fontFamily: "Georgia, serif",
-                  fontSize: 11,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
+                  flexShrink: 0, padding: "6px 16px", borderRadius: 20,
+                  border: campusFilter === "" ? "1px solid hsl(215 55% 45%)" : "1px solid hsl(215 25% 22%)",
+                  background: campusFilter === "" ? "hsl(215 50% 18%)" : "hsl(215 18% 10%)",
+                  color: campusFilter === "" ? "hsl(215 75% 74%)" : "hsl(215 30% 48%)",
+                  fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em",
+                  textTransform: "uppercase", cursor: "pointer", transition: "all 0.15s",
                 }}
               >
                 All
@@ -151,18 +132,12 @@ export default function DbancPage() {
                   key={c}
                   onClick={() => setCampusFilter(campusFilter === c ? "" : c)}
                   style={{
-                    flexShrink: 0,
-                    padding: "6px 16px",
-                    borderRadius: 20,
-                    border: campusFilter === c ? "1px solid hsl(220 60% 55%)" : "1px solid hsl(220 30% 28%)",
-                    background: campusFilter === c ? "hsl(220 55% 22%)" : "hsl(220 40% 10%)",
-                    color: campusFilter === c ? "hsl(220 70% 78%)" : "hsl(220 30% 55%)",
-                    fontFamily: "Georgia, serif",
-                    fontSize: 11,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
+                    flexShrink: 0, padding: "6px 16px", borderRadius: 20,
+                    border: campusFilter === c ? "1px solid hsl(215 55% 45%)" : "1px solid hsl(215 25% 22%)",
+                    background: campusFilter === c ? "hsl(215 50% 18%)" : "hsl(215 18% 10%)",
+                    color: campusFilter === c ? "hsl(215 75% 74%)" : "hsl(215 30% 48%)",
+                    fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em",
+                    textTransform: "uppercase", cursor: "pointer", transition: "all 0.15s",
                   }}
                 >
                   {c}
@@ -180,17 +155,17 @@ export default function DbancPage() {
         </div>
 
         {/* Sort toggle */}
-        <div style={{ display: "flex", background: "hsl(220 40% 8%)", borderRadius: 8, padding: 3, marginBottom: 10, gap: 3 }}>
+        <div style={{ display: "flex", background: "hsl(215 18% 8%)", borderRadius: 8, padding: 3, marginBottom: 10, gap: 3 }}>
           {(["newest", "oldest"] as const).map(opt => (
             <button
               key={opt}
               onClick={() => setSortOrder(opt)}
               style={{
                 flex: 1, padding: "6px 0", borderRadius: 6,
-                background: sortOrder === opt ? "hsl(220 50% 22%)" : "transparent",
-                color: sortOrder === opt ? "hsl(220 70% 78%)" : "hsl(220 25% 42%)",
+                background: sortOrder === opt ? "hsl(215 48% 20%)" : "transparent",
+                color: sortOrder === opt ? "hsl(215 72% 74%)" : "hsl(215 25% 40%)",
                 fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase",
-                border: sortOrder === opt ? "1px solid hsl(220 45% 35%)" : "1px solid transparent",
+                border: sortOrder === opt ? "1px solid hsl(215 48% 32%)" : "1px solid transparent",
                 cursor: "pointer", transition: "all 0.15s",
               }}
             >
@@ -212,27 +187,19 @@ export default function DbancPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
-            width: "100%",
-            padding: "10px 16px",
-            borderRadius: 8,
-            border: "1px solid hsl(220 40% 28%)",
-            background: "hsl(220 50% 10%)",
-            color: "hsl(0 0% 92%)",
-            fontFamily: "Georgia, serif",
-            fontSize: 13,
-            letterSpacing: "0.05em",
-            marginBottom: 16,
-            outline: "none",
-            boxSizing: "border-box",
+            width: "100%", padding: "10px 16px", borderRadius: 8,
+            border: "1px solid hsl(215 30% 24%)", background: "hsl(215 22% 10%)",
+            color: "hsl(215 60% 88%)", fontFamily: "Georgia, serif", fontSize: 13,
+            letterSpacing: "0.05em", marginBottom: 16, outline: "none", boxSizing: "border-box",
           }}
         />
 
         {/* Contact list */}
-        <div style={{ borderRadius: 10, border: "1px solid hsl(220 30% 22%)", background: "hsl(220 50% 10% / 0.7)", overflow: "hidden" }}>
+        <div style={{ borderRadius: 10, border: "1px solid hsl(215 28% 20%)", background: "hsl(215 20% 10% / 0.75)", overflow: "hidden" }}>
           {isLoading ? (
-            <div style={{ padding: 32, textAlign: "center", color: "hsl(220 40% 55%)", fontFamily: "Georgia, serif", fontSize: 13 }}>Loading…</div>
+            <div style={{ padding: 32, textAlign: "center", color: "hsl(215 40% 52%)", fontFamily: "Georgia, serif", fontSize: 13 }}>Loading…</div>
           ) : contacts.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>
+            <div style={{ padding: 40, textAlign: "center", color: "hsl(215 28% 38%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>
               {search
                 ? "No contacts match your search"
                 : activeCampus
@@ -244,30 +211,28 @@ export default function DbancPage() {
               <div
                 key={c.id}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "14px 18px",
-                  borderBottom: i < contacts.length - 1 ? "1px solid hsl(220 30% 16%)" : "none",
-                  background: i % 2 === 0 ? "transparent" : "hsl(220 40% 8% / 0.5)",
+                  display: "flex", alignItems: "center", padding: "14px 18px",
+                  borderBottom: i < contacts.length - 1 ? "1px solid hsl(215 25% 15%)" : "none",
+                  background: i % 2 === 0 ? "transparent" : "hsl(215 20% 8% / 0.5)",
                   gap: 12,
                 }}
               >
                 {/* Avatar */}
                 <div style={{
                   width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-                  background: `linear-gradient(135deg, hsl(${(c.id * 47) % 360} 60% 35%), hsl(${(c.id * 47 + 60) % 360} 50% 22%))`,
+                  background: `linear-gradient(135deg, hsl(${200 + (c.id * 23) % 40} 60% 30%), hsl(${215 + (c.id * 17) % 30} 55% 20%))`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "hsl(0 0% 95%)", fontFamily: "Georgia, serif", fontSize: 15, fontWeight: "bold",
+                  color: "hsl(215 80% 85%)", fontFamily: "Georgia, serif", fontSize: 15, fontWeight: "bold",
                 }}>
                   {c.firstName[0]}{c.lastName[0]}
                 </div>
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: "hsl(0 0% 94%)", fontFamily: "Georgia, serif", fontSize: 14, fontWeight: "bold" }}>
+                  <div style={{ color: "hsl(215 65% 86%)", fontFamily: "Georgia, serif", fontSize: 14, fontWeight: "bold" }}>
                     {c.firstName} {c.lastName}
                   </div>
-                  <div style={{ color: "hsl(220 40% 60%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
+                  <div style={{ color: "hsl(215 38% 55%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
                     {formatPhone(c.phone)}{c.carrier ? ` · ${c.carrier}` : ""}{!lockedCampus && c.campus ? ` · ${c.campus}` : ""}
                   </div>
                 </div>
@@ -277,11 +242,10 @@ export default function DbancPage() {
                   <button
                     onClick={() => navigate(`/admin/dbanc/contacts/${c.id}`)}
                     title="Edit contact"
-                    style={{ padding: "6px 10px", borderRadius: 6, background: "hsl(220 50% 22%)", border: "1px solid hsl(220 40% 32%)", color: "hsl(220 60% 75%)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ padding: "6px 10px", borderRadius: 6, background: "hsl(215 48% 20%)", border: "1px solid hsl(215 42% 30%)", color: "hsl(215 65% 72%)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                   >
                     <Pencil size={13} />
                   </button>
-                  {/* Delete only for master admin */}
                   {isMasterAdmin && (
                     <button
                       onClick={() => handleDelete(c.id, `${c.firstName} ${c.lastName}`)}
@@ -296,7 +260,7 @@ export default function DbancPage() {
           )}
         </div>
 
-        <p style={{ textAlign: "center", marginTop: 12, color: "hsl(220 30% 40%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
+        <p style={{ textAlign: "center", marginTop: 12, color: "hsl(215 28% 38%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
           {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}
           {activeCampus ? ` at ${activeCampus}` : ""}
         </p>

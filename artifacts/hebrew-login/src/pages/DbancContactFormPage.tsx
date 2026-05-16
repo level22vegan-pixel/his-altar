@@ -210,7 +210,7 @@ export default function DbancContactFormPage() {
       {!isPublic && (
         <button
           onClick={() => navigate("/admin/dbanc")}
-          className="absolute top-5 left-6 z-20"
+          className="fixed top-5 left-6 z-50"
           style={{
             color: "hsl(215 65% 36%)",
             fontFamily: "Georgia, serif",

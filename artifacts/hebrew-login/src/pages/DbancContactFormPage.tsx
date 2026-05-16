@@ -207,26 +207,24 @@ export default function DbancContactFormPage() {
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
       style={{ background: "linear-gradient(160deg, hsl(215 28% 90%) 0%, hsl(215 22% 84%) 60%, hsl(220 20% 88%) 100%)" }}
     >
-      {!isPublic && (
-        <button
-          onClick={() => navigate("/admin/dbanc")}
-          className="fixed top-5 left-6 z-50"
-          style={{
-            color: "hsl(215 65% 36%)",
-            fontFamily: "Georgia, serif",
-            fontSize: 11,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            background: "hsl(215 40% 88%)",
-            border: "1px solid hsl(215 38% 70%)",
-            borderRadius: 6,
-            padding: "5px 12px",
-            cursor: "pointer",
-          }}
-        >
-          ← Dbanc
-        </button>
-      )}
+      <button
+        onClick={() => navigate(isPublic ? "/" : "/admin/dbanc")}
+        className="fixed top-5 left-6 z-50"
+        style={{
+          color: "hsl(215 65% 36%)",
+          fontFamily: "Georgia, serif",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          background: "hsl(215 40% 88%)",
+          border: "1px solid hsl(215 38% 70%)",
+          borderRadius: 6,
+          padding: "5px 12px",
+          cursor: "pointer",
+        }}
+      >
+        ← Back
+      </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         <div className="text-center mb-8">

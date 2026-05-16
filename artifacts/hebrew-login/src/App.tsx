@@ -37,7 +37,7 @@ import { hasValidSession, clearAllSessions } from "@/lib/session";
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup"];
+const UNGUARDED = [LOGIN_PATH, "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -65,7 +65,8 @@ function Router() {
     <>
       <SessionGuard />
       <Switch>
-        <Route path="/" component={LoginPage} />
+        <Route path="/" component={OrgLoginPage} />
+        <Route path="/staff" component={LoginPage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/campus/hallmark" component={HallmarkPage} />
@@ -91,6 +92,7 @@ function Router() {
         <Route path="/admin/caller-passwords" component={CallerPasswordsPage} />
         <Route path="/caller-login" component={CallerLoginPage} />
         <Route path="/org/login" component={OrgLoginPage} />
+
         <Route path="/org/signup" component={OrgSignupPage} />
         <Route path="/org/dashboard" component={OrgDashboardPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>

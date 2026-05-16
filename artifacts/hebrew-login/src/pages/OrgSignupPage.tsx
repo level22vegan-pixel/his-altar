@@ -56,7 +56,7 @@ export default function OrgSignupPage() {
         return;
       }
       setOrgSession(data.orgId, data.orgName, data.token);
-      navigate("/");
+      navigate("/org/dashboard");
     } catch {
       setError("Connection error. Please try again.");
     } finally {

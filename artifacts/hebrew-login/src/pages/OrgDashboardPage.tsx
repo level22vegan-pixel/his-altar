@@ -38,7 +38,7 @@ export default function OrgDashboardPage() {
 
   function handleLogout() {
     clearOrgSession();
-    navigate("/org/login");
+    navigate("/");
   }
 
   return (

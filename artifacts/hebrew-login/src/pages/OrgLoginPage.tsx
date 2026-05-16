@@ -29,7 +29,7 @@ export default function OrgLoginPage() {
         return;
       }
       setOrgSession(data.orgId, data.orgName, data.token);
-      navigate("/");
+      navigate("/org/dashboard");
     } catch {
       setError("Connection error. Please try again.");
     } finally {
@@ -92,8 +92,8 @@ export default function OrgLoginPage() {
             </a>
           </p>
           <p className="mt-4">
-            <a href="/" className="text-neutral-600 hover:text-neutral-500 text-xs transition">
-              ← Back to staff portal
+            <a href="/staff" className="text-neutral-600 hover:text-neutral-500 text-xs transition">
+              Staff login
             </a>
           </p>
         </div>

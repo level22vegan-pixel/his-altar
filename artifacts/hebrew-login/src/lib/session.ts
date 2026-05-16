@@ -78,7 +78,12 @@ export function getValidCallerSession(): { callerId: number; callerName: string;
 }
 
 export function hasValidSession(): boolean {
-  return getValidAdminSession() || getValidCampusSession() !== null || getValidCallerSession() !== null;
+  return (
+    getValidAdminSession() ||
+    getValidCampusSession() !== null ||
+    getValidCallerSession() !== null ||
+    getValidOrgSession() !== null
+  );
 }
 
 export function setOrgSession(orgId: number, orgName: string, token: string) {

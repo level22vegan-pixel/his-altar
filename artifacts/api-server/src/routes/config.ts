@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { db, loginConfigTable } from "@workspace/db";
+import { db, loginConfigTable, organizationsTable } from "@workspace/db";
 import { UpdateLoginCodeBody } from "@workspace/api-zod";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -56,6 +56,59 @@ router.put("/login-code", async (req, res) => {
     res.json({ code: row.code, updatedAt: row.updatedAt.toISOString() });
   } catch (err) {
     req.log.error({ err }, "Error updating login code");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ── Service Times ─────────────────────────────────────────────────────────────
+
+const THE_WAY_DEFAULT_TIMES: Record<string, string[]> = {
+  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
+  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
+  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
+  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
+  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+};
+
+router.get("/service-times", async (req, res) => {
+  try {
+    const rows = await db
+      .select({ serviceTimes: organizationsTable.serviceTimes })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, req.orgId ?? 1))
+      .limit(1);
+    const saved = rows[0]?.serviceTimes as Record<string, string[]> | null;
+    const times = (saved && Object.keys(saved).length > 0) ? saved : THE_WAY_DEFAULT_TIMES;
+    res.json({ serviceTimes: times });
+  } catch (err) {
+    req.log.error({ err }, "Error getting service times");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/service-times", async (req, res) => {
+  try {
+    const { adminPassword, serviceTimes } = req.body as {
+      adminPassword?: string;
+      serviceTimes?: Record<string, string[]>;
+    };
+    if (!req.orgId && adminPassword !== ADMIN_PASSWORD) {
+      res.status(403).json({ message: "Invalid admin password" });
+      return;
+    }
+    if (!serviceTimes || typeof serviceTimes !== "object") {
+      res.status(400).json({ message: "Invalid service times" });
+      return;
+    }
+    const orgId = req.orgId ?? 1;
+    await db
+      .update(organizationsTable)
+      .set({ serviceTimes })
+      .where(eq(organizationsTable.id, orgId));
+    res.json({ serviceTimes });
+  } catch (err) {
+    req.log.error({ err }, "Error updating service times");
     res.status(500).json({ message: "Server error" });
   }
 });

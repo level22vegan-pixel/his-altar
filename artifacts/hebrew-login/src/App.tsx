@@ -33,6 +33,7 @@ import CallerPasswordsPage from "@/pages/CallerPasswordsPage";
 import ActivityLogPage from "@/pages/ActivityLogPage";
 import CheckInPage from "@/pages/CheckInPage";
 import RosterManagerPage from "@/pages/RosterManagerPage";
+import AdminServiceTimesPage from "@/pages/AdminServiceTimesPage";
 import ServiceReportPage from "@/pages/ServiceReportPage";
 import NotFound from "@/pages/not-found";
 import OrgLoginPage from "@/pages/OrgLoginPage";
@@ -129,6 +130,7 @@ function Router() {
         <Route path="/campus/arizona" component={ArizonaPage} />
         <Route path="/admin/altar-report" component={AltarReportPage} />
         <Route path="/admin/roster" component={RosterManagerPage} />
+        <Route path="/admin/service-times" component={AdminServiceTimesPage} />
         <Route path="/checkin" component={CheckInPage} />
         <Route path="/admin/service-report" component={ServiceReportPage} />
         <Route path="/admin/dbanc" component={DbancPage} />

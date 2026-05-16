@@ -169,6 +169,16 @@ export default function AdminPage() {
               <span>Roster Manager</span>
               <span style={{ opacity: 0.5 }}>→</span>
             </button>
+            {!isCampusUser && (
+              <button
+                onClick={() => navigate("/admin/service-times")}
+                className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
+              >
+                <span>Service Times</span>
+                <span style={{ opacity: 0.5 }}>→</span>
+              </button>
+            )}
 
           </div>
         </div>

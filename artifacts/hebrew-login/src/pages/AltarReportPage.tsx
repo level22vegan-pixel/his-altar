@@ -25,19 +25,34 @@ const THE_WAY_CAMPUS_SERVICES: Record<string, { sunday: string[]; wednesday: str
   ARIZONA:   { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
 };
 
+function flatToServiceMap(flat: Record<string, string[]>): Record<string, { sunday: string[]; wednesday: string[] }> {
+  return Object.fromEntries(
+    Object.entries(flat).map(([campus, times]) => [
+      campus,
+      {
+        sunday:    times.filter(t => /sun/i.test(t)).map(t => t.replace(/^Sunday /i, "")),
+        wednesday: times.filter(t => /wed/i.test(t)).map(t => t.replace(/^Wednesday /i, "")),
+      },
+    ])
+  );
+}
+
 function getEffectiveCampusServices(): Record<string, { sunday: string[]; wednesday: string[] }> {
+  // Admin-saved custom service times take highest priority
+  try {
+    const raw = localStorage.getItem("customServiceTimes");
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, string[]>;
+      if (parsed && Object.keys(parsed).length > 0) {
+        return flatToServiceMap(parsed);
+      }
+    }
+  } catch {}
+  // Fall back to org session service times (for non-The-Way orgs)
   const flat = getOrgServiceTimes();
   const isOrgSession = Object.keys(flat).some(k => !THE_WAY_CAMPUS_SERVICES[k]);
-  if (isOrgSession || Object.keys(flat).length > 0 && !Object.keys(flat).every(k => !!THE_WAY_CAMPUS_SERVICES[k])) {
-    return Object.fromEntries(
-      Object.entries(flat).map(([campus, times]) => [
-        campus,
-        {
-          sunday:    times.filter(t => /sun/i.test(t)),
-          wednesday: times.filter(t => /wed/i.test(t)),
-        },
-      ])
-    );
+  if (isOrgSession || (Object.keys(flat).length > 0 && !Object.keys(flat).every(k => !!THE_WAY_CAMPUS_SERVICES[k]))) {
+    return flatToServiceMap(flat);
   }
   return THE_WAY_CAMPUS_SERVICES;
 }

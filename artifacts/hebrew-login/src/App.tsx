@@ -38,6 +38,7 @@ import NotFound from "@/pages/not-found";
 import OrgLoginPage from "@/pages/OrgLoginPage";
 import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
+import OrgSetupPage from "@/pages/OrgSetupPage";
 import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
@@ -115,6 +116,7 @@ function Router() {
         <Route path="/admin/pxp/logs" component={PXPLogsPage} />
         <Route path="/admin/pxp/script" component={PXPScriptPage} />
         <Route path="/admin/pxp/callers" component={PXPCallersPage} />
+        <Route path="/org/setup" component={OrgSetupPage} />
         <Route path="/admin/pxp/contacts/:id" component={PXPContactProfilePage} />
         <Route path="/admin/caller-passwords" component={CallerPasswordsPage} />
         <Route path="/caller-login" component={CallerLoginPage} />

@@ -56,7 +56,8 @@ export default function OrgSignupPage() {
         return;
       }
       setOrgSession(data.orgId, data.orgName, data.token);
-      navigate("/org/dashboard");
+      localStorage.removeItem("orgSetupDone"); // ensure setup wizard runs for new accounts
+      navigate("/org/setup");
     } catch {
       setError("Connection error. Please try again.");
     } finally {

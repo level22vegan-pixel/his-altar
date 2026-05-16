@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { getValidOrgSession, clearOrgSession } from "@/lib/session";
+import { isSetupDone, markSetupDone } from "@/pages/OrgSetupPage";
 
 const TOOLS = [
   {
@@ -35,6 +36,7 @@ const TOOLS = [
 export default function OrgDashboardPage() {
   const [, navigate] = useLocation();
   const session = getValidOrgSession();
+  const setupDone = isSetupDone();
 
   function handleLogout() {
     clearOrgSession();
@@ -57,6 +59,30 @@ export default function OrgDashboardPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10">
+        {/* Setup banner */}
+        {!setupDone && (
+          <div className="mb-8 flex items-center justify-between gap-4 bg-purple-950/60 border border-purple-700/50 rounded-xl px-5 py-4">
+            <div>
+              <p className="text-purple-200 text-sm font-semibold">Finish setting up your account</p>
+              <p className="text-purple-400/70 text-xs mt-0.5">Add altar members, follow-up callers, and staff access to get started.</p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => { markSetupDone(); }}
+                className="text-purple-500 hover:text-purple-300 text-xs transition"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => navigate("/org/setup")}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg px-4 py-2 transition"
+              >
+                Continue Setup →
+              </button>
+            </div>
+          </div>
+        )}
+
         <h2 className="text-xl font-semibold mb-6 text-neutral-200">Platform Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {TOOLS.map((tool) => (

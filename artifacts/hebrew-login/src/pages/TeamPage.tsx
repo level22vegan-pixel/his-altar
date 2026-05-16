@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { getValidOrgSession, clearOrgSession, getValidCampusSession, setCampusSession } from "@/lib/session";
+import { getValidOrgSession, clearOrgSession, getValidCampusSession, setCampusSession, getValidAdminSession } from "@/lib/session";
 
 const CAMPUS_ROUTES: Record<string, string> = {
   HALLMARK: "/campus/hallmark",
@@ -14,6 +14,7 @@ export default function TeamPage() {
   const [, navigate] = useLocation();
   const orgSession = getValidOrgSession();
   const campusSession = getValidCampusSession();
+  const isAdmin = getValidAdminSession();
 
   const BUBBLES = [
     {
@@ -39,9 +40,9 @@ export default function TeamPage() {
     {
       id: "admin",
       label: "Admin",
-      sublabel: "Admin login required",
+      sublabel: isAdmin ? "Admin panel" : "Admin login required",
       icon: "⚙",
-      href: "/admin/login",
+      href: isAdmin ? "/admin" : "/admin/login",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
       glow: "rgba(100,120,160,0.2)",
       border: "rgba(100,120,160,0.3)",

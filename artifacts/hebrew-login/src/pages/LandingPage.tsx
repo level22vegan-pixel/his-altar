@@ -31,7 +31,6 @@ export default function LandingPage() {
 
       {/* Logo / Title */}
       <div style={{ textAlign: "center", marginBottom: 64, zIndex: 1 }}>
-        <div style={{ fontSize: 42, marginBottom: 12, filter: "drop-shadow(0 0 12px rgba(180,140,255,0.3))" }}>✝</div>
         <h1 style={{
           color: "#ffffff",
           fontFamily: "Georgia, serif",
@@ -42,15 +41,6 @@ export default function LandingPage() {
         }}>
           His Altar
         </h1>
-        <p style={{
-          color: "rgba(255,255,255,0.35)",
-          fontFamily: "Georgia, serif",
-          fontSize: 13,
-          letterSpacing: "0.1em",
-          marginTop: 8,
-        }}>
-          Church Ministry Platform
-        </p>
       </div>
 
       {/* Enter Site button */}

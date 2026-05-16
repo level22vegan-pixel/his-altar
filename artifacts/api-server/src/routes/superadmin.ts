@@ -91,9 +91,9 @@ router.put("/orgs/:id", async (req, res) => {
   if (!requireSA(req, res)) return;
   try {
     const id = parseInt(req.params.id);
-    const { plan, billingStatus, billingNotes, suspended, name, contactName } = req.body as {
+    const { plan, billingStatus, billingNotes, suspended, name, contactName, campuses } = req.body as {
       plan?: string; billingStatus?: string; billingNotes?: string;
-      suspended?: boolean; name?: string; contactName?: string;
+      suspended?: boolean; name?: string; contactName?: string; campuses?: string[];
     };
     const updates: Record<string, unknown> = {};
     if (plan !== undefined) updates.plan = plan;
@@ -102,6 +102,7 @@ router.put("/orgs/:id", async (req, res) => {
     if (suspended !== undefined) updates.suspended = suspended;
     if (name !== undefined) updates.name = name;
     if (contactName !== undefined) updates.contactName = contactName;
+    if (campuses !== undefined) updates.campuses = campuses;
     const [updated] = await db.update(organizationsTable).set(updates as any).where(eq(organizationsTable.id, id)).returning();
     res.json({ org: updated });
   } catch (err) {

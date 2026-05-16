@@ -80,4 +80,25 @@ router.post("/verify", async (req, res) => {
   }
 });
 
+// Look up a campus by its 4-digit code (any role)
+router.post("/verify-code", async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== "string") {
+      res.status(400).json({ message: "code is required" });
+      return;
+    }
+    const rows = await db.select().from(campusPasswordsTable);
+    const match = rows.find(r => r.password === code.trim());
+    if (match) {
+      res.json({ campus: match.campus });
+    } else {
+      res.status(401).json({ message: "Invalid code" });
+    }
+  } catch (err) {
+    req.log.error({ err }, "Error verifying campus code");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export { router as campusPasswordsRouter };

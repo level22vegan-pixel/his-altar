@@ -53,7 +53,7 @@ export default function LandingPage() {
 
       {/* Enter Site button */}
       <button
-        onClick={() => navigate("/pin")}
+        onClick={() => navigate("/enter")}
         style={{
           zIndex: 1,
           padding: "18px 64px",

@@ -143,10 +143,7 @@ export function getSessionUserName(): string {
   if (getValidAdminSession()) return `Admin (${org?.orgName ?? "Staff"})`;
   if (!getValidAdminSession() && org) return `Admin (${org.orgName})`;
   const campus = getValidCampusSession();
-  if (campus) {
-    const roleLabel = campus.role === "lead" ? "Lead" : "Deputy";
-    return `${roleLabel} (${campus.campus})`;
-  }
+  if (campus) return `Campus: ${campus.campus}`;
   const caller = getValidCallerSession();
   if (caller) return `Caller: ${caller.callerName} (${caller.campus})`;
   return "Unknown";

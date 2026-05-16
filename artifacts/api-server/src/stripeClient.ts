@@ -1,10 +1,19 @@
 import Stripe from "stripe";
 import { StripeSync } from "stripe-replit-sync";
 
-// Replit Stripe integration — credentials fetched from connectors proxy.
-// WARNING: Never cache the client — tokens rotate.
+// Credentials: prefer STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY env vars (set in Secrets tab),
+// then fall back to the Replit connectors proxy.
+// WARNING: Never cache the Stripe client — always call getUncachableStripeClient().
 
 async function getCredentials(): Promise<{ publishableKey: string; secretKey: string }> {
+  // Primary: environment secrets (works in dev + production)
+  const envSecret = process.env.STRIPE_SECRET_KEY;
+  const envPublishable = process.env.STRIPE_PUBLISHABLE_KEY;
+  if (envSecret && envPublishable) {
+    return { secretKey: envSecret, publishableKey: envPublishable };
+  }
+
+  // Fallback: Replit connectors proxy
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
@@ -13,7 +22,9 @@ async function getCredentials(): Promise<{ publishableKey: string; secretKey: st
       : null;
 
   if (!hostname || !xReplitToken) {
-    throw new Error("Stripe integration not configured. Connect Stripe via the Integrations tab.");
+    throw new Error(
+      "Stripe not configured. Add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in the Secrets tab."
+    );
   }
 
   const isProduction = process.env.REPLIT_DEPLOYMENT === "1";
@@ -35,7 +46,9 @@ async function getCredentials(): Promise<{ publishableKey: string; secretKey: st
   const settings = data.items?.[0]?.settings;
 
   if (!settings?.publishable || !settings?.secret) {
-    throw new Error("Stripe connection missing keys. Reconnect via the Integrations tab.");
+    throw new Error(
+      "Stripe connection missing keys. Add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in Secrets."
+    );
   }
 
   return { publishableKey: settings.publishable, secretKey: settings.secret };

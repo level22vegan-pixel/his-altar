@@ -7,9 +7,10 @@ import { StripeSync } from "stripe-replit-sync";
 
 async function getCredentials(): Promise<{ publishableKey: string; secretKey: string }> {
   // Primary: environment secrets (works in dev + production)
+  // These must start with sk_live_ or sk_test_ to be valid
   const envSecret = process.env.STRIPE_SECRET_KEY;
   const envPublishable = process.env.STRIPE_PUBLISHABLE_KEY;
-  if (envSecret && envPublishable) {
+  if (envSecret?.startsWith("sk_") && envPublishable) {
     return { secretKey: envSecret, publishableKey: envPublishable };
   }
 
@@ -64,15 +65,10 @@ export async function getStripePublishableKey(): Promise<string> {
   return publishableKey;
 }
 
-let stripeSync: StripeSync | null = null;
-
 export async function getStripeSync(): Promise<StripeSync> {
-  if (!stripeSync) {
-    const { secretKey } = await getCredentials();
-    stripeSync = new StripeSync({
-      poolConfig: { connectionString: process.env.DATABASE_URL!, max: 2 },
-      stripeSecretKey: secretKey,
-    });
-  }
-  return stripeSync;
+  const { secretKey } = await getCredentials();
+  return new StripeSync({
+    poolConfig: { connectionString: process.env.DATABASE_URL!, max: 2 },
+    stripeSecretKey: secretKey,
+  });
 }

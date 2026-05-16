@@ -55,6 +55,7 @@ export default function PXPCallPage() {
     contact_name: contact ? `${contact.firstName}` : "...",
     caller_name: params.callerName || "...",
     campus: params.campus || "...",
+    church_name: configData?.churchName || "...",
   };
 
   useEffect(() => {

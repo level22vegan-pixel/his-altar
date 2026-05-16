@@ -38,12 +38,14 @@ import NotFound from "@/pages/not-found";
 import OrgLoginPage from "@/pages/OrgLoginPage";
 import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
-import { hasValidSession, clearAllSessions } from "@/lib/session";
+import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
 const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup", "/admin/login"];
+
+const ADMIN_PATHS_PREFIX = "/admin";
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -52,6 +54,20 @@ function SessionGuard() {
     if (UNGUARDED.includes(location)) return;
 
     const check = () => {
+      // Admin routes (excluding /admin/login) require an adminSession or campusSession
+      if (
+        location.startsWith(ADMIN_PATHS_PREFIX) &&
+        location !== "/admin/login"
+      ) {
+        const hasAdmin = getValidAdminSession();
+        const hasCampus = getValidCampusSession() !== null;
+        if (!hasAdmin && !hasCampus) {
+          navigate("/admin/login");
+          return;
+        }
+      }
+
+      // All other guarded routes just need any valid session
       if (!hasValidSession()) {
         clearAllSessions();
         navigate(LOGIN_PATH);

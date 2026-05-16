@@ -52,9 +52,9 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
 function StepAltarMembers({ onNext }: { onNext: () => void }) {
   const qc = useQueryClient();
   const createWorker = useCreateWorker({ mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["workers"] }) } });
+  const orgName = getValidOrgSession()?.orgName ?? "";
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
-  const [campus, setCampus] = useState("");
   const [category, setCategory] = useState<"master" | "alt">("master");
   const [added, setAdded] = useState<{ name: string; role: string; category: string }[]>([]);
   const [err, setErr] = useState("");
@@ -63,9 +63,9 @@ function StepAltarMembers({ onNext }: { onNext: () => void }) {
     if (!name.trim()) { setErr("Name is required"); return; }
     setErr("");
     try {
-      await createWorker.mutateAsync({ data: { name: name.trim(), role: role.trim() || "Member", category, campus: campus.trim(), photoUrl: "" } });
+      await createWorker.mutateAsync({ data: { name: name.trim(), role: role.trim() || "Member", category, campus: orgName, photoUrl: "" } });
       setAdded(a => [...a, { name: name.trim(), role: role.trim() || "Member", category }]);
-      setName(""); setRole(""); setCampus("");
+      setName(""); setRole("");
     } catch { setErr("Failed to add member — try again"); }
   }
 
@@ -76,7 +76,6 @@ function StepAltarMembers({ onNext }: { onNext: () => void }) {
       </p>
       <div className="flex flex-col gap-3 mb-4">
         <input className={inputCls} placeholder="Full name" value={name} onChange={e => { setName(e.target.value); setErr(""); }} />
-        <input className={inputCls} placeholder="Campus (e.g. Main, North)" value={campus} onChange={e => setCampus(e.target.value)} />
         <div className="flex gap-2">
           <input className={inputCls} placeholder="Role (e.g. Usher, Greeter)" value={role} onChange={e => setRole(e.target.value)} />
           <select
@@ -116,9 +115,9 @@ function StepAltarMembers({ onNext }: { onNext: () => void }) {
 
 // Step 2 — Follow-up Callers
 function StepCallers({ onNext }: { onNext: () => void }) {
+  const orgName = getValidOrgSession()?.orgName ?? "";
   const [name, setName] = useState("");
-  const [campus, setCampus] = useState("");
-  const [added, setAdded] = useState<{ name: string; campus: string }[]>([]);
+  const [added, setAdded] = useState<string[]>([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -127,10 +126,10 @@ function StepCallers({ onNext }: { onNext: () => void }) {
     setErr("");
     setLoading(true);
     try {
-      const res = await apiFetch("/pxp/callers", { name: name.trim(), campus: campus.trim() || "" });
+      const res = await apiFetch("/pxp/callers", { name: name.trim(), campus: orgName });
       if (!res.ok) throw new Error();
-      setAdded(a => [...a, { name: name.trim(), campus: campus.trim() }]);
-      setName(""); setCampus("");
+      setAdded(a => [...a, name.trim()]);
+      setName("");
     } catch { setErr("Failed to add caller — try again"); }
     finally { setLoading(false); }
   }
@@ -142,7 +141,6 @@ function StepCallers({ onNext }: { onNext: () => void }) {
       </p>
       <div className="flex flex-col gap-3 mb-4">
         <input className={inputCls} placeholder="Caller name" value={name} onChange={e => { setName(e.target.value); setErr(""); }} />
-        <input className={inputCls} placeholder="Campus (optional)" value={campus} onChange={e => setCampus(e.target.value)} />
         {err && <p className="text-red-400 text-xs">{err}</p>}
         <button onClick={handleAdd} disabled={loading} className={btnCls}>
           {loading ? "Adding…" : "+ Add Caller"}
@@ -152,7 +150,7 @@ function StepCallers({ onNext }: { onNext: () => void }) {
       {added.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-5">
           {added.map((c, i) => (
-            <Chip key={i} label={c.campus ? `${c.name} · ${c.campus}` : c.name} onRemove={() => setAdded(a => a.filter((_, j) => j !== i))} />
+            <Chip key={i} label={c} onRemove={() => setAdded(a => a.filter((_, j) => j !== i))} />
           ))}
         </div>
       )}
@@ -194,6 +192,7 @@ function StepStaff({ onFinish }: { onFinish: () => void }) {
     if (pin.length < 4) { setErr("Enter all 4 digits"); return; }
     if (pin !== conf) { setErr("Codes don't match — try again"); return; }
     setSaving(true); setErr("");
+    const orgCampus = getValidOrgSession()?.orgName ?? "MAIN";
     try {
       const token = getToken();
       const roles = ["lead", "deputy_lead", "attendance"];
@@ -201,7 +200,7 @@ function StepStaff({ onFinish }: { onFinish: () => void }) {
         fetch("/api/campus-passwords", {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({ campus: "HALLMARK", role, password: pin }),
+          body: JSON.stringify({ campus: orgCampus, role, password: pin }),
         })
       ));
       setSaved(true);
@@ -295,45 +294,42 @@ function StepStaff({ onFinish }: { onFinish: () => void }) {
 
 // Step 4 — Service Days & Times
 function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
-  const [campus, setCampus] = useState("");
+  const orgName = getValidOrgSession()?.orgName ?? "MAIN";
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [serviceTimes, setServiceTimes] = useState<Record<string, string[]>>({});
+  const [times, setTimes] = useState<string[]>([]);
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const campusList = Object.keys(serviceTimes);
   const combined = [selectedDay, selectedTime].filter(Boolean).join(" ");
 
   function addTime() {
-    if (!campus.trim()) { setErr("Enter a campus name first"); return; }
     if (!combined.trim()) { setErr("Select a day and time"); return; }
     setErr("");
-    const key = campus.trim();
-    const entry = combined.trim();
-    setServiceTimes(prev => {
-      if ((prev[key] ?? []).includes(entry)) return prev;
-      return { ...prev, [key]: [...(prev[key] ?? []), entry] };
-    });
+    if (times.includes(combined.trim())) return;
+    setTimes(prev => [...prev, combined.trim()]);
     setSelectedDay("");
     setSelectedTime("");
   }
 
-  function removeTime(camp: string, idx: number) {
-    setServiceTimes(prev => {
-      const updated = { ...prev, [camp]: prev[camp].filter((_, i) => i !== idx) };
-      if (updated[camp].length === 0) delete updated[camp];
-      return updated;
-    });
+  function removeTime(idx: number) {
+    setTimes(prev => prev.filter((_, i) => i !== idx));
+  }
+
+  // Build the serviceTimes map using the org name as the single campus key
+  function buildServiceTimes() {
+    if (times.length === 0) return {};
+    return { [orgName]: times };
   }
 
   async function handleSave() {
-    if (Object.keys(serviceTimes).length === 0) { onFinish(); return; }
+    if (times.length === 0) { onFinish(); return; }
     setSaving(true);
     setErr("");
     try {
       const token = getToken();
+      const serviceTimes = buildServiceTimes();
       const res = await fetch("/api/orgs/settings", {
         method: "PUT",
         headers: {
@@ -368,21 +364,10 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
   return (
     <div>
       <p className="text-neutral-400 text-sm mb-5">
-        Set the service times for each campus. These appear when checking in workers and logging prayer contacts.
+        Set the service times for your church. These appear when checking in workers and logging prayer contacts.
       </p>
 
       <div className="flex flex-col gap-4 mb-4">
-        {/* Campus */}
-        <div>
-          <label className="text-neutral-500 text-xs mb-1.5 block">Campus</label>
-          <input
-            className={inputCls}
-            placeholder="Campus name (e.g. Main, North)"
-            value={campus}
-            onChange={e => { setCampus(e.target.value); setErr(""); }}
-          />
-        </div>
-
         {/* Day picker */}
         <div>
           <label className="text-neutral-500 text-xs mb-2 block">Day</label>
@@ -436,22 +421,17 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
         {err && <p className="text-red-400 text-xs">{err}</p>}
       </div>
 
-      {/* Added service times grouped by campus */}
-      {campusList.length > 0 && (
-        <div className="mb-5 flex flex-col gap-3">
-          {campusList.map(camp => (
-            <div key={camp} className="bg-neutral-800/60 border border-neutral-700 rounded-lg px-4 py-3">
-              <p className="text-neutral-300 text-sm font-medium mb-2">{camp}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {serviceTimes[camp].map((t, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-neutral-700 rounded px-2.5 py-1 text-xs text-neutral-200">
-                    <span>{t}</span>
-                    <button onClick={() => removeTime(camp, i)} className="text-neutral-500 hover:text-red-400 transition text-xs leading-none">✕</button>
-                  </div>
-                ))}
+      {/* Added service times */}
+      {times.length > 0 && (
+        <div className="mb-5 bg-neutral-800/60 border border-neutral-700 rounded-lg px-4 py-3">
+          <div className="flex flex-wrap gap-1.5">
+            {times.map((t, i) => (
+              <div key={i} className="flex items-center gap-1.5 bg-neutral-700 rounded px-2.5 py-1 text-xs text-neutral-200">
+                <span>{t}</span>
+                <button onClick={() => removeTime(i)} className="text-neutral-500 hover:text-red-400 transition text-xs leading-none">✕</button>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

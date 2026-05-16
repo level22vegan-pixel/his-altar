@@ -72,7 +72,7 @@ export default function OrgSignupPage() {
         setError(data.message || "Signup failed. Please try again.");
         return;
       }
-      setOrgSession(data.orgId, data.orgName, data.token);
+      setOrgSession(data.orgId, data.orgName, data.token, data.campuses ?? [data.orgName], {});
       localStorage.removeItem("orgSetupDone"); // ensure setup wizard runs for new accounts
       navigate("/org/setup");
     } catch {

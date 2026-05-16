@@ -44,19 +44,21 @@ router.post("/signup", async (req, res) => {
 
     const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
+    const orgName = name.trim();
     const [org] = await db
       .insert(organizationsTable)
       .values({
-        name: name.trim(),
+        name: orgName,
         email: emailLower,
         passwordHash,
         contactName: contactName?.trim() || null,
         token,
         trialEndsAt,
+        campuses: [orgName],
       })
       .returning({ id: organizationsTable.id, name: organizationsTable.name });
 
-    res.json({ orgId: org.id, orgName: org.name, token });
+    res.json({ orgId: org.id, orgName: org.name, token, campuses: [orgName] });
   } catch (err) {
     req.log.error({ err }, "Error signing up org");
     res.status(500).json({ message: "Server error" });

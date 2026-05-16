@@ -187,7 +187,7 @@ export default function DbancContactFormPage() {
       } else {
         await createContact.mutateAsync({ data: form });
       }
-      navigate(isPublic ? "/" : "/admin/dbanc");
+      navigate(isPublic ? "/" : isEdit ? "/admin/dbanc" : "/admin/dbanc/new");
     } catch {
       setError("Failed to save. Please try again.");
     } finally {

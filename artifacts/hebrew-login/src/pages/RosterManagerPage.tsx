@@ -146,7 +146,12 @@ export default function RosterManagerPage() {
   const sessionCampus = getValidCampusSession()?.campus ?? null;
 
   // Campus selector — persisted in localStorage, but overridden by session
-  const [campus, setCampus] = useState<string>(() => sessionCampus ?? localStorage.getItem("rosterCampus") ?? "");
+  const [campus, setCampus] = useState<string>(() => {
+    if (sessionCampus) return sessionCampus;
+    const stored = localStorage.getItem("rosterCampus") ?? "";
+    // Don't restore a stale hardcoded campus; require an explicit selection
+    return stored === "Hallmark" ? "" : stored;
+  });
 
   useEffect(() => { if (campus && !sessionCampus) localStorage.setItem("rosterCampus", campus); }, [campus, sessionCampus]);
 
@@ -328,7 +333,7 @@ export default function RosterManagerPage() {
             {/* Search */}
             <div style={{ position: "relative", marginBottom: 16 }}>
               <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "hsl(38 28% 38%)", fontSize: 13, pointerEvents: "none" }}>🔍</span>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${campus} roster...`} style={{ ...INPUT, paddingLeft: 32, paddingRight: search ? 32 : 10, borderRadius: 6 }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={campus ? `Search ${campus} roster...` : "Search roster..."} style={{ ...INPUT, paddingLeft: 32, paddingRight: search ? 32 : 10, borderRadius: 6 }} />
               {search && <button onClick={() => setSearch("")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "hsl(38 25% 42%)", fontSize: 14, lineHeight: 1 }}>✕</button>}
             </div>
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { setCampusSession } from "@/lib/session";
+import { setCampusSession, setAdminSession } from "@/lib/session";
 
 type Mode = "select" | "campus";
 
@@ -42,34 +42,48 @@ export default function PinEntryPage() {
     setLoading(true);
     setError("");
     try {
+      // First try campus code
       const res = await fetch("/api/campus-passwords/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError("Invalid code. Please try again.");
-        setDigits(["", "", "", ""]);
-        setTimeout(() => inputs.current[0]?.focus(), 50);
+      if (res.ok) {
+        const data = await res.json();
+        setCampusSession(data.campus, data.role ?? "campus");
+        if (data.role === "attendance") {
+          const campusRoutes: Record<string, string> = {
+            HALLMARK: "/campus/hallmark",
+            ARROWHEAD: "/campus/arrowhead",
+            RIVERSIDE: "/campus/riverside",
+            POMONA: "/campus/pomona",
+            LA: "/campus/la",
+            ARIZONA: "/campus/arizona",
+          };
+          const dest = campusRoutes[data.campus] ?? `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
+          navigate(dest, { replace: true });
+        } else {
+          navigate("/team", { replace: true });
+        }
         return;
       }
-      setCampusSession(data.campus, data.role ?? "campus");
-      // Replace /enter in history so back button skips the code screen
-      if (data.role === "attendance") {
-        const campusRoutes: Record<string, string> = {
-          HALLMARK: "/campus/hallmark",
-          ARROWHEAD: "/campus/arrowhead",
-          RIVERSIDE: "/campus/riverside",
-          POMONA: "/campus/pomona",
-          LA: "/campus/la",
-          ARIZONA: "/campus/arizona",
-        };
-        const dest = campusRoutes[data.campus] ?? `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
-        navigate(dest, { replace: true });
-      } else {
+
+      // Fallback: try admin password
+      const adminRes = await fetch("/api/auth/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: code }),
+      });
+      const adminData = await adminRes.json();
+      if (adminData.valid) {
+        setAdminSession();
         navigate("/team", { replace: true });
+        return;
       }
+
+      setError("Invalid code. Please try again.");
+      setDigits(["", "", "", ""]);
+      setTimeout(() => inputs.current[0]?.focus(), 50);
     } catch {
       setError("Connection error. Please try again.");
       setDigits(["", "", "", ""]);

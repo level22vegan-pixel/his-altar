@@ -9,9 +9,9 @@ import {
 const inputStyle = {
   padding: "9px 13px",
   borderRadius: 7,
-  border: "1px solid hsl(215 32% 24%)",
-  background: "hsl(215 22% 10%)",
-  color: "hsl(215 58% 86%)",
+  border: "1px solid hsl(215 30% 68%)",
+  background: "hsl(215 30% 97%)",
+  color: "hsl(215 55% 25%)",
   fontFamily: "Georgia, serif",
   fontSize: 13,
   outline: "none",
@@ -61,12 +61,12 @@ export default function DbancFieldsPage() {
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(215 15% 11%) 0%, hsl(215 10% 7%) 60%, hsl(220 12% 9%) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(215 28% 90%) 0%, hsl(215 22% 84%) 60%, hsl(220 20% 88%) 100%)" }}
     >
       <button
         onClick={() => navigate("/admin/dbanc")}
         className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(215 60% 80%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        style={{ color: "hsl(215 55% 32%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
       >
         ← Dbanc
       </button>
@@ -76,20 +76,20 @@ export default function DbancFieldsPage() {
           <h1 style={{
             fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 4vw, 2rem)",
             letterSpacing: "0.2em", textTransform: "uppercase",
-            background: "linear-gradient(135deg, hsl(210 90% 80%), hsl(225 80% 62%))",
+            background: "linear-gradient(135deg, hsl(215 70% 38%), hsl(225 65% 52%))",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
           }}>
             Custom Fields
           </h1>
-          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, hsl(215 70% 52%), hsl(225 80% 68%))", margin: "8px auto 0" }} />
-          <p style={{ color: "hsl(215 42% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
+          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, hsl(215 65% 45%), hsl(225 70% 58%))", margin: "8px auto 0" }} />
+          <p style={{ color: "hsl(215 42% 42%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
             Additional contact information fields
           </p>
         </div>
 
         {/* Add new field form */}
-        <div style={{ background: "hsl(215 20% 11% / 0.85)", border: "1px solid hsl(215 28% 20%)", borderRadius: 10, padding: 20, marginBottom: 24 }}>
-          <p style={{ color: "hsl(215 42% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 14 }}>Add New Field</p>
+        <div style={{ background: "hsl(215 25% 95% / 0.85)", border: "1px solid hsl(215 28% 72%)", borderRadius: 10, padding: 20, marginBottom: 24 }}>
+          <p style={{ color: "hsl(215 42% 42%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 14 }}>Add New Field</p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
@@ -140,9 +140,9 @@ export default function DbancFieldsPage() {
         </div>
 
         {/* Existing fields */}
-        <div style={{ borderRadius: 10, border: "1px solid hsl(215 28% 20%)", background: "hsl(215 20% 10% / 0.75)", overflow: "hidden" }}>
+        <div style={{ borderRadius: 10, border: "1px solid hsl(215 28% 72%)", background: "hsl(215 25% 95% / 0.85)", overflow: "hidden" }}>
           {fields.length === 0 ? (
-            <div style={{ padding: 36, textAlign: "center", color: "hsl(215 28% 38%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.1em" }}>
+            <div style={{ padding: 36, textAlign: "center", color: "hsl(215 30% 48%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.1em" }}>
               No custom fields yet
             </div>
           ) : (
@@ -153,13 +153,13 @@ export default function DbancFieldsPage() {
                   display: "flex",
                   alignItems: "center",
                   padding: "14px 18px",
-                  borderBottom: i < fields.length - 1 ? "1px solid hsl(215 25% 15%)" : "none",
+                  borderBottom: i < fields.length - 1 ? "1px solid hsl(215 28% 80%)" : "none",
                   gap: 12,
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: "hsl(215 62% 84%)", fontFamily: "Georgia, serif", fontSize: 14 }}>{f.label}</div>
-                  <div style={{ color: "hsl(215 38% 52%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
+                  <div style={{ color: "hsl(215 60% 28%)", fontFamily: "Georgia, serif", fontSize: 14 }}>{f.label}</div>
+                  <div style={{ color: "hsl(215 38% 46%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 2 }}>
                     {FIELD_TYPES.find(t => t.value === f.fieldType)?.label ?? f.fieldType}
                     {f.fieldType === "select" && (f.options as string[]).length > 0 && (
                       <span> · {(f.options as string[]).join(", ")}</span>
@@ -168,7 +168,7 @@ export default function DbancFieldsPage() {
                 </div>
                 <button
                   onClick={() => handleDelete(f.id, f.label)}
-                  style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 50% 18%)", border: "1px solid hsl(0 40% 28%)", color: "hsl(0 60% 65%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer" }}
+                  style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 55% 82%)", border: "1px solid hsl(0 45% 65%)", color: "hsl(0 65% 35%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer" }}
                 >
                   ✕
                 </button>

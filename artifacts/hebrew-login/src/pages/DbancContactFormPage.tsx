@@ -28,9 +28,9 @@ const inputStyle = {
   width: "100%",
   padding: "10px 14px",
   borderRadius: 8,
-  border: "1px solid hsl(215 32% 24%)",
-  background: "hsl(215 22% 10%)",
-  color: "hsl(215 58% 86%)",
+  border: "1px solid hsl(215 30% 68%)",
+  background: "hsl(215 30% 97%)",
+  color: "hsl(215 55% 25%)",
   fontFamily: "Georgia, serif",
   fontSize: 13,
   outline: "none",
@@ -39,7 +39,7 @@ const inputStyle = {
 
 const labelStyle = {
   display: "block" as const,
-  color: "hsl(215 42% 60%)",
+  color: "hsl(215 45% 38%)",
   fontFamily: "Georgia, serif",
   fontSize: 11,
   letterSpacing: "0.15em",
@@ -205,13 +205,13 @@ export default function DbancContactFormPage() {
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(215 15% 11%) 0%, hsl(215 10% 7%) 60%, hsl(220 12% 9%) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(215 28% 90%) 0%, hsl(215 22% 84%) 60%, hsl(220 20% 88%) 100%)" }}
     >
       {!isPublic && (
         <button
           onClick={() => navigate("/admin/dbanc")}
           className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-          style={{ color: "hsl(215 60% 80%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+          style={{ color: "hsl(215 55% 32%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
         >
           ← Dbanc
         </button>
@@ -222,13 +222,13 @@ export default function DbancContactFormPage() {
           <h1 style={{
             fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 4vw, 2rem)",
             letterSpacing: "0.2em", textTransform: "uppercase",
-            background: "linear-gradient(135deg, hsl(210 90% 80%), hsl(225 80% 62%))",
+            background: "linear-gradient(135deg, hsl(215 70% 38%), hsl(225 65% 52%))",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
           }}>
             {isEdit ? "Edit Contact" : "New Contact"}
           </h1>
-          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, hsl(215 70% 52%), hsl(225 80% 68%))", margin: "8px auto 0" }} />
-          <p style={{ color: "hsl(215 42% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
+          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, hsl(215 65% 45%), hsl(225 70% 58%))", margin: "8px auto 0" }} />
+          <p style={{ color: "hsl(215 42% 42%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", marginTop: 6, textTransform: "uppercase" }}>
             Prayer Contact Information
           </p>
         </div>
@@ -278,8 +278,8 @@ export default function DbancContactFormPage() {
               <label style={labelStyle}>Campus</label>
               {lockedCampus ? (
                 <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.8 }}>
-                  <span style={{ color: "hsl(215 65% 78%)" }}>{lockedCampus}</span>
-                  <span style={{ color: "hsl(215 32% 48%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>Locked</span>
+                  <span style={{ color: "hsl(215 60% 30%)" }}>{lockedCampus}</span>
+                  <span style={{ color: "hsl(215 35% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>Locked</span>
                 </div>
               ) : (
                 <select
@@ -301,7 +301,7 @@ export default function DbancContactFormPage() {
               style={{
                 ...inputStyle,
                 appearance: "none" as const,
-                borderColor: !form.serviceTime ? "hsl(215 55% 38%)" : "hsl(215 32% 24%)",
+                borderColor: !form.serviceTime ? "hsl(215 55% 50%)" : "hsl(215 30% 68%)",
               }}
               value={form.serviceTime}
               onChange={e => { setField("serviceTime", e.target.value); if (e.target.value) setField("serviceDate", serviceDateForTime(e.target.value)); }}
@@ -353,8 +353,8 @@ export default function DbancContactFormPage() {
             />
             {showSuggestions && filteredWorkers.length > 0 && (
               <div style={{
-                background: "hsl(215 22% 10%)",
-                border: "1px solid hsl(215 32% 24%)",
+                background: "hsl(215 30% 97%)",
+                border: "1px solid hsl(215 30% 68%)",
                 borderTop: "none",
                 borderRadius: "0 0 8px 8px",
                 maxHeight: 200,
@@ -372,10 +372,10 @@ export default function DbancContactFormPage() {
                     style={{
                       display: "block", width: "100%", textAlign: "left",
                       padding: "10px 14px", background: "none", border: "none",
-                      color: "hsl(215 58% 82%)", fontFamily: "Georgia, serif", fontSize: 13,
-                      cursor: "pointer", borderBottom: "1px solid hsl(215 28% 17%)",
+                      color: "hsl(215 55% 28%)", fontFamily: "Georgia, serif", fontSize: 13,
+                      cursor: "pointer", borderBottom: "1px solid hsl(215 28% 80%)",
                     }}
-                    onMouseOver={e => { e.currentTarget.style.background = "hsl(215 42% 18%)"; }}
+                    onMouseOver={e => { e.currentTarget.style.background = "hsl(215 40% 88%)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = "none"; }}
                   >
                     {name}
@@ -398,8 +398,8 @@ export default function DbancContactFormPage() {
 
           {/* Custom fields */}
           {customFields.length > 0 && (
-            <div style={{ borderTop: "1px solid hsl(215 28% 18%)", paddingTop: 18 }}>
-              <p style={{ ...labelStyle, marginBottom: 14, color: "hsl(215 38% 52%)" }}>Additional Information</p>
+            <div style={{ borderTop: "1px solid hsl(215 28% 72%)", paddingTop: 18 }}>
+              <p style={{ ...labelStyle, marginBottom: 14, color: "hsl(215 42% 42%)" }}>Additional Information</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {customFields.map(field => (
                   <div key={field.id}>
@@ -473,13 +473,13 @@ export default function DbancContactFormPage() {
                 flex: 1,
                 padding: "13px 0",
                 borderRadius: 10,
-                background: saving ? "hsl(215 22% 16%)" : "linear-gradient(135deg, hsl(215 65% 34%), hsl(215 60% 26%))",
-                color: "hsl(215 80% 92%)",
+                background: saving ? "hsl(215 30% 72%)" : "linear-gradient(135deg, hsl(215 60% 40%), hsl(215 55% 30%))",
+                color: "hsl(0 0% 100%)",
                 fontFamily: "Georgia, serif",
                 fontSize: 13,
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                border: "1px solid hsl(215 52% 42%)",
+                border: "1px solid hsl(215 50% 48%)",
                 cursor: saving ? "not-allowed" : "pointer",
               }}
             >

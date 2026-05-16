@@ -42,7 +42,7 @@ export default function TeamPage() {
       label: "Admin",
       sublabel: isAdmin ? "Admin panel" : "Admin login required",
       icon: "⚙",
-      href: isAdmin ? "/admin" : "/admin/login",
+      href: isAdmin ? "/admin" : "/unauthorized",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
       glow: "rgba(100,120,160,0.2)",
       border: "rgba(100,120,160,0.3)",

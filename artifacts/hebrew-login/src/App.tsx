@@ -40,12 +40,13 @@ import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
 import AboutPage from "@/pages/AboutPage";
+import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession, getValidCallerSession, getValidOrgSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/admin/login", "/about"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/admin/login", "/about", "/unauthorized"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -116,6 +117,7 @@ function Router() {
         <Route path="/staff" component={StaffLoginPage} />
         <Route path="/admin/login" component={AdminLoginPage} />
         <Route path="/about" component={AboutPage} />
+        <Route path="/unauthorized" component={UnauthorizedPage} />
         <Route path="/admin/profile" component={AdminProfilePage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />

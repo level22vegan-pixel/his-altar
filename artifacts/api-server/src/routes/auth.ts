@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, loginConfigTable, systemConfigTable } from "@workspace/db";
+import { db, loginConfigTable, systemConfigTable, organizationsTable } from "@workspace/db";
 import { VerifyLoginBody, UpdateLoginCodeBody } from "@workspace/api-zod";
 import { desc, eq } from "drizzle-orm";
 
@@ -56,7 +56,24 @@ router.post("/verify", async (req, res) => {
     const masterCode = rows[0]?.code ?? YESHUA_DEFAULT;
 
     if (seqEqual(submitted, masterCode)) {
-      res.json({ success: true, partial: false, role: "master", message: "Access granted" });
+      // Load org 1 (The Way World Outreach) data to include in the session
+      const orgRows = await db
+        .select({ id: organizationsTable.id, name: organizationsTable.name, token: organizationsTable.token, campuses: organizationsTable.campuses, serviceTimes: organizationsTable.serviceTimes })
+        .from(organizationsTable)
+        .where(eq(organizationsTable.id, 1))
+        .limit(1);
+      const org = orgRows[0];
+      res.json({
+        success: true,
+        partial: false,
+        role: "master",
+        message: "Access granted",
+        orgId: org?.id ?? 1,
+        orgName: org?.name ?? "The Way World Outreach",
+        orgToken: org?.token ?? null,
+        campuses: org?.campuses ?? [],
+        serviceTimes: org?.serviceTimes ?? {},
+      });
       return;
     }
 

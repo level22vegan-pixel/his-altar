@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useVerifyLogin } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
-import { setAdminSession, setCampusSession } from "@/lib/session";
+import { setAdminSession, setCampusSession, setOrgSession } from "@/lib/session";
 
 const ADMIN_HOLD_PASSWORD = "admin4680";
 
@@ -154,7 +154,12 @@ export default function LoginPage() {
             if (data.success) {
               setStatus("success");
               const role = data.role;
-              const campus = data.campus;
+              const campus = (data as { campus?: string }).campus;
+              // Always store org 1 session so campuses/service times come from DB
+              const d = data as { orgId?: number; orgName?: string; orgToken?: string; campuses?: string[]; serviceTimes?: Record<string, string[]> };
+              if (d.orgToken) {
+                setOrgSession(d.orgId ?? 1, d.orgName ?? "The Way World Outreach", d.orgToken, d.campuses ?? [], d.serviceTimes ?? {});
+              }
               if (campus) {
                 setCampusSession(campus, role ?? "lead");
               } else {

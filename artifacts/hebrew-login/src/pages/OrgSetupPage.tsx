@@ -245,25 +245,28 @@ function StepStaff({ onFinish }: { onFinish: () => void }) {
 // Step 4 — Service Days & Times
 function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
   const [campus, setCampus] = useState("");
-  const [timeInput, setTimeInput] = useState("");
-  // serviceTimes: campus → list of time strings
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   const [serviceTimes, setServiceTimes] = useState<Record<string, string[]>>({});
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const campusList = Object.keys(serviceTimes);
+  const combined = [selectedDay, selectedTime].filter(Boolean).join(" ");
 
   function addTime() {
     if (!campus.trim()) { setErr("Enter a campus name first"); return; }
-    if (!timeInput.trim()) { setErr("Enter a service time"); return; }
+    if (!combined.trim()) { setErr("Select a day and time"); return; }
     setErr("");
     const key = campus.trim();
-    setServiceTimes(prev => ({
-      ...prev,
-      [key]: [...(prev[key] ?? []), timeInput.trim()],
-    }));
-    setTimeInput("");
+    const entry = combined.trim();
+    setServiceTimes(prev => {
+      if ((prev[key] ?? []).includes(entry)) return prev;
+      return { ...prev, [key]: [...(prev[key] ?? []), entry] };
+    });
+    setSelectedDay("");
+    setSelectedTime("");
   }
 
   function removeTime(camp: string, idx: number) {
@@ -289,7 +292,6 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
         body: JSON.stringify({ serviceTimes }),
       });
       if (!res.ok) throw new Error();
-      // Refresh org session with updated service times
       const data = await res.json();
       const raw = localStorage.getItem("orgSession");
       if (raw) {
@@ -305,8 +307,12 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
     }
   }
 
-  const DAY_PRESETS = ["Sunday", "Wednesday", "Saturday", "Friday"];
-  const TIME_PRESETS = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "6:00 PM", "7:00 PM"];
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const TIMES = ["7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"];
+
+  const pillBase = "text-xs rounded-lg px-3 py-1.5 border transition cursor-pointer select-none";
+  const pillOff  = `${pillBase} bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500`;
+  const pillOn   = `${pillBase} bg-purple-700 border-purple-500 text-white`;
 
   return (
     <div>
@@ -314,8 +320,8 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
         Set the service times for each campus. These appear when checking in workers and logging prayer contacts.
       </p>
 
-      {/* Campus input */}
-      <div className="flex flex-col gap-3 mb-4">
+      <div className="flex flex-col gap-4 mb-4">
+        {/* Campus */}
         <div>
           <label className="text-neutral-500 text-xs mb-1.5 block">Campus</label>
           <input
@@ -326,37 +332,54 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
           />
         </div>
 
+        {/* Day picker */}
         <div>
-          <label className="text-neutral-500 text-xs mb-1.5 block">Service time</label>
-          <div className="flex gap-2">
-            <input
-              className={inputCls}
-              placeholder="e.g. Sunday 10:00 AM"
-              value={timeInput}
-              onChange={e => { setTimeInput(e.target.value); setErr(""); }}
-              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTime(); } }}
-            />
-            <button onClick={addTime} className={btnCls} style={{ flexShrink: 0 }}>+ Add</button>
-          </div>
-          {/* Quick-pick day + time */}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {DAY_PRESETS.map(d => (
-              <button key={d} onClick={() => setTimeInput(t => t ? t : d + " ")}
-                className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 rounded px-2 py-1 transition">
+          <label className="text-neutral-500 text-xs mb-2 block">Day</label>
+          <div className="flex flex-wrap gap-1.5">
+            {DAYS.map(d => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => { setSelectedDay(prev => prev === d ? "" : d); setErr(""); }}
+                className={selectedDay === d ? pillOn : pillOff}
+              >
                 {d}
               </button>
             ))}
-            {TIME_PRESETS.map(t => (
-              <button key={t} onClick={() => setTimeInput(prev => {
-                const parts = prev.trim().split(" ");
-                const hasDay = DAY_PRESETS.some(d => prev.startsWith(d));
-                return hasDay ? parts.slice(0, -0).join(" ").replace(/\s+\d.*$/, "") + " " + t : t;
-              })}
-                className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 rounded px-2 py-1 transition">
+          </div>
+        </div>
+
+        {/* Time picker */}
+        <div>
+          <label className="text-neutral-500 text-xs mb-2 block">Time</label>
+          <div className="flex flex-wrap gap-1.5">
+            {TIMES.map(t => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => { setSelectedTime(prev => prev === t ? "" : t); setErr(""); }}
+                className={selectedTime === t ? pillOn : pillOff}
+              >
                 {t}
               </button>
             ))}
           </div>
+          <input
+            className={`${inputCls} mt-2`}
+            placeholder="Or type a custom time…"
+            value={selectedTime}
+            onChange={e => { setSelectedTime(e.target.value); setErr(""); }}
+          />
+        </div>
+
+        {/* Preview + add */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 rounded-lg px-4 py-2.5 border border-neutral-700 bg-neutral-900/50 text-sm text-neutral-300 min-h-[42px]">
+            {combined || <span className="text-neutral-600">Select a day and time above</span>}
+          </div>
+          <button type="button" onClick={addTime} className={btnCls} style={{ flexShrink: 0 }}>
+            + Add
+          </button>
         </div>
 
         {err && <p className="text-red-400 text-xs">{err}</p>}

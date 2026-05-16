@@ -16,6 +16,8 @@ export const organizationsTable = pgTable("organizations", {
   billingStatus: text("billing_status").notNull().default("active"),
   billingNotes: text("billing_notes"),
   suspended: boolean("suspended").notNull().default(false),
+  trialEndsAt: timestamp("trial_ends_at"),
+  stripeCustomerId: text("stripe_customer_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastActiveAt: timestamp("last_active_at"),
 });

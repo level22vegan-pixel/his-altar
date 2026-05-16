@@ -102,7 +102,25 @@ export default function OrgDashboardPage() {
           ))}
         </div>
 
-        <div className="mt-10 p-4 bg-neutral-900 border border-neutral-800 rounded-xl text-center">
+        <div className="mt-8">
+          <button
+            onClick={() => navigate("/org/billing")}
+            className="w-full flex items-center justify-between bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-purple-700/50 rounded-xl px-5 py-4 text-left transition group"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">💳</span>
+              <div>
+                <p className="font-semibold text-white group-hover:text-purple-300 transition text-sm">
+                  Billing &amp; Subscription
+                </p>
+                <p className="text-neutral-500 text-xs mt-0.5">Manage your plan and payment</p>
+              </div>
+            </div>
+            <span className="text-neutral-600 group-hover:text-purple-400 text-sm transition">→</span>
+          </button>
+        </div>
+
+        <div className="mt-4 p-4 bg-neutral-900 border border-neutral-800 rounded-xl text-center">
           <p className="text-neutral-500 text-sm">
             Need help?{" "}
             <a

@@ -18,6 +18,7 @@ import { pxpCallLogsRouter } from "./pxpCallLogs";
 import { pxpCallersRouter } from "./pxpCallers";
 import { orgsRouter } from "./orgs";
 import { superadminRouter } from "./superadmin";
+import { stripeRouter } from "./stripe";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use("/pxp/call-logs", pxpCallLogsRouter);
 router.use("/pxp/callers", pxpCallersRouter);
 router.use("/orgs", orgsRouter);
 router.use("/superadmin", superadminRouter);
+router.use("/stripe", stripeRouter);
 
 export default router;

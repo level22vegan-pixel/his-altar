@@ -42,6 +42,8 @@ router.post("/signup", async (req, res) => {
     const token = randomUUID();
     const passwordHash = hashPassword(password);
 
+    const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
     const [org] = await db
       .insert(organizationsTable)
       .values({
@@ -50,6 +52,7 @@ router.post("/signup", async (req, res) => {
         passwordHash,
         contactName: contactName?.trim() || null,
         token,
+        trialEndsAt,
       })
       .returning({ id: organizationsTable.id, name: organizationsTable.name });
 

@@ -35,6 +35,7 @@ import OrgLoginPage from "@/pages/OrgLoginPage";
 import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
+import OrgBillingPage from "@/pages/OrgBillingPage";
 import AboutPage from "@/pages/AboutPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import SuperAdminLoginPage from "@/pages/SuperAdminLoginPage";
@@ -82,8 +83,8 @@ function SessionGuard() {
         return;
       }
 
-      // Org dashboard / setup — org session or admin
-      if (location.startsWith("/org/dashboard") || location.startsWith("/org/setup")) {
+      // Org dashboard / setup / billing — org session or admin
+      if (location.startsWith("/org/dashboard") || location.startsWith("/org/setup") || location.startsWith("/org/billing")) {
         if (!isAdmin && !org) { navigate("/org/login"); return; }
         return;
       }
@@ -142,6 +143,7 @@ function Router() {
 
         <Route path="/org/signup" component={OrgSignupPage} />
         <Route path="/org/dashboard" component={OrgDashboardPage} />
+        <Route path="/org/billing" component={OrgBillingPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
         <Route path="/superadmin/login" component={SuperAdminLoginPage} />

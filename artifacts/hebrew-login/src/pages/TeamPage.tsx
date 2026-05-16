@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { getValidOrgSession, clearOrgSession } from "@/lib/session";
+import { getValidOrgSession, clearOrgSession, getValidCampusSession, setCampusSession } from "@/lib/session";
 
 const BUBBLES = [
   {
@@ -36,10 +36,14 @@ const BUBBLES = [
 
 export default function TeamPage() {
   const [, navigate] = useLocation();
-  const session = getValidOrgSession();
+  const orgSession = getValidOrgSession();
+  const campusSession = getValidCampusSession();
+  const displayName = orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar");
 
   function handleLogout() {
     clearOrgSession();
+    if (campusSession) setCampusSession("", "");
+    localStorage.removeItem("campusSession");
     navigate("/");
   }
 
@@ -68,7 +72,7 @@ export default function TeamPage() {
             letterSpacing: "0.04em",
             margin: 0,
           }}>
-            {session?.orgName ?? "His Altar"}
+            {displayName}
           </p>
           <p style={{
             color: "rgba(255,255,255,0.3)",

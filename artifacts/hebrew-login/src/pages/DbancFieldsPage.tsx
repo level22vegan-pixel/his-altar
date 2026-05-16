@@ -65,8 +65,19 @@ export default function DbancFieldsPage() {
     >
       <button
         onClick={() => navigate("/admin/dbanc")}
-        className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(215 55% 32%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        className="absolute top-5 left-6 z-20"
+        style={{
+          color: "hsl(215 65% 36%)",
+          fontFamily: "Georgia, serif",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          background: "hsl(215 40% 88%)",
+          border: "1px solid hsl(215 38% 70%)",
+          borderRadius: 6,
+          padding: "5px 12px",
+          cursor: "pointer",
+        }}
       >
         ← Dbanc
       </button>

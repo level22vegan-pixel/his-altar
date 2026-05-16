@@ -139,6 +139,15 @@ function StepCallers({ onNext }: { onNext: () => void }) {
       <p className="text-neutral-400 text-sm mb-5">
         Add people who will make prayer follow-up calls. They'll show up in the PXP caller list.
       </p>
+
+      {/* Tip for admin-as-caller */}
+      <div className="flex items-start gap-3 bg-purple-950/40 border border-purple-800/40 rounded-xl px-4 py-3 mb-5">
+        <span className="text-purple-400 text-base mt-0.5 shrink-0">💡</span>
+        <p className="text-purple-300/80 text-xs leading-relaxed">
+          <span className="font-semibold text-purple-200">Will you be making calls too?</span> Add yourself here — the app logs every call with the caller's name, so you'll want your own entry to appear in the history.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-3 mb-4">
         <input className={inputCls} placeholder="Caller name" value={name} onChange={e => { setName(e.target.value); setErr(""); }} />
         {err && <p className="text-red-400 text-xs">{err}</p>}

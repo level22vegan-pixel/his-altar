@@ -169,7 +169,7 @@ export default function AdminPage() {
               <span>Roster Manager</span>
               <span style={{ opacity: 0.5 }}>→</span>
             </button>
-            {!isCampusUser && (
+            {(!isCampusUser || isLead) && (
               <button
                 onClick={() => navigate("/admin/service-times")}
                 className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
@@ -198,7 +198,7 @@ export default function AdminPage() {
                 <span style={{ opacity: 0.45 }}>→</span>
               </button>
               <div style={{ display: "flex", borderTop: "1px solid hsl(215 30% 18%)" }}>
-                {!isCampusUser && (
+                {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/dbanc/fields")}
                     style={{ flex: 1, padding: "7px 10px", background: "hsl(215 35% 11%)", border: "none", borderRight: "1px solid hsl(215 30% 18%)", color: "hsl(215 50% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
@@ -208,7 +208,7 @@ export default function AdminPage() {
                     Custom Fields
                   </button>
                 )}
-                {!isCampusUser && (
+                {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/activity-log/dbanc")}
                     style={{ flex: 1, padding: "7px 10px", background: "hsl(215 35% 11%)", border: "none", color: "hsl(215 50% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
@@ -231,8 +231,8 @@ export default function AdminPage() {
                 <span style={{ opacity: 0.45 }}>→</span>
               </button>
               <div style={{ display: "flex", borderTop: "1px solid hsl(270 20% 14%)" }}>
-                {/* Script editor — master admin only */}
-                {!isCampusUser && (
+                {/* Script editor — lead or master admin */}
+                {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/pxp/script")}
                     style={{ flex: 1, padding: "7px 10px", background: "hsl(270 10% 5%)", border: "none", borderRight: "1px solid hsl(270 20% 14%)", color: "hsl(270 45% 58%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
@@ -258,8 +258,8 @@ export default function AdminPage() {
                 >
                   History
                 </button>
-                {/* Activity Log — master admin only */}
-                {!isCampusUser && (
+                {/* Activity Log — lead or master admin */}
+                {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/activity-log/pxp")}
                     style={{ flex: 1, padding: "7px 10px", background: "hsl(270 10% 5%)", border: "none", color: "hsl(270 45% 58%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}

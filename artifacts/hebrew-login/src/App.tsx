@@ -59,21 +59,24 @@ function SessionGuard() {
       const caller  = getValidCallerSession();
       const org     = getValidOrgSession();
 
-      // PXP call routes — caller or admin only
+      // Lead role has full admin-level access (downward permission model)
+      const isLeadOrAdmin = isAdmin || campus?.role === "lead";
+
+      // PXP routes — lead/admin or caller
       if (location.startsWith("/admin/pxp")) {
-        if (!isAdmin && !caller) { navigate("/caller-login"); return; }
+        if (!isLeadOrAdmin && !caller) { navigate("/caller-login"); return; }
         return;
       }
 
-      // Dbanc contact form — campus staff or admin (for adding altar contacts)
+      // Dbanc contact form — any campus staff or admin (for adding altar contacts)
       if (location === "/admin/dbanc/new" || location.startsWith("/admin/dbanc/contacts/")) {
         if (!isAdmin && !campus) { navigate("/enter"); return; }
         return;
       }
 
-      // All other /admin/* routes — admin only
+      // All other /admin/* routes — lead role or admin
       if (location.startsWith("/admin")) {
-        if (!isAdmin) { navigate("/admin/login"); return; }
+        if (!isLeadOrAdmin) { navigate("/admin/login"); return; }
         return;
       }
 

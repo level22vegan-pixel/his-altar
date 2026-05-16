@@ -416,6 +416,98 @@ function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
   );
 }
 
+// Step 5 — Access Code (PIN)
+function StepAccessCode({ onFinish }: { onFinish: () => void }) {
+  const [digits, setDigits] = useState(["", "", "", ""]);
+  const [confirm, setConfirm] = useState(["", "", "", ""]);
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const mainRefs = [0,1,2,3].map(() => ({ current: null as HTMLInputElement | null }));
+  const confRefs = [0,1,2,3].map(() => ({ current: null as HTMLInputElement | null }));
+
+  function handleDigit(arr: string[], set: (v: string[]) => void, refs: typeof mainRefs, i: number, val: string) {
+    const c = val.replace(/\D/g, "").slice(-1);
+    const next = [...arr]; next[i] = c; set(next); setErr("");
+    if (c && i < 3) refs[i + 1].current?.focus();
+  }
+  function handleKey(arr: string[], set: (v: string[]) => void, refs: typeof mainRefs, i: number, e: React.KeyboardEvent) {
+    if (e.key === "Backspace" && !arr[i] && i > 0) { refs[i - 1].current?.focus(); }
+  }
+
+  async function handleSave() {
+    const pin = digits.join("");
+    const conf = confirm.join("");
+    if (pin.length < 4) { setErr("Enter all 4 digits"); return; }
+    if (pin !== conf) { setErr("Codes don't match — try again"); return; }
+    setSaving(true); setErr("");
+    try {
+      const token = getToken();
+      const res = await fetch("/api/orgs/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ pin }),
+      });
+      if (!res.ok) throw new Error((await res.json()).message ?? "Failed");
+      setSaved(true);
+      setTimeout(onFinish, 700);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Failed to save — try again");
+    } finally { setSaving(false); }
+  }
+
+  const boxCls = "w-14 h-16 rounded-xl border text-center text-2xl font-light outline-none transition-all duration-150 bg-neutral-900 text-white caret-transparent";
+  const boxOff = `${boxCls} border-neutral-700`;
+  const boxOn  = `${boxCls} border-purple-500 bg-purple-950/30`;
+
+  return (
+    <div>
+      <p className="text-neutral-400 text-sm mb-6">
+        Create a 4-digit access code for your church. Staff can use this to quickly sign in from the PIN entry screen.
+      </p>
+
+      <div className="flex flex-col gap-6">
+        <div>
+          <p className="text-neutral-500 text-xs mb-3">Choose a 4-digit code</p>
+          <div className="flex gap-3 justify-center">
+            {digits.map((d, i) => (
+              <input key={i} ref={el => { mainRefs[i].current = el; }} type="text" inputMode="numeric"
+                maxLength={1} value={d}
+                onChange={e => handleDigit(digits, setDigits, mainRefs, i, e.target.value)}
+                onKeyDown={e => handleKey(digits, setDigits, mainRefs, i, e)}
+                className={d ? boxOn : boxOff} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-neutral-500 text-xs mb-3">Confirm your code</p>
+          <div className="flex gap-3 justify-center">
+            {confirm.map((d, i) => (
+              <input key={i} ref={el => { confRefs[i].current = el; }} type="text" inputMode="numeric"
+                maxLength={1} value={d}
+                onChange={e => handleDigit(confirm, setConfirm, confRefs, i, e.target.value)}
+                onKeyDown={e => handleKey(confirm, setConfirm, confRefs, i, e)}
+                className={d ? boxOn : boxOff} />
+            ))}
+          </div>
+        </div>
+
+        {err && <p className="text-red-400 text-xs text-center">{err}</p>}
+      </div>
+
+      <div className="flex items-center justify-between mt-8 pt-4 border-t border-neutral-800">
+        <button onClick={onFinish} className="text-neutral-500 hover:text-neutral-300 text-sm transition">
+          Skip for now →
+        </button>
+        <button onClick={handleSave} disabled={saving || saved} className={btnCls}>
+          {saved ? "Saved ✓" : saving ? "Saving…" : "Finish Setup →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── main wizard ────────────────────────────────────────────────────────────────
 
 const STEPS = [
@@ -423,6 +515,7 @@ const STEPS = [
   { label: "Follow-up Callers", shortLabel: "Callers" },
   { label: "Staff Access", shortLabel: "Staff" },
   { label: "Service Times", shortLabel: "Services" },
+  { label: "Access Code", shortLabel: "PIN" },
 ];
 
 export default function OrgSetupPage() {
@@ -488,6 +581,7 @@ export default function OrgSetupPage() {
             {step === 1 && "Add Follow-up Callers"}
             {step === 2 && "Set Staff Access"}
             {step === 3 && "Service Days & Times"}
+            {step === 4 && "Church Access Code"}
           </h2>
           <p className="text-neutral-600 text-xs mb-6">
             Step {step + 1} of {STEPS.length}
@@ -496,7 +590,8 @@ export default function OrgSetupPage() {
           {step === 0 && <StepAltarMembers onNext={nextStep} />}
           {step === 1 && <StepCallers onNext={nextStep} />}
           {step === 2 && <StepStaff onFinish={nextStep} />}
-          {step === 3 && <StepServiceTimes onFinish={finish} />}
+          {step === 3 && <StepServiceTimes onFinish={nextStep} />}
+          {step === 4 && <StepAccessCode onFinish={finish} />}
         </div>
 
         <p className="text-center text-neutral-700 text-xs mt-6">

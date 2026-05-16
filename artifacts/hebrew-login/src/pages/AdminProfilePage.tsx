@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 
 const BASE = "/api";
@@ -85,6 +85,50 @@ export default function AdminProfilePage() {
   const [confirm, setConfirm] = useState("");
   const [pwMsg, setPwMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [pwLoading, setPwLoading] = useState(false);
+
+  const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
+  const [pinConfirm, setPinConfirm] = useState(["", "", "", ""]);
+  const [pinMsg, setPinMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [pinLoading, setPinLoading] = useState(false);
+  const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const pinConfRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  function handlePinDigit(
+    arr: string[], set: (v: string[]) => void,
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+    i: number, val: string
+  ) {
+    const c = val.replace(/\D/g, "").slice(-1);
+    const next = [...arr]; next[i] = c; set(next); setPinMsg(null);
+    if (c && i < 3) refs.current[i + 1]?.focus();
+  }
+  function handlePinKey(
+    arr: string[],
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+    i: number, e: React.KeyboardEvent
+  ) {
+    if (e.key === "Backspace" && !arr[i] && i > 0) refs.current[i - 1]?.focus();
+  }
+
+  async function handleSavePin() {
+    const pin = pinDigits.join("");
+    const conf = pinConfirm.join("");
+    if (pin.length < 4) { setPinMsg({ text: "Enter all 4 digits", ok: false }); return; }
+    if (pin !== conf) { setPinMsg({ text: "Codes don't match — try again", ok: false }); return; }
+    setPinLoading(true); setPinMsg(null);
+    try {
+      const res = await apiFetch("/orgs/settings", {
+        method: "PUT",
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message ?? "Failed");
+      setPinMsg({ text: "Access code updated", ok: true });
+      setPinDigits(["", "", "", ""]); setPinConfirm(["", "", "", ""]);
+    } catch (e: unknown) {
+      setPinMsg({ text: e instanceof Error ? e.message : "Something went wrong", ok: false });
+    } finally { setPinLoading(false); }
+  }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -202,6 +246,69 @@ export default function AdminProfilePage() {
               {pwLoading ? "Saving..." : "Update Password"}
             </button>
           </form>
+        </Section>
+
+        {/* Church Access Code */}
+        <Section title="Church Access Code">
+          <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 35% 48%)", margin: "0 0 14px", letterSpacing: "0.03em" }}>
+            Update the 4-digit PIN your staff use to sign in from the access code screen.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 42%)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>New code</p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                {pinDigits.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={el => { pinRefs.current[i] = el; }}
+                    type="text" inputMode="numeric" maxLength={1} value={d}
+                    onChange={e => handlePinDigit(pinDigits, setPinDigits, pinRefs, i, e.target.value)}
+                    onKeyDown={e => handlePinKey(pinDigits, pinRefs, i, e)}
+                    style={{
+                      width: 52, height: 60,
+                      background: d ? "hsl(270 40% 14%)" : "hsl(35 18% 10%)",
+                      border: `1.5px solid ${d ? "hsl(270 55% 50%)" : "hsl(38 20% 22%)"}`,
+                      borderRadius: 8, color: "hsl(38 55% 78%)",
+                      fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 400,
+                      textAlign: "center", outline: "none", caretColor: "transparent",
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 42%)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Confirm code</p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                {pinConfirm.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={el => { pinConfRefs.current[i] = el; }}
+                    type="text" inputMode="numeric" maxLength={1} value={d}
+                    onChange={e => handlePinDigit(pinConfirm, setPinConfirm, pinConfRefs, i, e.target.value)}
+                    onKeyDown={e => handlePinKey(pinConfirm, pinConfRefs, i, e)}
+                    style={{
+                      width: 52, height: 60,
+                      background: d ? "hsl(270 40% 14%)" : "hsl(35 18% 10%)",
+                      border: `1.5px solid ${d ? "hsl(270 55% 50%)" : "hsl(38 20% 22%)"}`,
+                      borderRadius: 8, color: "hsl(38 55% 78%)",
+                      fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 400,
+                      textAlign: "center", outline: "none", caretColor: "transparent",
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            {pinMsg && (
+              <p style={{ fontFamily: "Georgia, serif", fontSize: 11, textAlign: "center", color: pinMsg.ok ? "hsl(120 40% 55%)" : "hsl(0 60% 58%)", margin: 0 }}>
+                {pinMsg.text}
+              </p>
+            )}
+            <button onClick={handleSavePin} disabled={pinLoading} style={btnStyle({ opacity: pinLoading ? 0.6 : 1 })}>
+              {pinLoading ? "Saving..." : "Update Access Code"}
+            </button>
+          </div>
         </Section>
 
         {/* Billing */}

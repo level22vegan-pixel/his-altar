@@ -222,13 +222,21 @@ router.put("/settings", async (req, res) => {
       res.status(401).json({ message: "Invalid token" });
       return;
     }
-    const { campuses, serviceTimes } = req.body as {
+    const { campuses, serviceTimes, pin } = req.body as {
       campuses?: string[];
       serviceTimes?: Record<string, string[]>;
+      pin?: string;
     };
     const updates: Partial<typeof organizationsTable.$inferInsert> = {};
     if (Array.isArray(campuses)) updates.campuses = campuses;
     if (serviceTimes && typeof serviceTimes === "object") updates.serviceTimes = serviceTimes;
+    if (pin !== undefined) {
+      if (pin !== "" && !/^\d{4}$/.test(pin)) {
+        res.status(400).json({ message: "PIN must be exactly 4 digits" });
+        return;
+      }
+      updates.pin = pin === "" ? null : pin;
+    }
     if (Object.keys(updates).length === 0) {
       res.status(400).json({ message: "Nothing to update" });
       return;

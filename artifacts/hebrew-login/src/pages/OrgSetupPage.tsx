@@ -242,12 +242,164 @@ function StepStaff({ onFinish }: { onFinish: () => void }) {
   );
 }
 
+// Step 4 — Service Days & Times
+function StepServiceTimes({ onFinish }: { onFinish: () => void }) {
+  const [campus, setCampus] = useState("");
+  const [timeInput, setTimeInput] = useState("");
+  // serviceTimes: campus → list of time strings
+  const [serviceTimes, setServiceTimes] = useState<Record<string, string[]>>({});
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const campusList = Object.keys(serviceTimes);
+
+  function addTime() {
+    if (!campus.trim()) { setErr("Enter a campus name first"); return; }
+    if (!timeInput.trim()) { setErr("Enter a service time"); return; }
+    setErr("");
+    const key = campus.trim();
+    setServiceTimes(prev => ({
+      ...prev,
+      [key]: [...(prev[key] ?? []), timeInput.trim()],
+    }));
+    setTimeInput("");
+  }
+
+  function removeTime(camp: string, idx: number) {
+    setServiceTimes(prev => {
+      const updated = { ...prev, [camp]: prev[camp].filter((_, i) => i !== idx) };
+      if (updated[camp].length === 0) delete updated[camp];
+      return updated;
+    });
+  }
+
+  async function handleSave() {
+    if (Object.keys(serviceTimes).length === 0) { onFinish(); return; }
+    setSaving(true);
+    setErr("");
+    try {
+      const token = getToken();
+      const res = await fetch("/api/orgs/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ serviceTimes }),
+      });
+      if (!res.ok) throw new Error();
+      // Refresh org session with updated service times
+      const data = await res.json();
+      const raw = localStorage.getItem("orgSession");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        localStorage.setItem("orgSession", JSON.stringify({ ...parsed, serviceTimes: data.serviceTimes, campuses: data.campuses ?? parsed.campuses }));
+      }
+      setSaved(true);
+      setTimeout(onFinish, 800);
+    } catch {
+      setErr("Failed to save — try again");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const DAY_PRESETS = ["Sunday", "Wednesday", "Saturday", "Friday"];
+  const TIME_PRESETS = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "6:00 PM", "7:00 PM"];
+
+  return (
+    <div>
+      <p className="text-neutral-400 text-sm mb-5">
+        Set the service times for each campus. These appear when checking in workers and logging prayer contacts.
+      </p>
+
+      {/* Campus input */}
+      <div className="flex flex-col gap-3 mb-4">
+        <div>
+          <label className="text-neutral-500 text-xs mb-1.5 block">Campus</label>
+          <input
+            className={inputCls}
+            placeholder="Campus name (e.g. Main, North)"
+            value={campus}
+            onChange={e => { setCampus(e.target.value); setErr(""); }}
+          />
+        </div>
+
+        <div>
+          <label className="text-neutral-500 text-xs mb-1.5 block">Service time</label>
+          <div className="flex gap-2">
+            <input
+              className={inputCls}
+              placeholder="e.g. Sunday 10:00 AM"
+              value={timeInput}
+              onChange={e => { setTimeInput(e.target.value); setErr(""); }}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTime(); } }}
+            />
+            <button onClick={addTime} className={btnCls} style={{ flexShrink: 0 }}>+ Add</button>
+          </div>
+          {/* Quick-pick day + time */}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {DAY_PRESETS.map(d => (
+              <button key={d} onClick={() => setTimeInput(t => t ? t : d + " ")}
+                className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 rounded px-2 py-1 transition">
+                {d}
+              </button>
+            ))}
+            {TIME_PRESETS.map(t => (
+              <button key={t} onClick={() => setTimeInput(prev => {
+                const parts = prev.trim().split(" ");
+                const hasDay = DAY_PRESETS.some(d => prev.startsWith(d));
+                return hasDay ? parts.slice(0, -0).join(" ").replace(/\s+\d.*$/, "") + " " + t : t;
+              })}
+                className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 rounded px-2 py-1 transition">
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {err && <p className="text-red-400 text-xs">{err}</p>}
+      </div>
+
+      {/* Added service times grouped by campus */}
+      {campusList.length > 0 && (
+        <div className="mb-5 flex flex-col gap-3">
+          {campusList.map(camp => (
+            <div key={camp} className="bg-neutral-800/60 border border-neutral-700 rounded-lg px-4 py-3">
+              <p className="text-neutral-300 text-sm font-medium mb-2">{camp}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {serviceTimes[camp].map((t, i) => (
+                  <div key={i} className="flex items-center gap-1.5 bg-neutral-700 rounded px-2.5 py-1 text-xs text-neutral-200">
+                    <span>{t}</span>
+                    <button onClick={() => removeTime(camp, i)} className="text-neutral-500 hover:text-red-400 transition text-xs leading-none">✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mt-6 pt-4 border-t border-neutral-800">
+        <button onClick={onFinish} className="text-neutral-500 hover:text-neutral-300 text-sm transition">
+          Skip for now →
+        </button>
+        <button onClick={handleSave} disabled={saving || saved} className={btnCls}>
+          {saved ? "Saved ✓" : saving ? "Saving…" : "Finish Setup →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── main wizard ────────────────────────────────────────────────────────────────
 
 const STEPS = [
   { label: "Altar Members", shortLabel: "Members" },
   { label: "Follow-up Callers", shortLabel: "Callers" },
   { label: "Staff Access", shortLabel: "Staff" },
+  { label: "Service Times", shortLabel: "Services" },
 ];
 
 export default function OrgSetupPage() {
@@ -312,6 +464,7 @@ export default function OrgSetupPage() {
             {step === 0 && "Add Altar Members"}
             {step === 1 && "Add Follow-up Callers"}
             {step === 2 && "Set Staff Access"}
+            {step === 3 && "Service Days & Times"}
           </h2>
           <p className="text-neutral-600 text-xs mb-6">
             Step {step + 1} of {STEPS.length}
@@ -319,7 +472,8 @@ export default function OrgSetupPage() {
 
           {step === 0 && <StepAltarMembers onNext={nextStep} />}
           {step === 1 && <StepCallers onNext={nextStep} />}
-          {step === 2 && <StepStaff onFinish={finish} />}
+          {step === 2 && <StepStaff onFinish={nextStep} />}
+          {step === 3 && <StepServiceTimes onFinish={finish} />}
         </div>
 
         <p className="text-center text-neutral-700 text-xs mt-6">

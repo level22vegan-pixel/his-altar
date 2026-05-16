@@ -205,4 +205,44 @@ router.post("/:id/messages", async (req, res) => {
   }
 });
 
+// PUT /api/orgs/settings — update campuses and service times for the authenticated org
+router.put("/settings", async (req, res) => {
+  const token = (req.headers.authorization ?? "").replace("Bearer ", "").trim();
+  if (!token) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+  try {
+    const [org] = await db
+      .select()
+      .from(organizationsTable)
+      .where(eq(organizationsTable.token, token))
+      .limit(1);
+    if (!org) {
+      res.status(401).json({ message: "Invalid token" });
+      return;
+    }
+    const { campuses, serviceTimes } = req.body as {
+      campuses?: string[];
+      serviceTimes?: Record<string, string[]>;
+    };
+    const updates: Partial<typeof organizationsTable.$inferInsert> = {};
+    if (Array.isArray(campuses)) updates.campuses = campuses;
+    if (serviceTimes && typeof serviceTimes === "object") updates.serviceTimes = serviceTimes;
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ message: "Nothing to update" });
+      return;
+    }
+    const [updated] = await db
+      .update(organizationsTable)
+      .set(updates)
+      .where(eq(organizationsTable.id, org.id))
+      .returning();
+    res.json({ campuses: updated.campuses, serviceTimes: updated.serviceTimes });
+  } catch (err) {
+    req.log.error({ err }, "Error updating org settings");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export { router as orgsRouter };

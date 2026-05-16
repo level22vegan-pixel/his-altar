@@ -55,7 +55,16 @@ export default function PinEntryPage() {
         return;
       }
       setCampusSession(data.campus, "campus");
-      navigate("/home");
+      const campusRoutes: Record<string, string> = {
+        HALLMARK: "/campus/hallmark",
+        ARROWHEAD: "/campus/arrowhead",
+        RIVERSIDE: "/campus/riverside",
+        POMONA: "/campus/pomona",
+        LA: "/campus/la",
+        ARIZONA: "/campus/arizona",
+      };
+      const dest = campusRoutes[data.campus] ?? `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
+      navigate(dest);
     } catch {
       setError("Connection error. Please try again.");
       setDigits(["", "", "", ""]);

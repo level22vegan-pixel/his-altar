@@ -88,11 +88,44 @@ export default function OrgSignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-2xl font-semibold text-white">Join the Platform</h1>
           <p className="text-neutral-400 text-sm mt-1">
             Create an account for your church
           </p>
+        </div>
+
+        {/* Plan offer card */}
+        <div className="bg-gradient-to-br from-purple-950/60 to-neutral-900 border border-purple-700/40 rounded-2xl px-5 py-5 mb-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-semibold text-purple-400 uppercase tracking-widest mb-1">His Altar Monthly</p>
+              <p className="text-2xl font-bold text-white">
+                $9.99<span className="text-base font-normal text-neutral-400"> / month</span>
+              </p>
+              <p className="text-green-400 text-sm font-medium mt-1">30-day free trial — no card required today</p>
+            </div>
+            <span className="bg-green-900/50 border border-green-700/40 text-green-400 text-xs font-semibold rounded-full px-3 py-1 mt-1 shrink-0">
+              Free Trial
+            </span>
+          </div>
+          <ul className="mt-4 space-y-1.5">
+            {[
+              "Altar Report — log & export responses",
+              "Roster & Check-in management",
+              "Dbanc — prayer contact database",
+              "PXP — prayer follow-up call system",
+              "Multi-campus support",
+            ].map((feature) => (
+              <li key={feature} className="flex items-center gap-2 text-neutral-300 text-xs">
+                <svg className="w-3.5 h-3.5 text-purple-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <p className="text-neutral-600 text-xs mt-3">Cancel anytime. No commitment.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

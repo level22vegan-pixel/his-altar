@@ -162,7 +162,7 @@ export default function OrgSignupPage() {
 
         <p className="mt-6 text-center text-neutral-500 text-sm">
           Already have an account?{" "}
-          <a href="/org/login" className="text-purple-400 hover:text-purple-300 transition">
+          <a href="/" className="text-purple-400 hover:text-purple-300 transition">
             Sign in
           </a>
         </p>

@@ -187,7 +187,6 @@ export interface CampusPasswordEntry {
   campus: string;
   role: string;
   hasPassword: boolean;
-  sequence?: number[];
 }
 
 export interface CampusPasswordList {
@@ -197,8 +196,8 @@ export interface CampusPasswordList {
 export interface SetCampusPasswordBody {
   campus: string;
   role: string;
-  /** Hebrew letter number sequence */
-  sequence: number[];
+  /** Plain text password (letters, numbers, symbols) */
+  password: string;
 }
 
 export interface VerifyCampusPasswordBody {
@@ -211,7 +210,6 @@ export interface PasswordHistoryEntry {
   id: number;
   campus: string;
   role: string;
-  sequence: number[];
   changedAt: string;
 }
 
@@ -233,6 +231,8 @@ export interface SetTeamPresetBody {
 
 export interface VerifyCampusPasswordResponse {
   valid: boolean;
+  campus?: string;
+  role?: string;
 }
 
 export interface ActivityLog {

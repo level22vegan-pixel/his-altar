@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { db, loginConfigTable, campusPasswordsTable } from "@workspace/db";
+import { db, loginConfigTable } from "@workspace/db";
 import { VerifyLoginBody, UpdateLoginCodeBody } from "@workspace/api-zod";
-import { eq, desc } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 
 const router = Router();
 
@@ -52,41 +52,11 @@ router.post("/verify", async (req, res) => {
       return;
     }
 
-    // --- Check campus codes ---
-    const campusRows = await db.select().from(campusPasswordsTable);
-    for (const row of campusRows) {
-      let seq: number[];
-      try {
-        seq = JSON.parse(row.password);
-      } catch {
-        continue;
-      }
-      if (!Array.isArray(seq)) continue;
-      if (seqEqual(submitted, seq)) {
-        res.json({ success: true, partial: false, role: row.role, campus: row.campus, message: "Access granted" });
-        return;
-      }
-    }
-
-    // --- Check partial: prefix of master OR any campus code ---
+    // --- Check partial: prefix of master ---
     const isMasterPartial = seqIsPrefix(submitted, masterCode);
     if (isMasterPartial) {
       res.json({ success: false, partial: true, message: "Keep going" });
       return;
-    }
-
-    for (const row of campusRows) {
-      let seq: number[];
-      try {
-        seq = JSON.parse(row.password);
-      } catch {
-        continue;
-      }
-      if (!Array.isArray(seq)) continue;
-      if (seqIsPrefix(submitted, seq)) {
-        res.json({ success: false, partial: true, message: "Keep going" });
-        return;
-      }
     }
 
     res.json({ success: false, partial: false, message: "Invalid sequence" });

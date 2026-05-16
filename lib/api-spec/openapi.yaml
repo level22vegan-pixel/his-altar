@@ -1271,10 +1271,6 @@ components:
           type: string
         hasPassword:
           type: boolean
-        sequence:
-          type: array
-          items:
-            type: integer
       required:
         - campus
         - role
@@ -1295,15 +1291,13 @@ components:
           type: string
         role:
           type: string
-        sequence:
-          type: array
-          items:
-            type: integer
-          description: Hebrew letter number sequence
+        password:
+          type: string
+          description: Plain text password (letters, numbers, symbols)
       required:
         - campus
         - role
-        - sequence
+        - password
     VerifyCampusPasswordBody:
       type: object
       properties:
@@ -1326,10 +1320,6 @@ components:
           type: string
         role:
           type: string
-        sequence:
-          type: array
-          items:
-            type: integer
         changedAt:
           type: string
           format: date-time
@@ -1337,7 +1327,6 @@ components:
         - id
         - campus
         - role
-        - sequence
         - changedAt
     PasswordHistoryList:
       type: object
@@ -1383,6 +1372,10 @@ components:
       properties:
         valid:
           type: boolean
+        campus:
+          type: string
+        role:
+          type: string
       required:
         - valid
     ActivityLog:

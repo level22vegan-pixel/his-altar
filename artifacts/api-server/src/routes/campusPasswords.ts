@@ -1,27 +1,17 @@
 import { Router } from "express";
 import { db, campusPasswordsTable, passwordHistoryTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 
 const router = Router();
-
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin1234";
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
-const ROLES = ["lead", "deputy_lead"];
 
 router.get("/", async (req, res) => {
   try {
     const rows = await db.select().from(campusPasswordsTable);
-    const passwords = CAMPUSES.flatMap(campus =>
-      ROLES.map(role => {
-        const found = rows.find(r => r.campus === campus && r.role === role);
-        return {
-          campus,
-          role,
-          hasPassword: !!found,
-          sequence: found ? (JSON.parse(found.password) as number[]) : [],
-        };
-      })
-    );
+    const passwords = rows.map(r => ({
+      campus: r.campus,
+      role: r.role,
+      hasPassword: true,
+    }));
     res.json({ passwords });
   } catch (err) {
     req.log.error({ err }, "Error listing campus passwords");
@@ -39,7 +29,6 @@ router.get("/history", async (req, res) => {
       id: r.id,
       campus: r.campus,
       role: r.role,
-      sequence: JSON.parse(r.sequence ?? "[]") as number[],
       changedAt: r.changedAt.toISOString(),
     }));
     res.json({ entries });
@@ -51,12 +40,11 @@ router.get("/history", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { campus, role, sequence } = req.body;
-    if (!campus || !role || !Array.isArray(sequence) || sequence.length === 0) {
-      res.status(400).json({ message: "campus, role, and sequence are required" });
+    const { campus, role, password } = req.body;
+    if (!campus || !role || !password || typeof password !== "string" || password.trim().length === 0) {
+      res.status(400).json({ message: "campus, role, and password are required" });
       return;
     }
-    const password = JSON.stringify(sequence);
     await db
       .insert(campusPasswordsTable)
       .values({ campus, role, password })
@@ -69,6 +57,26 @@ router.post("/", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Error setting campus password");
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/verify", async (req, res) => {
+  try {
+    const { campus, role, password } = req.body;
+    if (!campus || !role || !password) {
+      res.status(400).json({ valid: false });
+      return;
+    }
+    const rows = await db.select().from(campusPasswordsTable);
+    const match = rows.find(r => r.campus === campus && r.role === role && r.password === password);
+    if (match) {
+      res.json({ valid: true, campus: match.campus, role: match.role });
+    } else {
+      res.json({ valid: false });
+    }
+  } catch (err) {
+    req.log.error({ err }, "Error verifying campus password");
+    res.status(500).json({ valid: false });
   }
 });
 

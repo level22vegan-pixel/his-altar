@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
+import StaffLoginPage from "@/pages/StaffLoginPage";
 import PinEntryPage from "@/pages/PinEntryPage";
 import TeamPage from "@/pages/TeamPage";
 import HomePage from "@/pages/HomePage";
@@ -72,7 +73,7 @@ function Router() {
         <Route path="/enter" component={PinEntryPage} />
         <Route path="/team" component={TeamPage} />
         <Route path="/org/login" component={OrgLoginPage} />
-        <Route path="/staff" component={LoginPage} />
+        <Route path="/staff" component={StaffLoginPage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/campus/hallmark" component={HallmarkPage} />

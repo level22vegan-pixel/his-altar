@@ -38,9 +38,17 @@ export default function LandingPage() {
           fontWeight: 400,
           letterSpacing: "0.06em",
           margin: 0,
+          textShadow: "0 0 18px rgba(180,140,255,0.75), 0 0 40px rgba(160,100,255,0.45), 0 0 80px rgba(140,80,255,0.2)",
+          animation: "hisAltarGlow 3s ease-in-out infinite alternate",
         }}>
           His Altar
         </h1>
+        <style>{`
+          @keyframes hisAltarGlow {
+            from { text-shadow: 0 0 18px rgba(180,140,255,0.75), 0 0 40px rgba(160,100,255,0.45), 0 0 80px rgba(140,80,255,0.2); }
+            to   { text-shadow: 0 0 28px rgba(200,160,255,0.95), 0 0 60px rgba(180,120,255,0.65), 0 0 110px rgba(160,100,255,0.35); }
+          }
+        `}</style>
       </div>
 
       {/* Enter Site button */}

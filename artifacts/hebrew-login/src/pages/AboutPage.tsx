@@ -35,7 +35,6 @@ export default function AboutPage() {
 
         {/* Logo mark */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 36, marginBottom: 10, color: "hsl(38 60% 60%)" }}>✝</div>
           <h1
             style={{
               fontFamily: "Georgia, serif",

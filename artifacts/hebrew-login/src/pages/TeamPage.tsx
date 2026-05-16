@@ -48,7 +48,7 @@ export default function TeamPage() {
       border: "rgba(100,120,160,0.3)",
     },
   ];
-  const displayName = orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar");
+  const displayName = isAdmin ? "His Altar" : (orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar"));
 
   function handleLogout() {
     clearOrgSession();

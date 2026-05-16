@@ -397,6 +397,8 @@ export interface CreatePxpCallLogBody {
   notes?: string;
   servicesOffered?: string;
   feedback?: string;
+  flagged?: boolean;
+  flagNote?: string;
 }
 
 export type ListWorkersParams = {

@@ -1739,6 +1739,10 @@ components:
           type: string
         feedback:
           type: string
+        flagged:
+          type: boolean
+        flagNote:
+          type: string
       required:
         - contactId
         - callerName

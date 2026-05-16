@@ -72,7 +72,6 @@ export default function OrgSignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-3">✝</div>
           <h1 className="text-2xl font-semibold text-white">Join the Platform</h1>
           <p className="text-neutral-400 text-sm mt-1">
             Create an account for your church

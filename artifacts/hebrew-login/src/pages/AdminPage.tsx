@@ -1,9 +1,93 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useListCampusPasswords, useSetCampusPassword } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { getValidCampusSession, getValidAdminSession, clearAllSessions } from "@/lib/session";
+import { getValidCampusSession, getValidAdminSession, clearAllSessions, getOrgToken } from "@/lib/session";
 import { getOrgCampuses } from "@/lib/useOrgConfig";
+
+type FlaggedLog = {
+  id: number;
+  contactId: number;
+  callerName: string;
+  campus: string;
+  outcome: string;
+  flagNote: string;
+  calledAt: string;
+};
+
+function MessageCenter() {
+  const [logs, setLogs] = useState<FlaggedLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dismissed, setDismissed] = useState<Set<number>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("dismissedFlags") ?? "[]")); }
+    catch { return new Set(); }
+  });
+
+  useEffect(() => {
+    const token = getOrgToken();
+    fetch("/api/pxp/call-logs?flagged=true", {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then(r => r.json())
+      .then(d => setLogs(d.logs ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  function dismiss(id: number) {
+    const next = new Set(dismissed).add(id);
+    setDismissed(next);
+    localStorage.setItem("dismissedFlags", JSON.stringify([...next]));
+  }
+
+  const visible = logs.filter(l => !dismissed.has(l.id));
+
+  if (loading) return null;
+  if (visible.length === 0) return (
+    <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
+      <p className="text-xs uppercase tracking-widest mb-2 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Message Center</p>
+      <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 25% 38%)", letterSpacing: "0.04em" }}>No flagged contacts — all clear.</p>
+    </div>
+  );
+
+  return (
+    <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(0 40% 28%)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs uppercase tracking-widest opacity-80" style={{ color: "hsl(0 60% 62%)", fontFamily: "Georgia, serif" }}>
+          🚩 Message Center · {visible.length} flag{visible.length !== 1 ? "s" : ""}
+        </p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {visible.map(log => (
+          <div key={log.id} style={{ background: "hsl(0 30% 10%)", border: "1px solid hsl(0 40% 22%)", borderRadius: 8, padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 60% 68%)", letterSpacing: "0.06em", marginBottom: 3 }}>
+                  Contact #{log.contactId} · {log.campus}
+                </p>
+                <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 30% 48%)", letterSpacing: "0.04em", marginBottom: log.flagNote ? 6 : 0 }}>
+                  Caller: {log.callerName} · Outcome: {log.outcome || "—"} · {new Date(log.calledAt).toLocaleDateString()}
+                </p>
+                {log.flagNote && (
+                  <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 60% 68%)", letterSpacing: "0.03em", fontStyle: "italic" }}>
+                    "{log.flagNote}"
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => dismiss(log.id)}
+                title="Dismiss"
+                style={{ background: "none", border: "none", color: "hsl(38 25% 38%)", cursor: "pointer", fontSize: 16, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 const ROLES = [
   { id: "lead", label: "Lead" },
   { id: "deputy_lead", label: "Deputy Lead" },
@@ -194,6 +278,9 @@ export default function AdminPage() {
         >
           {isLead ? "Campus Lead" : "Manage settings & tools"}
         </p>
+
+        {/* Message Center — flagged calls from callers */}
+        {isMasterAdmin && <MessageCenter />}
 
         {/* Tools section */}
         <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>

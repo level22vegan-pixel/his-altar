@@ -47,6 +47,8 @@ export default function PXPCallPage() {
   const [logged, setLogged] = useState(false);
   const [servicesOffered, setServicesOffered] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [flagged, setFlagged] = useState(false);
+  const [flagNote, setFlagNote] = useState("");
 
   const contact = contactData;
   const scriptTree = configData?.scriptTree as ScriptNode | undefined;
@@ -98,6 +100,8 @@ export default function PXPCallPage() {
         notes: "",
         servicesOffered,
         feedback,
+        flagged,
+        flagNote,
       },
     });
     setLogged(true);
@@ -193,6 +197,32 @@ export default function PXPCallPage() {
               <>
                 <textarea style={inputStyle} placeholder="Services offered (prayer, counseling, food, referral…)" value={servicesOffered} onChange={e => setServicesOffered(e.target.value)} />
                 <textarea style={inputStyle} placeholder="Contact's feedback or response…" value={feedback} onChange={e => setFeedback(e.target.value)} />
+
+                {/* Flag for admin */}
+                <button
+                  type="button"
+                  onClick={() => setFlagged(f => !f)}
+                  style={{
+                    padding: "10px 16px", borderRadius: 8, textAlign: "left",
+                    background: flagged ? "hsl(0 45% 14%)" : "hsl(270 10% 6%)",
+                    border: `1px solid ${flagged ? "hsl(0 55% 38%)" : "hsl(270 20% 18%)"}`,
+                    color: flagged ? "hsl(0 70% 68%)" : "hsl(270 25% 50%)",
+                    fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.1em",
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{flagged ? "🚩" : "⚑"}</span>
+                  {flagged ? "Flagged for admin review" : "Flag for admin review"}
+                </button>
+                {flagged && (
+                  <textarea
+                    style={{ ...inputStyle, minHeight: 56, borderColor: "hsl(0 45% 28%)" }}
+                    placeholder="What should admin know about this contact? (optional)"
+                    value={flagNote}
+                    onChange={e => setFlagNote(e.target.value)}
+                  />
+                )}
               </>
             )}
 

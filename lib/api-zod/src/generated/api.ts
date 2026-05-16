@@ -588,6 +588,8 @@ export const CreatePxpCallLogBody = zod.object({
   notes: zod.string().optional(),
   servicesOffered: zod.string().optional(),
   feedback: zod.string().optional(),
+  flagged: zod.boolean().optional(),
+  flagNote: zod.string().optional(),
 });
 
 /**

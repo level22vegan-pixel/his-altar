@@ -330,6 +330,31 @@ export default function AdminProfilePage() {
           </div>
         </Section>
 
+        {/* Privacy & Data */}
+        <Section title="Privacy & Data">
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { label: "Data storage", value: "Encrypted at rest · US servers" },
+              { label: "Access logs", value: "Admin actions logged for 90 days" },
+              { label: "Contact data", value: "Never sold or shared with third parties" },
+              { label: "Call records", value: "Retained for 12 months, then purged" },
+              { label: "Sessions", value: "Expire after 24 hours of inactivity" },
+              { label: "Passwords", value: "Hashed, never stored in plain text" },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                  <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 35% 50%)", letterSpacing: "0.06em", flexShrink: 0 }}>{label}</span>
+                  <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 55% 68%)", letterSpacing: "0.03em", textAlign: "right" }}>{value}</span>
+                </div>
+                <div style={{ height: 1, background: "hsl(38 15% 20%)", marginTop: 8 }} />
+              </div>
+            ))}
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 22% 35%)", letterSpacing: "0.05em", marginTop: 4 }}>
+              His Altar handles all ministry data in accordance with applicable privacy laws. For data removal requests, contact support.
+            </p>
+          </div>
+        </Section>
+
         {/* Support */}
         <Section title="Support">
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

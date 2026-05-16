@@ -19,7 +19,7 @@ const TOOLS = [
   },
   {
     id: "altar",
-    icon: "✝",
+    icon: "📖",
     title: "Altar Reports",
     desc: "Log and export altar responses",
     href: "/admin/altar-report",

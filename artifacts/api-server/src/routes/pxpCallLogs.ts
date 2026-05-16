@@ -8,9 +8,11 @@ router.get("/", async (req, res) => {
   try {
     const orgId = req.orgId ?? 1;
     const contactId = req.query.contactId ? parseInt(req.query.contactId as string) : undefined;
-    const whereClause = contactId
-      ? and(eq(pxpCallLogsTable.orgId, orgId), eq(pxpCallLogsTable.contactId, contactId))
-      : eq(pxpCallLogsTable.orgId, orgId);
+    const onlyFlagged = req.query.flagged === "true";
+    const conditions = [eq(pxpCallLogsTable.orgId, orgId)];
+    if (contactId) conditions.push(eq(pxpCallLogsTable.contactId, contactId));
+    if (onlyFlagged) conditions.push(eq(pxpCallLogsTable.flagged, true));
+    const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
     const logs = await db.select().from(pxpCallLogsTable).where(whereClause).orderBy(desc(pxpCallLogsTable.calledAt));
     res.json({ logs });
   } catch (err) {
@@ -24,6 +26,7 @@ router.post("/", async (req, res) => {
     const {
       contactId, callerName, campus,
       outcome = "", notes = "", servicesOffered = "", feedback = "",
+      flagged = false, flagNote = "",
     } = req.body as Record<string, unknown>;
     if (!contactId || !callerName || !campus) {
       res.status(400).json({ message: "contactId, callerName, and campus are required" });
@@ -40,6 +43,8 @@ router.post("/", async (req, res) => {
         notes: String(notes),
         servicesOffered: String(servicesOffered),
         feedback: String(feedback),
+        flagged: Boolean(flagged),
+        flagNote: String(flagNote),
         orgId,
       })
       .returning();

@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +12,8 @@ export const pxpCallLogsTable = pgTable("pxp_call_logs", {
   servicesOffered: text("services_offered").notNull().default(""),
   feedback: text("feedback").notNull().default(""),
   orgId: integer("org_id").notNull().default(1),
+  flagged: boolean("flagged").notNull().default(false),
+  flagNote: text("flag_note").notNull().default(""),
   calledAt: timestamp("called_at").notNull().defaultNow(),
 });
 

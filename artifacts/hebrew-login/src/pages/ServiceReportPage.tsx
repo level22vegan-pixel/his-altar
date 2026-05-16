@@ -9,7 +9,7 @@ const SERVICES = ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm", "
 const CATEGORIES = [
   { key: "totalEntries" as const, label: "Total Entries", color: "hsl(38 55% 28%)", light: "hsl(38 70% 65%)", icon: "📋" },
   { key: "servants" as const, label: "Servants", color: "hsl(200 40% 22%)", light: "hsl(200 60% 65%)", icon: "🙌" },
-  { key: "salvations" as const, label: "Salvations", color: "hsl(130 35% 18%)", light: "hsl(130 55% 60%)", icon: "✝" },
+  { key: "salvations" as const, label: "Salvations", color: "hsl(130 35% 18%)", light: "hsl(130 55% 60%)", icon: "🌿" },
   { key: "prayers" as const, label: "Prayers", color: "hsl(280 28% 20%)", light: "hsl(280 50% 65%)", icon: "🙏" },
   { key: "family" as const, label: "Family", color: "hsl(0 30% 20%)", light: "hsl(0 55% 65%)", icon: "👨‍👩‍👧" },
 ] as const;

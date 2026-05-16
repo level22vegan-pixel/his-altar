@@ -88,7 +88,6 @@ export default function PinEntryPage() {
       }}
     >
       <div style={{ textAlign: "center", marginBottom: 56 }}>
-        <div style={{ fontSize: 36, marginBottom: 10, filter: "drop-shadow(0 0 10px rgba(180,140,255,0.3))" }}>✝</div>
         <h1 style={{
           color: "#ffffff",
           fontFamily: "Georgia, serif",

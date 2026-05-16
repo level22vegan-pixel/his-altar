@@ -7,6 +7,7 @@ import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
+import AdminProfilePage from "@/pages/AdminProfilePage";
 import PinEntryPage from "@/pages/PinEntryPage";
 import TeamPage from "@/pages/TeamPage";
 import HomePage from "@/pages/HomePage";
@@ -76,6 +77,7 @@ function Router() {
         <Route path="/org/login" component={OrgLoginPage} />
         <Route path="/staff" component={StaffLoginPage} />
         <Route path="/admin/login" component={AdminLoginPage} />
+        <Route path="/admin/profile" component={AdminProfilePage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/campus/hallmark" component={HallmarkPage} />

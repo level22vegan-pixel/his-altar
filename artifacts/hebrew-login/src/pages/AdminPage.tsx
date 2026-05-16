@@ -163,13 +163,24 @@ export default function AdminPage() {
       />
 
       <div className="relative z-10 w-full max-w-xl">
-        <button
-          onClick={handleBack}
-          className="mb-8 text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
-          style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
-        >
-          {isCampusUser ? "← Home" : "← Sign Out"}
-        </button>
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={handleBack}
+            className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
+            style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
+          >
+            {isCampusUser ? "← Home" : "← Sign Out"}
+          </button>
+          {isMasterAdmin && (
+            <button
+              onClick={() => navigate("/admin/profile")}
+              className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
+              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
+            >
+              Profile →
+            </button>
+          )}
+        </div>
 
         <h1
           className="text-2xl mb-1 tracking-widest uppercase text-center"

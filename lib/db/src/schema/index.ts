@@ -35,3 +35,4 @@ export * from "./pxpCallLogs";
 export * from "./pxpCallers";
 export * from "./organizations";
 export * from "./orgMessages";
+export * from "./systemConfig";

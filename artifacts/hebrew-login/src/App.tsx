@@ -39,12 +39,13 @@ import OrgLoginPage from "@/pages/OrgLoginPage";
 import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
+import AboutPage from "@/pages/AboutPage";
 import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup", "/admin/login"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup", "/admin/login", "/about"];
 
 const ADMIN_PATHS_PREFIX = "/admin";
 
@@ -94,6 +95,7 @@ function Router() {
         <Route path="/org/login" component={OrgLoginPage} />
         <Route path="/staff" component={StaffLoginPage} />
         <Route path="/admin/login" component={AdminLoginPage} />
+        <Route path="/about" component={AboutPage} />
         <Route path="/admin/profile" component={AdminProfilePage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />

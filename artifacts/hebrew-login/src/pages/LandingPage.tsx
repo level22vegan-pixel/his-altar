@@ -155,21 +155,22 @@ export default function LandingPage() {
         </a>
       </div>
 
-      {/* Staff login link — very subtle */}
+      {/* About link */}
       <div style={{ position: "absolute", top: 20, right: 20, zIndex: 1 }}>
         <a
-          href="/staff"
+          href="/about"
           style={{
-            color: "rgba(255,255,255,0.12)",
+            color: "rgba(255,255,255,0.25)",
             fontFamily: "Georgia, serif",
             fontSize: 10,
-            letterSpacing: "0.1em",
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
             textDecoration: "none",
           }}
-          onMouseOver={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.3)")}
-          onMouseOut={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.12)")}
+          onMouseOver={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
+          onMouseOut={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.25)")}
         >
-          staff
+          About Us
         </a>
       </div>
     </div>

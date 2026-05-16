@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { setAdminSession } from "@/lib/session";
+import { setAdminSession, getValidAdminSession } from "@/lib/session";
 
 export default function AdminLoginPage() {
   const [, navigate] = useLocation();
@@ -8,6 +8,12 @@ export default function AdminLoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (getValidAdminSession()) {
+      navigate("/admin", { replace: true });
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

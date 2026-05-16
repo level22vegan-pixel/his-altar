@@ -169,18 +169,23 @@ function StepCallers({ onNext }: { onNext: () => void }) {
   );
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  lead:        "Altar Lead (full team access)",
+  deputy_lead: "Deputy Lead",
+  attendance:  "Attendance Only (check-in screen)",
+};
+
 // Step 3 — Staff / Administrators
 function StepStaff({ onFinish }: { onFinish: () => void }) {
-  const [campus, setCampus] = useState("");
   const [role, setRole] = useState("lead");
   const [password, setPassword] = useState("");
-  const [added, setAdded] = useState<{ campus: string; role: string }[]>([]);
+  const [added, setAdded] = useState<{ role: string }[]>([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleAdd() {
-    if (!campus.trim() || !password.trim()) { setErr("Campus and password are required"); return; }
-    if (password.length < 4) { setErr("Password must be at least 4 characters"); return; }
+    if (!password.trim()) { setErr("Enter a 4-digit code"); return; }
+    if (password.trim().length < 4) { setErr("Code must be at least 4 digits"); return; }
     setErr("");
     setLoading(true);
     try {
@@ -191,41 +196,54 @@ function StepStaff({ onFinish }: { onFinish: () => void }) {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ campus: campus.trim(), role, password: password.trim() }),
+        body: JSON.stringify({ campus: "HALLMARK", role, password: password.trim() }),
       });
       if (!res.ok) throw new Error();
-      setAdded(a => [...a, { campus: campus.trim(), role }]);
-      setCampus(""); setPassword(""); setRole("lead");
-    } catch { setErr("Failed to set password — try again"); }
+      setAdded(a => [...a, { role }]);
+      setPassword(""); setRole("lead");
+    } catch { setErr("Failed to save — try again"); }
     finally { setLoading(false); }
   }
 
   return (
     <div>
       <p className="text-neutral-400 text-sm mb-5">
-        Set a login password for each campus so your staff can sign in. You can add more campuses or change passwords later in the Admin Panel.
+        Set a 4-digit entry code for each access level. Staff enter this code at the login screen. You can change these anytime in the Admin Panel.
       </p>
       <div className="flex flex-col gap-3 mb-4">
-        <input className={inputCls} placeholder="Campus name (e.g. Main, North)" value={campus} onChange={e => { setCampus(e.target.value); setErr(""); }} />
-        <select
-          value={role}
-          onChange={e => setRole(e.target.value)}
-          className="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 transition"
-        >
-          <option value="lead">Campus Lead</option>
-          <option value="deputy_lead">Deputy Lead</option>
-        </select>
-        <input className={inputCls} type="password" placeholder="Staff password" value={password} onChange={e => { setPassword(e.target.value); setErr(""); }} />
+        <div>
+          <label className="text-neutral-500 text-xs mb-1.5 block">Access Level</label>
+          <select
+            value={role}
+            onChange={e => setRole(e.target.value)}
+            className="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500 transition"
+          >
+            <option value="lead">Altar Lead — full team access</option>
+            <option value="deputy_lead">Deputy Lead</option>
+            <option value="attendance">Attendance Only — check-in screen</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-neutral-500 text-xs mb-1.5 block">4-Digit Entry Code</label>
+          <input
+            className={inputCls}
+            type="number"
+            inputMode="numeric"
+            placeholder="e.g. 4680"
+            value={password}
+            onChange={e => { setPassword(e.target.value); setErr(""); }}
+          />
+        </div>
         {err && <p className="text-red-400 text-xs">{err}</p>}
         <button onClick={handleAdd} disabled={loading} className={btnCls}>
-          {loading ? "Saving…" : "+ Set Campus Password"}
+          {loading ? "Saving…" : "+ Save Code"}
         </button>
       </div>
 
       {added.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-5">
           {added.map((s, i) => (
-            <Chip key={i} label={`${s.campus} · ${s.role === "lead" ? "Lead" : "Deputy"}`} onRemove={() => setAdded(a => a.filter((_, j) => j !== i))} />
+            <Chip key={i} label={`✓ ${ROLE_LABELS[s.role] ?? s.role}`} onRemove={() => setAdded(a => a.filter((_, j) => j !== i))} />
           ))}
         </div>
       )}

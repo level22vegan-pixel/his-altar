@@ -119,7 +119,7 @@ export default function AboutPage() {
               Register Your Church
             </button>
             <button
-              onClick={() => navigate("/org/login")}
+              onClick={() => navigate("/enter")}
               style={{
                 padding: "11px 28px",
                 background: "transparent",

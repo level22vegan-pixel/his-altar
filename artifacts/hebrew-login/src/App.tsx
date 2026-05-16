@@ -40,14 +40,12 @@ import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
 import AboutPage from "@/pages/AboutPage";
-import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession } from "@/lib/session";
+import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession, getValidCallerSession, getValidOrgSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup", "/admin/login", "/about"];
-
-const ADMIN_PATHS_PREFIX = "/admin";
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/admin/login", "/about"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -56,20 +54,36 @@ function SessionGuard() {
     if (UNGUARDED.includes(location)) return;
 
     const check = () => {
-      // Admin routes (excluding /admin/login) require an adminSession or campusSession
-      if (
-        location.startsWith(ADMIN_PATHS_PREFIX) &&
-        location !== "/admin/login"
-      ) {
-        const hasAdmin = getValidAdminSession();
-        const hasCampus = getValidCampusSession() !== null;
-        if (!hasAdmin && !hasCampus) {
-          navigate("/admin/login");
-          return;
-        }
+      const isAdmin = getValidAdminSession();
+      const campus  = getValidCampusSession();
+      const caller  = getValidCallerSession();
+      const org     = getValidOrgSession();
+
+      // PXP call routes — caller or admin only
+      if (location.startsWith("/admin/pxp")) {
+        if (!isAdmin && !caller) { navigate("/caller-login"); return; }
+        return;
       }
 
-      // All other guarded routes just need any valid session
+      // All other /admin/* routes — admin only
+      if (location.startsWith("/admin")) {
+        if (!isAdmin) { navigate("/admin/login"); return; }
+        return;
+      }
+
+      // Campus pages & check-in — campus session or admin
+      if (location.startsWith("/campus") || location === "/checkin") {
+        if (!isAdmin && !campus) { navigate("/enter"); return; }
+        return;
+      }
+
+      // Org dashboard / setup — org session or admin
+      if (location.startsWith("/org/dashboard") || location.startsWith("/org/setup")) {
+        if (!isAdmin && !org) { navigate("/org/login"); return; }
+        return;
+      }
+
+      // Everything else — any valid session
       if (!hasValidSession()) {
         clearAllSessions();
         navigate(LOGIN_PATH);

@@ -1,43 +1,56 @@
 import { useLocation } from "wouter";
 import { getValidOrgSession, clearOrgSession, getValidCampusSession, setCampusSession } from "@/lib/session";
 
-const BUBBLES = [
-  {
-    id: "altar",
-    label: "Altar",
-    sublabel: "Register new prayer contacts",
-    icon: "🙏",
-    href: "/admin/dbanc/new",
-    gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
-    glow: "rgba(184,134,11,0.35)",
-    border: "rgba(184,134,11,0.4)",
-  },
-  {
-    id: "calls",
-    label: "Follow-Up Calls",
-    sublabel: "Prayer call team sign-in",
-    icon: "📞",
-    href: "/caller-login",
-    gradient: "linear-gradient(150deg, #4c1d95 0%, #7c3aed 50%, #6d28d9 100%)",
-    glow: "rgba(124,58,237,0.4)",
-    border: "rgba(124,58,237,0.5)",
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    sublabel: "Full account management",
-    icon: "⚙",
-    href: "/admin",
-    gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
-    glow: "rgba(100,120,160,0.2)",
-    border: "rgba(100,120,160,0.3)",
-  },
-];
+const CAMPUS_ROUTES: Record<string, string> = {
+  HALLMARK: "/campus/hallmark",
+  ARROWHEAD: "/campus/arrowhead",
+  RIVERSIDE: "/campus/riverside",
+  POMONA: "/campus/pomona",
+  LA: "/campus/la",
+  ARIZONA: "/campus/arizona",
+};
 
 export default function TeamPage() {
   const [, navigate] = useLocation();
   const orgSession = getValidOrgSession();
   const campusSession = getValidCampusSession();
+
+  const altarHref = campusSession
+    ? (CAMPUS_ROUTES[campusSession.campus] ?? `/campus/${campusSession.campus.toLowerCase().replace(/\s+/g, "-")}`)
+    : "/admin/dbanc/new";
+
+  const BUBBLES = [
+    {
+      id: "altar",
+      label: "Altar",
+      sublabel: campusSession ? "Select service & check in" : "Register new prayer contacts",
+      icon: "🙏",
+      href: altarHref,
+      gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
+      glow: "rgba(184,134,11,0.35)",
+      border: "rgba(184,134,11,0.4)",
+    },
+    {
+      id: "calls",
+      label: "Follow-Up Calls",
+      sublabel: "Prayer call team sign-in",
+      icon: "📞",
+      href: "/caller-login",
+      gradient: "linear-gradient(150deg, #4c1d95 0%, #7c3aed 50%, #6d28d9 100%)",
+      glow: "rgba(124,58,237,0.4)",
+      border: "rgba(124,58,237,0.5)",
+    },
+    {
+      id: "admin",
+      label: "Admin",
+      sublabel: "Admin login required",
+      icon: "⚙",
+      href: "/admin/login",
+      gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
+      glow: "rgba(100,120,160,0.2)",
+      border: "rgba(100,120,160,0.3)",
+    },
+  ];
   const displayName = orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar");
 
   function handleLogout() {

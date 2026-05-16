@@ -148,7 +148,7 @@ export default function PinEntryPage() {
         setEmailError(data.message || "Incorrect email or password.");
         return;
       }
-      setOrgSession(data.orgId, data.orgName, data.token);
+      setOrgSession(data.orgId, data.orgName, data.token, data.campuses ?? [], data.serviceTimes ?? {});
       navigate("/org/dashboard");
     } catch {
       setEmailError("Connection error. Please try again.");

@@ -61,7 +61,22 @@ export default function HomePage() {
           <div className="flex-1 h-px" style={{ background: "hsl(38 35% 30%)" }} />
         </div>
 
-        {!showCampuses ? (
+        {CAMPUSES.length === 0 ? (
+          <div className="text-center px-6">
+            <p
+              className="text-sm uppercase tracking-widest opacity-50"
+              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
+            >
+              No campuses configured
+            </p>
+            <p
+              className="text-xs mt-2 opacity-35"
+              style={{ color: "hsl(38 30% 45%)", fontFamily: "Georgia, serif" }}
+            >
+              Contact your administrator to set up campuses.
+            </p>
+          </div>
+        ) : !showCampuses ? (
           <button
             onClick={() => setShowCampuses(true)}
             className="campus-btn px-12 py-4 text-base uppercase tracking-widest rounded"

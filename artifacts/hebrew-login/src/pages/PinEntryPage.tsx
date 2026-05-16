@@ -55,7 +55,7 @@ export default function PinEntryPage() {
         return;
       }
       setCampusSession(data.campus, data.role ?? "campus");
-      // Attendance-only codes go straight to the campus service page
+      // Replace /enter in history so back button skips the code screen
       if (data.role === "attendance") {
         const campusRoutes: Record<string, string> = {
           HALLMARK: "/campus/hallmark",
@@ -66,9 +66,9 @@ export default function PinEntryPage() {
           ARIZONA: "/campus/arizona",
         };
         const dest = campusRoutes[data.campus] ?? `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
-        navigate(dest);
+        navigate(dest, { replace: true });
       } else {
-        navigate("/team");
+        navigate("/team", { replace: true });
       }
     } catch {
       setError("Connection error. Please try again.");

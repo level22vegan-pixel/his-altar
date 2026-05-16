@@ -93,6 +93,9 @@ export function setOrgSession(
   campuses?: string[],
   serviceTimes?: Record<string, string[]>,
 ) {
+  localStorage.removeItem("campusSession");
+  localStorage.removeItem("adminSession");
+  localStorage.removeItem("callerSession");
   localStorage.setItem(
     "orgSession",
     JSON.stringify({ orgId, orgName, token, campuses, serviceTimes, loginAt: Date.now() }),

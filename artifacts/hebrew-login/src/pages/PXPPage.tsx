@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListDbancContacts, useListPxpCallers, useCreateActivityLog, useListPxpCallLogs } from "@workspace/api-client-react";
-import { getSessionUserName, getValidCampusSession, getValidCallerSession, clearAllSessions } from "@/lib/session";
+import { getSessionUserName, getValidCampusSession, getValidCallerSession, getValidOrgSession, clearAllSessions } from "@/lib/session";
 
 import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 
@@ -202,7 +202,7 @@ export default function PXPPage() {
               </span>
             </div>
           )}
-          {!isCallerSession && lockedCampus && (
+          {!isCallerSession && lockedCampus && !getValidOrgSession() && (
             <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 40% 14%)", border: "1px solid hsl(270 40% 26%)", borderRadius: 20 }}>
               <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
                 {lockedCampus} · {campusSession?.role === "lead" ? "Lead" : "Deputy Lead"}

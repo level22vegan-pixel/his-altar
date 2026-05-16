@@ -4,7 +4,7 @@ import {
   useListPxpCallers,
   useResetPxpCallerPassword,
 } from "@workspace/api-client-react";
-import { getValidCampusSession, getValidAdminSession } from "@/lib/session";
+import { getValidCampusSession, getValidAdminSession, getValidOrgSession } from "@/lib/session";
 import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 export default function CallerPasswordsPage() {
@@ -83,7 +83,7 @@ export default function CallerPasswordsPage() {
           <p style={{ color: "hsl(270 30% 50%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", marginTop: 6, textTransform: "uppercase" }}>
             Manage login passwords by campus
           </p>
-          {lockedCampus && (
+          {lockedCampus && !getValidOrgSession() && (
             <div style={{ display: "inline-block", marginTop: 8, padding: "3px 14px", background: "hsl(270 40% 14%)", border: "1px solid hsl(270 40% 26%)", borderRadius: 20 }}>
               <span style={{ color: "hsl(270 65% 75%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
                 {lockedCampus} · {campusSession?.role === "lead" ? "Lead" : "Deputy Lead"}

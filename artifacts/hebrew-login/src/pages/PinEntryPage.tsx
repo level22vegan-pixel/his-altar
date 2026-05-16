@@ -1,8 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { setCampusSession, setAdminSession } from "@/lib/session";
+import { setCampusSession, setAdminSession, setOrgSession } from "@/lib/session";
 
-type Mode = "select" | "campus";
+type Mode = "select" | "campus" | "email";
+
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
 
 export default function PinEntryPage() {
   const [, navigate] = useLocation();
@@ -11,6 +25,13 @@ export default function PinEntryPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Email sign-in state
+  const [email, setEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [showEmailPw, setShowEmailPw] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     if (mode === "campus") {
@@ -93,6 +114,34 @@ export default function PinEntryPage() {
     setLoading(false);
   }
 
+  async function submitEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || !emailPassword.trim()) {
+      setEmailError("Please enter your email and password.");
+      return;
+    }
+    setEmailLoading(true);
+    setEmailError("");
+    try {
+      const res = await fetch("/api/orgs/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: emailPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailError(data.message || "Incorrect email or password.");
+        return;
+      }
+      setOrgSession(data.orgId, data.orgName, data.token);
+      navigate("/org/dashboard");
+    } catch {
+      setEmailError("Connection error. Please try again.");
+    } finally {
+      setEmailLoading(false);
+    }
+  }
+
   const bg = "linear-gradient(160deg, #0a0a0f 0%, #0f0a1a 60%, #0a0a0f 100%)";
 
   const cardBase: React.CSSProperties = {
@@ -160,7 +209,7 @@ export default function PinEntryPage() {
             margin: 0,
             textShadow: "0 0 20px rgba(180,140,255,0.6)",
           }}>
-            {mode === "campus" ? "Campus Access" : "His Altar"}
+            {mode === "campus" ? "Campus Access" : mode === "email" ? "Sign In" : "His Altar"}
           </h1>
           <p style={{
             color: "rgba(255,255,255,0.3)",
@@ -169,7 +218,7 @@ export default function PinEntryPage() {
             letterSpacing: "0.1em",
             marginTop: 8,
           }}>
-            {mode === "campus" ? "Enter your 4-digit campus code" : "Select how you're signing in"}
+            {mode === "campus" ? "Enter your 4-digit campus code" : mode === "email" ? "Use your church account email and password" : "Select how you're signing in"}
           </p>
         </div>
 
@@ -268,6 +317,7 @@ export default function PinEntryPage() {
         )}
 
         {mode === "campus" && (
+          <>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
             <div style={{ display: "flex", gap: 14, marginBottom: 28 }}>
               {digits.map((d, i) => (
@@ -315,28 +365,139 @@ export default function PinEntryPage() {
               </p>
             )}
           </div>
+
+          {/* Forgot code link */}
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <button
+              onClick={() => { setMode("email"); setError(""); setDigits(["", "", "", ""]); }}
+              style={{
+                background: "none", border: "none",
+                color: "rgba(180,140,255,0.5)",
+                fontFamily: "Georgia, serif", fontSize: 11,
+                letterSpacing: "0.08em", cursor: "pointer", padding: 0,
+                textDecoration: "underline", textUnderlineOffset: 3,
+              }}
+              onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(180,140,255,0.85)")}
+              onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(180,140,255,0.5)")}
+            >
+              Forgot your code? Sign in with email →
+            </button>
+          </div>
+          </>
+        )}
+
+        {/* Email sign-in mode */}
+        {mode === "email" && (
+          <form onSubmit={submitEmail} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", color: "rgba(255,255,255,0.4)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em", marginBottom: 8 }}>
+                EMAIL
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setEmailError(""); }}
+                placeholder="admin@yourchurch.org"
+                autoComplete="email"
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1.5px solid rgba(255,255,255,0.12)",
+                  borderRadius: 10, color: "#fff",
+                  fontFamily: "Georgia, serif", fontSize: 14,
+                  padding: "12px 16px", outline: "none",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", color: "rgba(255,255,255,0.4)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em", marginBottom: 8 }}>
+                PASSWORD
+              </label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showEmailPw ? "text" : "password"}
+                  value={emailPassword}
+                  onChange={e => { setEmailPassword(e.target.value); setEmailError(""); }}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1.5px solid rgba(255,255,255,0.12)",
+                    borderRadius: 10, color: "#fff",
+                    fontFamily: "Georgia, serif", fontSize: 14,
+                    padding: "12px 44px 12px 16px", outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEmailPw(v => !v)}
+                  tabIndex={-1}
+                  style={{
+                    position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", cursor: "pointer",
+                    color: "rgba(255,255,255,0.3)", padding: 0, display: "flex",
+                  }}
+                >
+                  <EyeIcon open={showEmailPw} />
+                </button>
+              </div>
+            </div>
+
+            {emailError && (
+              <p style={{ color: "rgba(255,100,100,0.9)", fontFamily: "Georgia, serif", fontSize: 12, textAlign: "center", margin: 0 }}>
+                {emailError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={emailLoading}
+              style={{
+                background: emailLoading ? "rgba(124,58,237,0.4)" : "rgba(124,58,237,0.85)",
+                border: "none", borderRadius: 10, color: "#fff",
+                fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.08em",
+                padding: "14px", cursor: emailLoading ? "default" : "pointer",
+                transition: "background 0.2s",
+              }}
+            >
+              {emailLoading ? "Signing in…" : "Sign In"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMode("campus"); setEmailError(""); setEmail(""); setEmailPassword(""); }}
+              style={{
+                background: "none", border: "none",
+                color: "rgba(255,255,255,0.25)", fontFamily: "Georgia, serif",
+                fontSize: 12, letterSpacing: "0.08em", cursor: "pointer", padding: 0,
+                textAlign: "center",
+              }}
+            >
+              ← Back to code entry
+            </button>
+          </form>
         )}
 
         {/* Back link */}
-        <div style={{ marginTop: 48, textAlign: "center" }}>
-          <button
-            onClick={() => navigate("/")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "rgba(255,255,255,0.22)",
-              fontFamily: "Georgia, serif",
-              fontSize: 12,
-              letterSpacing: "0.08em",
-              cursor: "pointer",
-              padding: 0,
-            }}
-            onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)")}
-            onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.22)")}
-          >
-            ← Back
-          </button>
-        </div>
+        {mode !== "email" && (
+          <div style={{ marginTop: 48, textAlign: "center" }}>
+            <button
+              onClick={() => navigate("/")}
+              style={{
+                background: "none", border: "none",
+                color: "rgba(255,255,255,0.22)",
+                fontFamily: "Georgia, serif", fontSize: 12,
+                letterSpacing: "0.08em", cursor: "pointer", padding: 0,
+              }}
+              onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)")}
+              onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.22)")}
+            >
+              ← Back
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

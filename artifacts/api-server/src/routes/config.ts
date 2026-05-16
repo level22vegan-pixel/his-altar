@@ -102,11 +102,12 @@ router.put("/service-times", async (req, res) => {
       return;
     }
     const orgId = req.orgId ?? 1;
+    const campuses = Object.keys(serviceTimes);
     await db
       .update(organizationsTable)
-      .set({ serviceTimes })
+      .set({ serviceTimes, campuses })
       .where(eq(organizationsTable.id, orgId));
-    res.json({ serviceTimes });
+    res.json({ serviceTimes, campuses });
   } catch (err) {
     req.log.error({ err }, "Error updating service times");
     res.status(500).json({ message: "Server error" });

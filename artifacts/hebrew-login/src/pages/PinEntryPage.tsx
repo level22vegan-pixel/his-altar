@@ -32,6 +32,7 @@ export default function PinEntryPage() {
   const [showEmailPw, setShowEmailPw] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [showForgotEmail, setShowForgotEmail] = useState(false);
 
   useEffect(() => {
     if (mode === "campus") {
@@ -408,6 +409,38 @@ export default function PinEntryPage() {
                   padding: "12px 16px", outline: "none",
                 }}
               />
+              <div style={{ textAlign: "right", marginTop: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotEmail(v => !v)}
+                  style={{
+                    background: "none", border: "none",
+                    color: "rgba(180,140,255,0.45)",
+                    fontFamily: "Georgia, serif", fontSize: 11,
+                    letterSpacing: "0.07em", cursor: "pointer", padding: 0,
+                  }}
+                  onMouseOver={e => ((e.currentTarget as HTMLElement).style.color = "rgba(180,140,255,0.8)")}
+                  onMouseOut={e => ((e.currentTarget as HTMLElement).style.color = "rgba(180,140,255,0.45)")}
+                >
+                  Forgot email?
+                </button>
+              </div>
+              {showForgotEmail && (
+                <div style={{
+                  marginTop: 8, padding: "12px 14px",
+                  background: "rgba(180,140,255,0.07)",
+                  border: "1px solid rgba(180,140,255,0.18)",
+                  borderRadius: 8,
+                }}>
+                  <p style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Georgia, serif", fontSize: 12, lineHeight: 1.6, margin: 0 }}>
+                    Your email is the one used when your church registered. Contact your church administrator, or reach us at{" "}
+                    <a href="mailto:support@hisaltar.com" style={{ color: "rgba(180,140,255,0.8)", textDecoration: "none" }}>
+                      support@hisaltar.com
+                    </a>
+                    {" "}and we'll help you recover access.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

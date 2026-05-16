@@ -80,7 +80,8 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-// Look up a campus by its 4-digit code (any role)
+// Look up a campus by its 4-digit code — returns highest-priority role
+const ROLE_PRIORITY = ["lead", "deputy_lead", "attendance"];
 router.post("/verify-code", async (req, res) => {
   try {
     const { code } = req.body;
@@ -89,12 +90,16 @@ router.post("/verify-code", async (req, res) => {
       return;
     }
     const rows = await db.select().from(campusPasswordsTable);
-    const match = rows.find(r => r.password === code.trim());
-    if (match) {
-      res.json({ campus: match.campus, role: match.role });
-    } else {
+    const matches = rows.filter(r => r.password === code.trim());
+    if (matches.length === 0) {
       res.status(401).json({ message: "Invalid code" });
+      return;
     }
+    // Always return the highest-permission role (lead > deputy_lead > attendance)
+    const match = matches.sort(
+      (a, b) => ROLE_PRIORITY.indexOf(a.role) - ROLE_PRIORITY.indexOf(b.role)
+    )[0];
+    res.json({ campus: match.campus, role: match.role });
   } catch (err) {
     req.log.error({ err }, "Error verifying campus code");
     res.status(500).json({ message: "Server error" });

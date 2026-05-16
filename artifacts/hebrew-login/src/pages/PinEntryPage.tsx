@@ -312,7 +312,7 @@ export default function PinEntryPage() {
         {/* Back link */}
         <div style={{ marginTop: 48, textAlign: "center" }}>
           <button
-            onClick={mode === "campus" ? reset : () => navigate("/")}
+            onClick={() => navigate("/")}
             style={{
               background: "none",
               border: "none",
@@ -326,7 +326,7 @@ export default function PinEntryPage() {
             onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)")}
             onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.22)")}
           >
-            ← {mode === "campus" ? "Back" : "Home"}
+            ← Back
           </button>
         </div>
 

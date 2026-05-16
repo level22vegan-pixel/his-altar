@@ -66,4 +66,13 @@ router.post("/verify", async (req, res) => {
   }
 });
 
+router.post("/admin-login", (req, res) => {
+  const { password } = req.body ?? {};
+  if (password && password === ADMIN_PASSWORD) {
+    res.json({ valid: true });
+  } else {
+    res.json({ valid: false });
+  }
+});
+
 export { router as authRouter };

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
+import AdminLoginPage from "@/pages/AdminLoginPage";
 import PinEntryPage from "@/pages/PinEntryPage";
 import TeamPage from "@/pages/TeamPage";
 import HomePage from "@/pages/HomePage";
@@ -41,7 +42,7 @@ import { hasValidSession, clearAllSessions } from "@/lib/session";
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup", "/admin/login"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -74,6 +75,7 @@ function Router() {
         <Route path="/team" component={TeamPage} />
         <Route path="/org/login" component={OrgLoginPage} />
         <Route path="/staff" component={StaffLoginPage} />
+        <Route path="/admin/login" component={AdminLoginPage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/campus/hallmark" component={HallmarkPage} />

@@ -51,9 +51,13 @@ export default function TeamPage() {
 
   function handleLogout() {
     clearOrgSession();
-    if (campusSession) setCampusSession("", "");
-    localStorage.removeItem("campusSession");
-    navigate("/");
+    if (campusSession) {
+      setCampusSession("", "");
+      localStorage.removeItem("campusSession");
+      navigate("/enter");
+    } else {
+      navigate("/");
+    }
   }
 
   return (

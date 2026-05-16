@@ -9,9 +9,9 @@ const inputStyle = {
   width: "100%",
   padding: "11px 14px",
   borderRadius: 8,
-  border: "1px solid hsl(38 25% 22%)",
-  background: "hsl(35 18% 7%)",
-  color: "hsl(38 60% 70%)",
+  border: "1px solid hsl(270 25% 22%)",
+  background: "hsl(270 10% 4%)",
+  color: "hsl(270 40% 88%)",
   fontFamily: "Georgia, serif",
   fontSize: 14,
   outline: "none",
@@ -28,10 +28,8 @@ export default function CallerLoginPage() {
   const [shaking, setShaking] = useState(false);
 
   const { data, isLoading } = useListPxpCallers({ campus });
-
   const callers = data?.callers ?? [];
 
-  // Reset caller selection when campus changes
   useEffect(() => {
     setSelectedCallerId(null);
     setPassword("");
@@ -57,37 +55,47 @@ export default function CallerLoginPage() {
     }
   }
 
+  const canSubmit = !!selectedCallerId && !!password.trim();
+
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: "radial-gradient(ellipse at 60% 40%, hsl(35 30% 16%) 0%, hsl(35 20% 9%) 60%, hsl(30 18% 7%) 100%)" }}
+      style={{ background: "hsl(270 8% 3%)" }}
     >
-      <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 40%, hsl(30 18% 5% / 0.8) 100%)" }} />
-
-      {/* Back to login */}
       <button
         onClick={() => navigate("/")}
-        className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(38 45% 55%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        style={{
+          position: "fixed",
+          top: 20,
+          left: 24,
+          color: "hsl(270 45% 68%)",
+          fontFamily: "Georgia, serif",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          background: "hsl(270 20% 9%)",
+          border: "1px solid hsl(270 30% 22%)",
+          borderRadius: 6,
+          padding: "5px 12px",
+          cursor: "pointer",
+          zIndex: 50,
+        }}
       >
         ← Back
       </button>
 
       <div className="relative z-10 w-full max-w-xs px-4">
-        {/* Header */}
         <div className="text-center mb-10">
-          <div style={{ fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif", fontSize: 48, color: "hsl(38 80% 60%)", marginBottom: 8 }}>
+          <div style={{ fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif", fontSize: 48, color: "hsl(270 60% 62%)", marginBottom: 8, textShadow: "0 0 30px hsl(270 60% 40% / 0.6)" }}>
             א
           </div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "hsl(38 55% 62%)", letterSpacing: "0.28em", textTransform: "uppercase" }}>
+          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "hsl(270 55% 88%)", letterSpacing: "0.28em", textTransform: "uppercase" }}>
             Follow-Up Team Sign In
           </h1>
-          <div style={{ width: 40, height: 1, background: "hsl(38 30% 30%)", margin: "10px auto 0" }} />
+          <div style={{ width: 40, height: 1, background: "linear-gradient(90deg, transparent, hsl(270 60% 45%), transparent)", margin: "10px auto 0" }} />
         </div>
 
-        {/* Form */}
         <div className={shaking ? "shake" : ""} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* Campus */}
           <select
             style={{ ...inputStyle, appearance: "none" as const }}
             value={campus}
@@ -96,9 +104,8 @@ export default function CallerLoginPage() {
             {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
-          {/* Caller name */}
           <select
-            style={{ ...inputStyle, appearance: "none" as const, color: selectedCallerId ? "hsl(38 60% 70%)" : "hsl(38 30% 42%)" }}
+            style={{ ...inputStyle, appearance: "none" as const, color: selectedCallerId ? "hsl(270 40% 88%)" : "hsl(270 20% 42%)" }}
             value={selectedCallerId ?? ""}
             onChange={e => setSelectedCallerId(e.target.value ? parseInt(e.target.value) : null)}
             disabled={isLoading || callers.length === 0}
@@ -111,10 +118,14 @@ export default function CallerLoginPage() {
             ))}
           </select>
 
-          {/* Password */}
           <input
             type="password"
-            style={{ ...inputStyle, border: error ? "1px solid hsl(0 55% 40%)" : inputStyle.border, color: error ? "hsl(0 70% 60%)" : inputStyle.color, letterSpacing: "0.2em" }}
+            style={{
+              ...inputStyle,
+              border: error ? "1px solid hsl(0 55% 40%)" : inputStyle.border,
+              color: error ? "hsl(0 70% 60%)" : inputStyle.color,
+              letterSpacing: "0.2em",
+            }}
             placeholder="Password"
             value={password}
             onChange={e => setPassword(e.target.value)}
@@ -129,21 +140,21 @@ export default function CallerLoginPage() {
 
           <button
             onClick={handleLogin}
-            disabled={!selectedCallerId || !password.trim()}
+            disabled={!canSubmit}
             style={{
               marginTop: 4,
               padding: "13px 0",
               borderRadius: 8,
-              background: selectedCallerId && password.trim()
-                ? "linear-gradient(135deg, hsl(38 45% 22%), hsl(35 40% 16%))"
-                : "hsl(35 18% 10%)",
-              border: `1px solid ${selectedCallerId && password.trim() ? "hsl(38 40% 32%)" : "hsl(38 20% 16%)"}`,
-              color: selectedCallerId && password.trim() ? "hsl(38 70% 65%)" : "hsl(38 20% 32%)",
+              background: canSubmit
+                ? "linear-gradient(135deg, hsl(270 60% 42%), hsl(270 55% 30%))"
+                : "hsl(270 12% 8%)",
+              border: `1px solid ${canSubmit ? "hsl(270 55% 46%)" : "hsl(270 15% 14%)"}`,
+              color: canSubmit ? "hsl(270 20% 95%)" : "hsl(270 15% 32%)",
               fontFamily: "Georgia, serif",
               fontSize: 12,
               letterSpacing: "0.22em",
               textTransform: "uppercase",
-              cursor: selectedCallerId && password.trim() ? "pointer" : "not-allowed",
+              cursor: canSubmit ? "pointer" : "not-allowed",
               transition: "all 0.2s",
             }}
           >

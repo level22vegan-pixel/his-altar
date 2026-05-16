@@ -68,7 +68,7 @@ export default function ArrowheadPage() {
       </div>
 
       <button
-        onClick={() => navigate("/home")}
+        onClick={() => navigate("/enter")}
         className="absolute top-5 left-6 z-10 text-xs tracking-widest uppercase transition-opacity duration-200 opacity-40 hover:opacity-80"
         style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
       >

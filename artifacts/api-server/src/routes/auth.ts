@@ -19,9 +19,9 @@ async function getAdminPassword(): Promise<string> {
 const YESHUA_DEFAULT = [10, 21, 6, 16];
 
 async function ensureDefaultConfig() {
-  const rows = await db.select().from(loginConfigTable).limit(1);
+  const rows = await db.select().from(loginConfigTable).where(eq(loginConfigTable.orgId, 1)).limit(1);
   if (rows.length === 0) {
-    await db.insert(loginConfigTable).values({ code: YESHUA_DEFAULT });
+    await db.insert(loginConfigTable).values({ orgId: 1, code: YESHUA_DEFAULT, isAdmin: true, label: "Admin" });
   }
 }
 
@@ -46,27 +46,34 @@ router.post("/verify", async (req, res) => {
     }
 
     const submitted = parsed.data.sequence;
+    const orgId = (req as { orgId?: number }).orgId ?? 1;
 
-    // --- Check master code ---
+    // Load all codes for this org
     const rows = await db
       .select()
       .from(loginConfigTable)
-      .orderBy(desc(loginConfigTable.updatedAt))
-      .limit(1);
-    const masterCode = rows[0]?.code ?? YESHUA_DEFAULT;
+      .where(eq(loginConfigTable.orgId, orgId))
+      .orderBy(desc(loginConfigTable.updatedAt));
 
-    if (seqEqual(submitted, masterCode)) {
-      // Load org 1 (The Way World Outreach) data to include in the session
+    if (rows.length === 0) {
+      res.json({ success: false, partial: false, message: "Invalid sequence" });
+      return;
+    }
+
+    // Check for exact match against any stored code
+    const matched = rows.find(r => seqEqual(submitted, r.code));
+    if (matched) {
       const orgRows = await db
         .select({ id: organizationsTable.id, name: organizationsTable.name, token: organizationsTable.token, campuses: organizationsTable.campuses, serviceTimes: organizationsTable.serviceTimes })
         .from(organizationsTable)
-        .where(eq(organizationsTable.id, 1))
+        .where(eq(organizationsTable.id, orgId))
         .limit(1);
       const org = orgRows[0];
       res.json({
         success: true,
         partial: false,
-        role: "master",
+        role: matched.isAdmin ? "master" : "staff",
+        isAdmin: matched.isAdmin,
         message: "Access granted",
         orgId: org?.id ?? 1,
         orgName: org?.name ?? "The Way World Outreach",
@@ -77,9 +84,9 @@ router.post("/verify", async (req, res) => {
       return;
     }
 
-    // --- Check partial: prefix of master ---
-    const isMasterPartial = seqIsPrefix(submitted, masterCode);
-    if (isMasterPartial) {
+    // Check if submitted is a valid prefix of ANY code
+    const isPartial = rows.some(r => seqIsPrefix(submitted, r.code));
+    if (isPartial) {
       res.json({ success: false, partial: true, message: "Keep going" });
       return;
     }

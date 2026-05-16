@@ -155,16 +155,18 @@ export default function LoginPage() {
               setStatus("success");
               const role = data.role;
               const campus = (data as { campus?: string }).campus;
-              // Always store org 1 session so campuses/service times come from DB
+              const isAdmin = (data as { isAdmin?: boolean }).isAdmin ?? (role === "master");
+              // Always store org session so campuses/service times come from DB
               const d = data as { orgId?: number; orgName?: string; orgToken?: string; campuses?: string[]; serviceTimes?: Record<string, string[]> };
               if (d.orgToken) {
                 setOrgSession(d.orgId ?? 1, d.orgName ?? "The Way World Outreach", d.orgToken, d.campuses ?? [], d.serviceTimes ?? {});
               }
               if (campus) {
                 setCampusSession(campus, role ?? "lead");
-              } else {
+              } else if (isAdmin) {
                 setAdminSession();
               }
+              // Staff (isAdmin=false, no campus) goes to /home without admin session
               setTimeout(() => navigate("/home"), 600);
             } else if (!data.partial) {
               // Definitively wrong (not a valid prefix) — shake and reset

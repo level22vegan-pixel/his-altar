@@ -17,6 +17,7 @@ import { pxpConfigRouter } from "./pxpConfig";
 import { pxpCallLogsRouter } from "./pxpCallLogs";
 import { pxpCallersRouter } from "./pxpCallers";
 import { orgsRouter } from "./orgs";
+import { superadminRouter } from "./superadmin";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,6 @@ router.use("/pxp/config", pxpConfigRouter);
 router.use("/pxp/call-logs", pxpCallLogsRouter);
 router.use("/pxp/callers", pxpCallersRouter);
 router.use("/orgs", orgsRouter);
+router.use("/superadmin", superadminRouter);
 
 export default router;

@@ -97,6 +97,20 @@ export default function PinEntryPage() {
         return;
       }
 
+      // Fallback: try superadmin gateway code
+      const saRes = await fetch("/api/superadmin/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (saRes.ok) {
+        const saData = await saRes.json();
+        if (saData.match) {
+          navigate("/superadmin/login", { replace: true });
+          return;
+        }
+      }
+
       setError("Invalid code. Please try again.");
       setDigits(["", "", "", ""]);
       setTimeout(() => inputs.current[0]?.focus(), 50);

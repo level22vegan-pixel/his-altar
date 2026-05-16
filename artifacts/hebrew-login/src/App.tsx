@@ -37,12 +37,14 @@ import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
 import AboutPage from "@/pages/AboutPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
+import SuperAdminLoginPage from "@/pages/SuperAdminLoginPage";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession, getValidCallerSession, getValidOrgSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/admin/login", "/about", "/unauthorized"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/admin/login", "/about", "/unauthorized", "/superadmin/login", "/superadmin"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -142,6 +144,8 @@ function Router() {
         <Route path="/org/dashboard" component={OrgDashboardPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
+        <Route path="/superadmin/login" component={SuperAdminLoginPage} />
+        <Route path="/superadmin" component={SuperAdminDashboard} />
         <Route component={NotFound} />
       </Switch>
     </>

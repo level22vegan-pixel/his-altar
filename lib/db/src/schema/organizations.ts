@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +12,10 @@ export const organizationsTable = pgTable("organizations", {
   pin: text("pin"),
   campuses: jsonb("campuses").$type<string[]>().notNull().default(["HALLMARK","ARROWHEAD","RIVERSIDE","POMONA","LA","ARIZONA"]),
   serviceTimes: jsonb("service_times").$type<Record<string,string[]>>().notNull().default({}),
+  plan: text("plan").notNull().default("free"),
+  billingStatus: text("billing_status").notNull().default("active"),
+  billingNotes: text("billing_notes"),
+  suspended: boolean("suspended").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastActiveAt: timestamp("last_active_at"),
 });

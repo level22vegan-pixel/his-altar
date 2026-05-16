@@ -34,19 +34,18 @@ const CAMPUS_SERVICES: Record<string, string[]> = {
   ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
 };
 
-// ── PDF colours (purple-dark theme) ──────────────────────────────────────────
-const PDF_BG          = [18, 12, 30]  as const;
-const PDF_PURPLE      = [160, 110, 220] as const;
-const PDF_PURPLE_DIM  = [100, 70, 150] as const;
-const PDF_WHITE       = [210, 200, 230] as const;
-const PDF_ROW_ALT     = [32, 22, 50]  as const;
-const PDF_HEADER_ROW  = [50, 30, 75]  as const;
+const PDF_BG          = [18, 20, 24]  as const;
+const PDF_BLUE        = [100, 150, 220] as const;
+const PDF_BLUE_DIM    = [70, 110, 170] as const;
+const PDF_WHITE       = [200, 210, 225] as const;
+const PDF_ROW_ALT     = [28, 32, 40]  as const;
+const PDF_HEADER_ROW  = [40, 46, 60]  as const;
 
 const inputStyle = {
   padding: "9px 14px",
   borderRadius: 8,
-  border: "1px solid hsl(270 30% 30%)",
-  background: "hsl(270 40% 10%)",
+  border: "1px solid hsl(220 15% 28%)",
+  background: "hsl(220 15% 9%)",
   color: "hsl(0 0% 92%)",
   fontFamily: "Georgia, serif",
   fontSize: 12,
@@ -57,7 +56,6 @@ const inputStyle = {
 export default function PXPLogsPage() {
   const [, navigate] = useLocation();
 
-  // Determine locked campus from whichever session is active
   const callerSession = getValidCallerSession();
   const campusSession = getValidCampusSession();
   const lockedCampus  = callerSession?.campus ?? campusSession?.campus ?? null;
@@ -67,8 +65,6 @@ export default function PXPLogsPage() {
 
   const [filterService, setFilterService] = useState("");
   const [filterCaller, setFilterCaller]   = useState("");
-
-  // Campus filter is locked when a session is active; otherwise freely selectable
   const [filterCampus, setFilterCampus] = useState(lockedCampus ?? "");
 
   const logs     = logsData?.logs ?? [];
@@ -85,7 +81,6 @@ export default function PXPLogsPage() {
     return true;
   });
 
-  // ── Tally ────────────────────────────────────────────────────────────────────
   const uniqueContacts = new Set(filteredLogs.map(l => l.contactId)).size;
   const uniqueCallers  = new Set(filteredLogs.map(l => l.callerName)).size;
 
@@ -98,7 +93,6 @@ export default function PXPLogsPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
 
-  // ── Build export rows ─────────────────────────────────────────────────────────
   function buildRows() {
     return filteredLogs.map((log, i) => {
       const c = contactsMap[log.contactId];
@@ -145,20 +139,18 @@ export default function PXPLogsPage() {
 
   function exportPDF() {
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "letter" });
-    const W   = doc.internal.pageSize.getWidth();   // 279 mm
-    const H   = doc.internal.pageSize.getHeight();  // 216 mm
+    const W   = doc.internal.pageSize.getWidth();
+    const H   = doc.internal.pageSize.getHeight();
 
-    // Background
     doc.setFillColor(...PDF_BG);
     doc.rect(0, 0, W, H, "F");
 
-    // Title bar
-    doc.setDrawColor(...PDF_PURPLE);
+    doc.setDrawColor(...PDF_BLUE);
     doc.setLineWidth(0.8);
     doc.line(14, 18, W - 14, 18);
     doc.setFont("times", "bold");
     doc.setFontSize(18);
-    doc.setTextColor(...PDF_PURPLE);
+    doc.setTextColor(...PDF_BLUE);
 
     const subtitle = [
       filterCampus  ? filterCampus  : "All Campuses",
@@ -169,13 +161,12 @@ export default function PXPLogsPage() {
     doc.text("PXP — CALL HISTORY", W / 2, 13, { align: "center" });
     doc.setFont("times", "normal");
     doc.setFontSize(10);
-    doc.setTextColor(...PDF_PURPLE_DIM);
+    doc.setTextColor(...PDF_BLUE_DIM);
     doc.text(subtitle, W / 2, 23, { align: "center" });
-    doc.setDrawColor(...PDF_PURPLE_DIM);
+    doc.setDrawColor(...PDF_BLUE_DIM);
     doc.setLineWidth(0.3);
     doc.line(14, 26, W - 14, 26);
 
-    // Tally summary line
     doc.setFont("times", "italic");
     doc.setFontSize(9);
     doc.setTextColor(...PDF_WHITE);
@@ -184,8 +175,6 @@ export default function PXPLogsPage() {
       W / 2, 32, { align: "center" }
     );
 
-    // Table header
-    // cols: Contact Name | Phone | Campus | Service | Caller | Date | Outcome | Notes
     const cols  = ["Contact Name", "Phone", "Campus", "Service", "Caller", "Date / Time", "Outcome", "Notes"];
     const colW  = [42, 26, 22, 26, 28, 36, 30, 50];
     const startX = 14;
@@ -196,7 +185,7 @@ export default function PXPLogsPage() {
     doc.rect(startX, y - 5, W - 28, rowH, "F");
     doc.setFont("times", "bold");
     doc.setFontSize(8);
-    doc.setTextColor(...PDF_PURPLE);
+    doc.setTextColor(...PDF_BLUE);
     let x = startX + 2;
     cols.forEach((col, i) => { doc.text(col.toUpperCase(), x, y); x += colW[i]; });
     y += rowH;
@@ -237,25 +226,23 @@ export default function PXPLogsPage() {
       y += rowH;
     });
 
-    // Totals row
     if (filteredLogs.length > 0) {
       y += 2;
-      doc.setDrawColor(...PDF_PURPLE_DIM);
+      doc.setDrawColor(...PDF_BLUE_DIM);
       doc.setLineWidth(0.3);
       doc.line(startX, y - 4, W - 14, y - 4);
       doc.setFont("times", "bold");
       doc.setFontSize(8);
-      doc.setTextColor(...PDF_PURPLE);
+      doc.setTextColor(...PDF_BLUE);
       doc.text(`TOTAL CALLS: ${filteredLogs.length}   UNIQUE CONTACTS: ${uniqueContacts}   UNIQUE CALLERS: ${uniqueCallers}`, startX + 2, y);
     }
 
-    // Footer
-    doc.setDrawColor(...PDF_PURPLE_DIM);
+    doc.setDrawColor(...PDF_BLUE_DIM);
     doc.setLineWidth(0.3);
     doc.line(14, H - 12, W - 14, H - 12);
     doc.setFont("times", "italic");
     doc.setFontSize(8);
-    doc.setTextColor(...PDF_PURPLE_DIM);
+    doc.setTextColor(...PDF_BLUE_DIM);
     doc.text("PXP Call History — Confidential", W / 2, H - 7, { align: "center" });
 
     doc.save(`pxp-call-history-${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -267,15 +254,23 @@ export default function PXPLogsPage() {
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
-      style={{ background: "radial-gradient(ellipse at 50% 20%, hsl(270 50% 14%) 0%, hsl(260 45% 8%) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(220 15% 10%) 0%, hsl(220 12% 8%) 100%)" }}
     >
-      <div className="absolute top-0 left-0 right-0 h-1" style={{ background: "linear-gradient(90deg, hsl(270 70% 55%), hsl(300 60% 55%), hsl(270 70% 55%))" }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(270 50% 60% / 0.05) 1px, transparent 1px)", backgroundSize: "50px 50px" }} />
-
       <button
         onClick={() => navigate(callerSession ? "/admin/pxp" : "/admin")}
-        className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        className="fixed top-5 left-6 z-50"
+        style={{
+          color: "hsl(220 10% 68%)",
+          fontFamily: "Georgia, serif",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          background: "hsl(220 15% 18%)",
+          border: "1px solid hsl(220 12% 30%)",
+          borderRadius: 6,
+          padding: "5px 12px",
+          cursor: "pointer",
+        }}
       >
         {callerSession ? "← PXP" : "← Admin"}
       </button>
@@ -285,39 +280,36 @@ export default function PXPLogsPage() {
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 4vw, 2rem)", color: "hsl(0 0% 97%)", letterSpacing: "0.2em", textTransform: "uppercase" }}>
             Call History
           </h1>
-          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, transparent, hsl(270 60% 55%), transparent)", margin: "8px auto 0" }} />
+          <div style={{ width: 50, height: 2, background: "linear-gradient(90deg, transparent, hsl(210 50% 55%), transparent)", margin: "8px auto 0" }} />
         </div>
 
-        {/* Tally strip */}
         {logs.length > 0 && (
-          <div style={{ background: "hsl(270 35% 11%)", border: "1px solid hsl(270 30% 22%)", borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
-            {/* Main counts */}
+          <div style={{ background: "hsl(220 12% 14%)", border: "1px solid hsl(220 12% 22%)", borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 12 }}>
               {[
-                { label: "Total Calls",    value: filteredLogs.length,  color: "hsl(270 70% 75%)" },
-                { label: "Contacts",       value: uniqueContacts,        color: "hsl(200 65% 68%)" },
+                { label: "Total Calls",    value: filteredLogs.length,  color: "hsl(210 65% 70%)" },
+                { label: "Contacts",       value: uniqueContacts,        color: "hsl(200 60% 65%)" },
                 { label: "Callers",        value: uniqueCallers,         color: "hsl(140 55% 55%)" },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ color, fontFamily: "Georgia, serif", fontSize: "clamp(1.4rem, 5vw, 2rem)", fontWeight: "bold", lineHeight: 1 }}>
                     {value}
                   </div>
-                  <div style={{ color: "hsl(270 25% 45%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>
+                  <div style={{ color: "hsl(220 10% 44%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 3 }}>
                     {label}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Outcome breakdown */}
             {topOutcomes.length > 0 && (
               <>
-                <div style={{ height: 1, background: "hsl(270 25% 20%)", marginBottom: 10 }} />
+                <div style={{ height: 1, background: "hsl(220 12% 20%)", marginBottom: 10 }} />
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                   {topOutcomes.map(([outcome, count]) => (
-                    <div key={outcome} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", background: "hsl(270 30% 8%)", border: "1px solid hsl(270 25% 20%)", borderRadius: 20 }}>
-                      <span style={{ color: "hsl(270 60% 68%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{count}</span>
-                      <span style={{ color: "hsl(270 25% 48%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em" }}>{outcome}</span>
+                    <div key={outcome} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", background: "hsl(220 15% 9%)", border: "1px solid hsl(220 12% 20%)", borderRadius: 20 }}>
+                      <span style={{ color: "hsl(210 55% 65%)", fontFamily: "Georgia, serif", fontSize: 13, fontWeight: "bold" }}>{count}</span>
+                      <span style={{ color: "hsl(220 10% 48%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em" }}>{outcome}</span>
                     </div>
                   ))}
                 </div>
@@ -326,16 +318,15 @@ export default function PXPLogsPage() {
           </div>
         )}
 
-        {/* Filters */}
-        <div style={{ background: "hsl(270 35% 11%)", border: "1px solid hsl(270 30% 22%)", borderRadius: 12, padding: 16, marginBottom: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ color: "hsl(270 40% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 0 }}>
+        <div style={{ background: "hsl(220 12% 14%)", border: "1px solid hsl(220 12% 22%)", borderRadius: 12, padding: 16, marginBottom: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ color: "hsl(220 15% 50%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 0 }}>
             Filter
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {lockedCampus ? (
               <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
-                <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
-                <span style={{ color: "hsl(270 30% 42%)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Locked</span>
+                <span style={{ color: "hsl(210 55% 68%)" }}>{lockedCampus}</span>
+                <span style={{ color: "hsl(220 10% 42%)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Locked</span>
               </div>
             ) : (
               <select
@@ -348,7 +339,7 @@ export default function PXPLogsPage() {
               </select>
             )}
             <select
-              style={{ ...inputStyle, color: filterService ? "hsl(270 70% 78%)" : undefined }}
+              style={{ ...inputStyle, color: filterService ? "hsl(210 60% 70%)" : undefined }}
               value={filterService}
               onChange={e => setFilterService(e.target.value)}
               disabled={!filterCampus}
@@ -363,12 +354,11 @@ export default function PXPLogsPage() {
           </select>
         </div>
 
-        {/* Export buttons */}
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
           {[
-            { label: "↓ PDF",   onClick: exportPDF,   bg: "hsl(270 50% 18%)", color: "hsl(270 70% 78%)", border: "hsl(270 45% 34%)" },
-            { label: "↓ Excel", onClick: exportExcel, bg: "hsl(140 45% 16%)", color: "hsl(140 65% 62%)", border: "hsl(140 42% 28%)" },
-            { label: "↓ CSV",   onClick: exportCSV,   bg: "hsl(210 45% 16%)", color: "hsl(210 65% 68%)", border: "hsl(210 42% 30%)" },
+            { label: "↓ PDF",   onClick: exportPDF,   bg: "hsl(210 40% 16%)", color: "hsl(210 65% 72%)", border: "hsl(210 40% 30%)" },
+            { label: "↓ Excel", onClick: exportExcel, bg: "hsl(140 40% 14%)", color: "hsl(140 60% 60%)", border: "hsl(140 38% 26%)" },
+            { label: "↓ CSV",   onClick: exportCSV,   bg: "hsl(200 40% 14%)", color: "hsl(200 60% 65%)", border: "hsl(200 38% 28%)" },
           ].map(({ label, onClick, bg, color, border }) => (
             <button
               key={label}
@@ -376,10 +366,10 @@ export default function PXPLogsPage() {
               disabled={!canExport}
               style={{
                 flex: 1, padding: "11px 0", borderRadius: 10,
-                background: canExport ? bg : "hsl(270 25% 12%)",
-                color: canExport ? color : "hsl(270 18% 33%)",
+                background: canExport ? bg : "hsl(220 12% 12%)",
+                color: canExport ? color : "hsl(220 10% 32%)",
                 fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase",
-                border: `1px solid ${canExport ? border : "hsl(270 18% 20%)"}`,
+                border: `1px solid ${canExport ? border : "hsl(220 12% 20%)"}`,
                 cursor: canExport ? "pointer" : "not-allowed",
                 transition: "all 0.15s",
               }}
@@ -389,12 +379,11 @@ export default function PXPLogsPage() {
           ))}
         </div>
 
-        {/* Log list */}
-        <div style={{ borderRadius: 10, border: "1px solid hsl(270 30% 20%)", background: "hsl(270 35% 10% / 0.8)", overflow: "hidden" }}>
+        <div style={{ borderRadius: 10, border: "1px solid hsl(220 12% 18%)", background: "hsl(220 12% 10% / 0.8)", overflow: "hidden" }}>
           {isLoading ? (
-            <div style={{ padding: 32, textAlign: "center", color: "hsl(270 35% 45%)", fontFamily: "Georgia, serif", fontSize: 13 }}>Loading…</div>
+            <div style={{ padding: 32, textAlign: "center", color: "hsl(220 10% 44%)", fontFamily: "Georgia, serif", fontSize: 13 }}>Loading…</div>
           ) : filteredLogs.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "hsl(270 25% 38%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>
+            <div style={{ padding: 40, textAlign: "center", color: "hsl(220 10% 38%)", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.1em" }}>
               {logs.length === 0 ? "No calls logged yet" : "No results match the current filters"}
             </div>
           ) : (
@@ -405,8 +394,8 @@ export default function PXPLogsPage() {
                   key={log.id}
                   style={{
                     padding: "14px 18px",
-                    borderBottom: i < filteredLogs.length - 1 ? "1px solid hsl(270 25% 14%)" : "none",
-                    background: i % 2 === 0 ? "transparent" : "hsl(270 30% 8% / 0.5)",
+                    borderBottom: i < filteredLogs.length - 1 ? "1px solid hsl(220 12% 15%)" : "none",
+                    background: i % 2 === 0 ? "transparent" : "hsl(220 12% 9% / 0.5)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
@@ -415,30 +404,30 @@ export default function PXPLogsPage() {
                         {contact ? `${contact.firstName} ${contact.lastName}` : `Contact #${log.contactId}`}
                       </span>
                       {contact?.serviceTime && (
-                        <span style={{ background: "hsl(270 45% 16%)", color: "hsl(270 60% 70%)", borderRadius: 4, padding: "1px 7px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                        <span style={{ background: "hsl(210 40% 15%)", color: "hsl(210 55% 65%)", borderRadius: 4, padding: "1px 7px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                           {contact.serviceTime}
                         </span>
                       )}
                     </div>
-                    <span style={{ color: "hsl(270 30% 45%)", fontFamily: "Georgia, serif", fontSize: 11, flexShrink: 0, marginLeft: 8 }}>
+                    <span style={{ color: "hsl(220 10% 44%)", fontFamily: "Georgia, serif", fontSize: 11, flexShrink: 0, marginLeft: 8 }}>
                       {formatDate(log.calledAt)}
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ background: "hsl(270 45% 18%)", color: "hsl(270 60% 70%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    <span style={{ background: "hsl(210 40% 16%)", color: "hsl(210 55% 65%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       {log.callerName}
                     </span>
-                    <span style={{ background: "hsl(270 30% 14%)", color: "hsl(270 40% 55%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
+                    <span style={{ background: "hsl(220 12% 14%)", color: "hsl(220 10% 52%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
                       {log.campus}
                     </span>
                     {log.outcome && (
-                      <span style={{ background: "hsl(270 25% 12%)", color: "hsl(270 35% 52%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
+                      <span style={{ background: "hsl(220 12% 12%)", color: "hsl(220 10% 50%)", borderRadius: 4, padding: "2px 8px", fontFamily: "Georgia, serif", fontSize: 10 }}>
                         {log.outcome}
                       </span>
                     )}
                   </div>
                   {log.notes && (
-                    <p style={{ color: "hsl(270 25% 48%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 5, lineHeight: 1.5 }}>
+                    <p style={{ color: "hsl(220 10% 46%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 5, lineHeight: 1.5 }}>
                       {log.notes}
                     </p>
                   )}
@@ -448,7 +437,7 @@ export default function PXPLogsPage() {
           )}
         </div>
 
-        <p style={{ textAlign: "center", marginTop: 10, color: "hsl(270 25% 35%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
+        <p style={{ textAlign: "center", marginTop: 10, color: "hsl(220 10% 34%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
           {filteredLogs.length} {filteredLogs.length === 1 ? "call" : "calls"}
           {filteredLogs.length !== logs.length ? ` of ${logs.length} total` : " logged"}
         </p>

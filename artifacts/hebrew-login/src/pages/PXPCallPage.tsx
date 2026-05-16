@@ -29,7 +29,7 @@ function parseParams(search: string) {
 }
 
 export default function PXPCallPage() {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const params = parseParams(window.location.search);
 
   const { data: contactData } = useGetDbancContact(
@@ -105,10 +105,25 @@ export default function PXPCallPage() {
     setLogging(false);
   }
 
+  const textareaStyle = {
+    width: "100%",
+    padding: "10px 14px",
+    borderRadius: 8,
+    border: "1px solid hsl(220 15% 28%)",
+    background: "hsl(220 15% 9%)",
+    color: "hsl(0 0% 92%)",
+    fontFamily: "Georgia, serif",
+    fontSize: 13,
+    outline: "none",
+    boxSizing: "border-box" as const,
+    resize: "vertical" as const,
+    minHeight: 72,
+  };
+
   if (!currentNode) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at 50% 20%, hsl(270 50% 14%) 0%, hsl(260 45% 8%) 100%)" }}>
-        <span style={{ color: "hsl(270 40% 55%)", fontFamily: "Georgia, serif", fontSize: 14 }}>Loading script…</span>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(160deg, hsl(220 15% 10%) 0%, hsl(220 12% 8%) 100%)" }}>
+        <span style={{ color: "hsl(220 12% 50%)", fontFamily: "Georgia, serif", fontSize: 14 }}>Loading script…</span>
       </div>
     );
   }
@@ -119,55 +134,58 @@ export default function PXPCallPage() {
   return (
     <div
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
-      style={{ background: "radial-gradient(ellipse at 50% 20%, hsl(270 50% 14%) 0%, hsl(260 45% 8%) 100%)" }}
+      style={{ background: "linear-gradient(160deg, hsl(220 15% 10%) 0%, hsl(220 12% 8%) 100%)" }}
     >
-      <div className="absolute top-0 left-0 right-0 h-1" style={{ background: "linear-gradient(90deg, hsl(270 70% 55%), hsl(300 60% 55%), hsl(270 70% 55%))" }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, hsl(270 50% 60% / 0.05) 1px, transparent 1px)", backgroundSize: "50px 50px" }} />
-
-      {/* Back to PXP */}
       <button
         onClick={() => navigate("/admin/pxp")}
-        className="absolute top-5 left-6 z-20 text-xs tracking-widest uppercase opacity-50 hover:opacity-90 transition-opacity"
-        style={{ color: "hsl(270 50% 75%)", fontFamily: "Georgia, serif", background: "none", border: "none", cursor: "pointer" }}
+        className="fixed top-5 left-6 z-50"
+        style={{
+          color: "hsl(220 10% 68%)",
+          fontFamily: "Georgia, serif",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          background: "hsl(220 15% 18%)",
+          border: "1px solid hsl(220 12% 30%)",
+          borderRadius: 6,
+          padding: "5px 12px",
+          cursor: "pointer",
+        }}
       >
         ← PXP
       </button>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <h1 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "hsl(0 0% 96%)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
               PXP Call
             </h1>
             {contact && (
-              <p style={{ color: "hsl(270 45% 60%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
+              <p style={{ color: "hsl(210 45% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.1em" }}>
                 Calling: {contact.firstName} {contact.lastName} · {params.callerName}
               </p>
             )}
           </div>
-          {/* Progress dots */}
           <div style={{ display: "flex", gap: 5 }}>
             {[...Array(Math.max(1, depth + 1))].map((_, i) => (
-              <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i === depth ? "hsl(270 65% 60%)" : "hsl(270 35% 30%)" }} />
+              <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i === depth ? "hsl(210 55% 58%)" : "hsl(220 12% 28%)" }} />
             ))}
           </div>
         </div>
 
-        {/* Script card */}
         <div
           style={{
-            background: "hsl(270 35% 12%)",
-            border: "1px solid hsl(270 35% 25%)",
+            background: "hsl(220 12% 14%)",
+            border: "1px solid hsl(220 12% 24%)",
             borderRadius: 14,
             padding: "28px 24px",
             marginBottom: 24,
-            boxShadow: "0 8px 40px hsl(270 50% 8% / 0.6)",
+            boxShadow: "0 8px 40px hsl(220 15% 5% / 0.6)",
             position: "relative",
           }}
         >
-          {/* Label */}
-          <div style={{ position: "absolute", top: -10, left: 20, background: "hsl(270 60% 35%)", color: "hsl(0 0% 97%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", padding: "3px 10px", borderRadius: 20 }}>
+          <div style={{ position: "absolute", top: -10, left: 20, background: "hsl(210 50% 32%)", color: "hsl(0 0% 97%)", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", padding: "3px 10px", borderRadius: 20 }}>
             {callDone ? "Closing" : depth === 0 ? "Opening" : `Step ${depth + 1}`}
           </div>
 
@@ -182,32 +200,21 @@ export default function PXPCallPage() {
           </p>
         </div>
 
-        {/* Response buttons or completion */}
         {callDone ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ background: "hsl(270 40% 12%)", border: "1px solid hsl(270 35% 22%)", borderRadius: 10, padding: 16, textAlign: "center" }}>
-              <p style={{ color: "hsl(270 60% 68%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
+            <div style={{ background: "hsl(220 12% 14%)", border: "1px solid hsl(220 12% 22%)", borderRadius: 10, padding: 16, textAlign: "center" }}>
+              <p style={{ color: "hsl(210 55% 65%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
                 Call Complete
               </p>
-              <p style={{ color: "hsl(270 35% 55%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
+              <p style={{ color: "hsl(220 10% 52%)", fontFamily: "Georgia, serif", fontSize: 11 }}>
                 Outcome: {outcome || "Completed"}
               </p>
             </div>
 
             {!logged && (
               <>
-                <textarea
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid hsl(270 30% 28%)", background: "hsl(270 40% 10%)", color: "hsl(0 0% 92%)", fontFamily: "Georgia, serif", fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 72 }}
-                  placeholder="Services offered (prayer, counseling, food, referral…)"
-                  value={servicesOffered}
-                  onChange={e => setServicesOffered(e.target.value)}
-                />
-                <textarea
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid hsl(270 30% 28%)", background: "hsl(270 40% 10%)", color: "hsl(0 0% 92%)", fontFamily: "Georgia, serif", fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 72 }}
-                  placeholder="Contact's feedback or response…"
-                  value={feedback}
-                  onChange={e => setFeedback(e.target.value)}
-                />
+                <textarea style={textareaStyle} placeholder="Services offered (prayer, counseling, food, referral…)" value={servicesOffered} onChange={e => setServicesOffered(e.target.value)} />
+                <textarea style={textareaStyle} placeholder="Contact's feedback or response…" value={feedback} onChange={e => setFeedback(e.target.value)} />
               </>
             )}
 
@@ -218,13 +225,13 @@ export default function PXPCallPage() {
                 style={{
                   padding: "13px 0",
                   borderRadius: 10,
-                  background: "linear-gradient(135deg, hsl(270 65% 38%), hsl(270 58% 28%))",
+                  background: "linear-gradient(135deg, hsl(210 55% 38%), hsl(210 50% 28%))",
                   color: "hsl(0 0% 97%)",
                   fontFamily: "Georgia, serif",
                   fontSize: 13,
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
-                  border: "1px solid hsl(270 50% 42%)",
+                  border: "1px solid hsl(210 50% 42%)",
                   cursor: logging ? "not-allowed" : "pointer",
                 }}
               >
@@ -236,13 +243,13 @@ export default function PXPCallPage() {
                 style={{
                   padding: "13px 0",
                   borderRadius: 10,
-                  background: "hsl(270 35% 16%)",
-                  color: "hsl(270 60% 70%)",
+                  background: "hsl(220 12% 16%)",
+                  color: "hsl(210 55% 65%)",
                   fontFamily: "Georgia, serif",
                   fontSize: 13,
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
-                  border: "1px solid hsl(270 30% 28%)",
+                  border: "1px solid hsl(220 12% 26%)",
                   cursor: "pointer",
                 }}
               >
@@ -253,7 +260,7 @@ export default function PXPCallPage() {
             {!logged && depth > 0 && (
               <button
                 onClick={handleBack}
-                style={{ padding: "10px 0", borderRadius: 8, background: "none", color: "hsl(270 35% 48%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", border: "1px solid hsl(270 25% 22%)", cursor: "pointer" }}
+                style={{ padding: "10px 0", borderRadius: 8, background: "none", color: "hsl(220 10% 45%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", border: "1px solid hsl(220 12% 22%)", cursor: "pointer" }}
               >
                 ← Go Back
               </button>
@@ -261,7 +268,7 @@ export default function PXPCallPage() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <p style={{ color: "hsl(270 35% 50%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4, textAlign: "center" }}>
+            <p style={{ color: "hsl(220 10% 48%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4, textAlign: "center" }}>
               Their response:
             </p>
 
@@ -272,12 +279,12 @@ export default function PXPCallPage() {
                 style={{
                   padding: "13px 20px",
                   borderRadius: 10,
-                  background: "hsl(270 40% 16%)",
+                  background: "hsl(220 12% 16%)",
                   color: "hsl(0 0% 92%)",
                   fontFamily: "Georgia, serif",
                   fontSize: 13,
                   letterSpacing: "0.05em",
-                  border: "1px solid hsl(270 35% 26%)",
+                  border: "1px solid hsl(220 12% 26%)",
                   cursor: "pointer",
                   textAlign: "left",
                   transition: "all 0.15s",
@@ -286,13 +293,13 @@ export default function PXPCallPage() {
                   justifyContent: "space-between",
                 }}
                 onMouseOver={e => {
-                  e.currentTarget.style.background = "hsl(270 50% 22%)";
-                  e.currentTarget.style.borderColor = "hsl(270 50% 38%)";
-                  e.currentTarget.style.color = "hsl(270 80% 88%)";
+                  e.currentTarget.style.background = "hsl(210 40% 18%)";
+                  e.currentTarget.style.borderColor = "hsl(210 45% 35%)";
+                  e.currentTarget.style.color = "hsl(210 65% 82%)";
                 }}
                 onMouseOut={e => {
-                  e.currentTarget.style.background = "hsl(270 40% 16%)";
-                  e.currentTarget.style.borderColor = "hsl(270 35% 26%)";
+                  e.currentTarget.style.background = "hsl(220 12% 16%)";
+                  e.currentTarget.style.borderColor = "hsl(220 12% 26%)";
                   e.currentTarget.style.color = "hsl(0 0% 92%)";
                 }}
               >
@@ -301,12 +308,11 @@ export default function PXPCallPage() {
               </button>
             ))}
 
-            {/* Manual end / voicemail handled by script, but provide escape */}
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               {depth > 0 && (
                 <button
                   onClick={handleBack}
-                  style={{ flex: 1, padding: "10px 0", borderRadius: 8, background: "none", color: "hsl(270 30% 45%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", border: "1px solid hsl(270 20% 20%)", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "10px 0", borderRadius: 8, background: "none", color: "hsl(220 10% 42%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", border: "1px solid hsl(220 12% 20%)", cursor: "pointer" }}
                 >
                   ← Back
                 </button>

@@ -3,16 +3,7 @@ import { useLocation } from "wouter";
 import { useListDbancContacts, useListPxpCallers, useCreateActivityLog, useListPxpCallLogs } from "@workspace/api-client-react";
 import { getSessionUserName, getValidCampusSession, getValidCallerSession, clearAllSessions } from "@/lib/session";
 
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
-
-const CAMPUS_SERVICES: Record<string, string[]> = {
-  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
-  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
-  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-};
+import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 
 const inputStyle = {
   width: "100%",
@@ -44,7 +35,9 @@ export default function PXPPage() {
   const lockedCallerName = callerSession?.callerName ?? null;
   const isCallerSession = !!callerSession;
 
-  const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? "HALLMARK");
+  const CAMPUSES = getOrgCampuses();
+  const CAMPUS_SERVICES = getOrgServiceTimes();
+  const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? CAMPUSES[0] ?? "HALLMARK");
   const [selectedCallerId, setSelectedCallerId] = useState<number | "manual" | null>(null);
   const [manualName, setManualName] = useState("");
   const [search, setSearch] = useState("");

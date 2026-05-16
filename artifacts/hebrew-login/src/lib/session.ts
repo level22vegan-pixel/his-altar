@@ -86,11 +86,26 @@ export function hasValidSession(): boolean {
   );
 }
 
-export function setOrgSession(orgId: number, orgName: string, token: string) {
-  localStorage.setItem("orgSession", JSON.stringify({ orgId, orgName, token, loginAt: Date.now() }));
+export function setOrgSession(
+  orgId: number,
+  orgName: string,
+  token: string,
+  campuses?: string[],
+  serviceTimes?: Record<string, string[]>,
+) {
+  localStorage.setItem(
+    "orgSession",
+    JSON.stringify({ orgId, orgName, token, campuses, serviceTimes, loginAt: Date.now() }),
+  );
 }
 
-export function getValidOrgSession(): { orgId: number; orgName: string; token: string } | null {
+export function getValidOrgSession(): {
+  orgId: number;
+  orgName: string;
+  token: string;
+  campuses?: string[];
+  serviceTimes?: Record<string, string[]>;
+} | null {
   try {
     const raw = localStorage.getItem("orgSession");
     if (!raw) return null;
@@ -100,7 +115,13 @@ export function getValidOrgSession(): { orgId: number; orgName: string; token: s
       localStorage.removeItem("orgSession");
       return null;
     }
-    return { orgId: parsed.orgId, orgName: parsed.orgName, token: parsed.token };
+    return {
+      orgId: parsed.orgId,
+      orgName: parsed.orgName,
+      token: parsed.token,
+      campuses: parsed.campuses,
+      serviceTimes: parsed.serviceTimes,
+    };
   } catch {
     return null;
   }
@@ -115,7 +136,9 @@ export function clearOrgSession() {
 }
 
 export function getSessionUserName(): string {
-  if (getValidAdminSession()) return "Admin (HALLMARK)";
+  const org = getValidOrgSession();
+  if (getValidAdminSession()) return `Admin (${org?.orgName ?? "Staff"})`;
+  if (!getValidAdminSession() && org) return `Admin (${org.orgName})`;
   const campus = getValidCampusSession();
   if (campus) {
     const roleLabel = campus.role === "lead" ? "Lead" : "Deputy";

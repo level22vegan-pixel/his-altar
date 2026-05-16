@@ -7,8 +7,7 @@ import {
   useCreateActivityLog,
 } from "@workspace/api-client-react";
 import { getSessionUserName, getValidCampusSession, getValidAdminSession } from "@/lib/session";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 function formatPhone(p: string) {
   const d = p.replace(/\D/g, "");
@@ -31,8 +30,9 @@ const BTN = {
 
 export default function DbancPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const [search, setSearch] = useState("");
-  const [campusFilter, setCampusFilter] = useState("HALLMARK");
+  const [campusFilter, setCampusFilter] = useState(() => CAMPUSES[0] ?? "HALLMARK");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const logAccess = useCreateActivityLog();
 

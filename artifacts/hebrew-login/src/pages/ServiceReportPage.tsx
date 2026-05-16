@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListServiceReports, useUpsertServiceReport, useListCheckIns } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const SERVICES = ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm", "Other"];
 
 const CATEGORIES = [
@@ -31,6 +31,7 @@ const LABEL: React.CSSProperties = {
 
 export default function ServiceReportPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const queryClient = useQueryClient();
 
   // Parse initial filter from URL

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useListPxpCallLogs, useListDbancContacts } from "@workspace/api-client-react";
 import { getValidCallerSession, getValidCampusSession } from "@/lib/session";
+import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 
@@ -22,17 +23,6 @@ function formatDateShort(iso: string) {
     d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
   );
 }
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
-
-const CAMPUS_SERVICES: Record<string, string[]> = {
-  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
-  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
-  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-};
 
 const PDF_BG         = [5, 3, 10]    as const;
 const PDF_PURPLE     = [160, 100, 230] as const;
@@ -55,6 +45,8 @@ const inputStyle = {
 
 export default function PXPLogsPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
+  const CAMPUS_SERVICES = getOrgServiceTimes();
 
   const callerSession = getValidCallerSession();
   const campusSession = getValidCampusSession();

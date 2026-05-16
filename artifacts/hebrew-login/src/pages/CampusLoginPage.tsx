@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { setCampusSession } from "@/lib/session";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 const ROLES = [
   { id: "lead", label: "Lead", desc: "Admin access for your campus" },
@@ -11,6 +10,7 @@ const ROLES = [
 
 export default function CampusLoginPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const [campus, setCampus] = useState("");
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");

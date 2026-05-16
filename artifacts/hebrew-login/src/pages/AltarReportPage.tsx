@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { getValidCampusSession } from "@/lib/session";
+import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 import {
   useListDailyAltarReports,
   useUpsertDailyAltarReport,
@@ -12,12 +13,10 @@ import { useQueryClient, useQuery, useQueries } from "@tanstack/react-query";
 import type { DailyAltarReport } from "@workspace/api-client-react";
 import { jsPDF } from "jspdf";
 
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-// Per-campus service times — Sunday and Wednesday
-const CAMPUS_SERVICES: Record<string, { sunday: string[]; wednesday: string[] }> = {
+const THE_WAY_CAMPUS_SERVICES: Record<string, { sunday: string[]; wednesday: string[] }> = {
   HALLMARK:  { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
   ARROWHEAD: { sunday: ["10am", "12pm"],        wednesday: ["7pm"] },
   RIVERSIDE: { sunday: ["10am", "12pm"],        wednesday: [] },
@@ -26,16 +25,35 @@ const CAMPUS_SERVICES: Record<string, { sunday: string[]; wednesday: string[] }>
   ARIZONA:   { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
 };
 
+function getEffectiveCampusServices(): Record<string, { sunday: string[]; wednesday: string[] }> {
+  const flat = getOrgServiceTimes();
+  const isOrgSession = Object.keys(flat).some(k => !THE_WAY_CAMPUS_SERVICES[k]);
+  if (isOrgSession || Object.keys(flat).length > 0 && !Object.keys(flat).every(k => !!THE_WAY_CAMPUS_SERVICES[k])) {
+    return Object.fromEntries(
+      Object.entries(flat).map(([campus, times]) => [
+        campus,
+        {
+          sunday:    times.filter(t => /sun/i.test(t)),
+          wednesday: times.filter(t => /wed/i.test(t)),
+        },
+      ])
+    );
+  }
+  return THE_WAY_CAMPUS_SERVICES;
+}
+
 // Ordered union of all campus Sunday times
 const SUNDAY_SERVICES = ["8am", "9am", "10am", "11am", "12pm"];
 const WEDNESDAY_SERVICES = ["7pm"];
 
 // Which campuses hold each service slot
 function campusesForSlot(service: string): string[] {
+  const campuses = getOrgCampuses();
+  const services = getEffectiveCampusServices();
   if (service === "7pm") {
-    return CAMPUSES.filter(c => CAMPUS_SERVICES[c]?.wednesday.includes(service));
+    return campuses.filter(c => services[c]?.wednesday.includes(service));
   }
-  return CAMPUSES.filter(c => CAMPUS_SERVICES[c]?.sunday.includes(service));
+  return campuses.filter(c => services[c]?.sunday.includes(service));
 }
 
 // Full check-in service name (as stored in DB from campus pages)
@@ -45,16 +63,17 @@ function checkInServiceName(slot: string): string {
 
 function getDayServices(date: Date, campus?: string | null): string[] | null {
   const dow = date.getDay();
+  const services = getEffectiveCampusServices();
   if (dow === 0) {
     if (campus) {
-      const s = CAMPUS_SERVICES[campus]?.sunday ?? [];
+      const s = services[campus]?.sunday ?? [];
       return s.length > 0 ? s : null;
     }
     return SUNDAY_SERVICES;
   }
   if (dow === 3) {
     if (campus) {
-      const s = CAMPUS_SERVICES[campus]?.wednesday ?? [];
+      const s = services[campus]?.wednesday ?? [];
       return s.length > 0 ? s : null;
     }
     return WEDNESDAY_SERVICES;
@@ -1061,6 +1080,7 @@ function DayDetail({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function AltarReportPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const queryClient = useQueryClient();
 
   // Read campus from session (campus leads are scoped to their campus)

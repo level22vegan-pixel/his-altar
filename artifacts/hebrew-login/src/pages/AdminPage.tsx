@@ -3,8 +3,7 @@ import { useGetLoginCode, useUpdateLoginCode, useListCampusPasswords, useSetCamp
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { getValidCampusSession, getValidAdminSession, clearAllSessions } from "@/lib/session";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 const ROLES = [
   { id: "lead", label: "Lead" },
   { id: "deputy_lead", label: "Deputy Lead" },
@@ -37,6 +36,7 @@ const HEBREW_ALPHABET = [
 
 function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
   const queryClient = useQueryClient();
+  const CAMPUSES = getOrgCampuses();
   const { data } = useListCampusPasswords({ query: { queryKey: ["campus-passwords"] } });
   const setPass = useSetCampusPassword();
 
@@ -199,6 +199,7 @@ function CampusPasswordsPanel({ campusFilter }: { campusFilter?: string }) {
 
 export default function AdminPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const [adminPassword, setAdminPassword] = useState("");
   const [newSequence, setNewSequence] = useState<number[]>([]);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);

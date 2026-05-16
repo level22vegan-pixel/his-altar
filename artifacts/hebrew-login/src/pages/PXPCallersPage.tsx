@@ -7,8 +7,7 @@ import {
   useResetPxpCallerPassword,
 } from "@workspace/api-client-react";
 import { getValidCampusSession, getValidAdminSession } from "@/lib/session";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 const inputStyle = {
   width: "100%",
@@ -25,14 +24,15 @@ const inputStyle = {
 
 export default function PXPCallersPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
 
   const campusSession = getValidCampusSession();
   const isMasterAdmin = getValidAdminSession();
   const lockedCampus  = campusSession?.campus ?? null;
 
-  const [filterCampus, setFilterCampus] = useState(lockedCampus ?? "HALLMARK");
+  const [filterCampus, setFilterCampus] = useState(() => lockedCampus ?? CAMPUSES[0] ?? "HALLMARK");
   const [name, setName] = useState("");
-  const [campus, setCampus] = useState(lockedCampus ?? "HALLMARK");
+  const [campus, setCampus] = useState(() => lockedCampus ?? CAMPUSES[0] ?? "HALLMARK");
   const [phone, setPhone] = useState("");
   const [adding, setAdding] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());

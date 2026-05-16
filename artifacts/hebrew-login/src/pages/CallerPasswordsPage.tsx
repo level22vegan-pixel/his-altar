@@ -5,17 +5,17 @@ import {
   useResetPxpCallerPassword,
 } from "@workspace/api-client-react";
 import { getValidCampusSession, getValidAdminSession } from "@/lib/session";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 export default function CallerPasswordsPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
 
   const campusSession = getValidCampusSession();
   const isMasterAdmin = getValidAdminSession();
   const lockedCampus  = campusSession?.campus ?? null;
 
-  const [filterCampus, setFilterCampus] = useState(lockedCampus ?? "HALLMARK");
+  const [filterCampus, setFilterCampus] = useState(() => lockedCampus ?? CAMPUSES[0] ?? "HALLMARK");
   const [revealedIds, setRevealedIds]   = useState<Set<number>>(new Set());
   const [copiedId, setCopiedId]         = useState<number | null>(null);
 

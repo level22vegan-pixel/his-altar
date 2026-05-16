@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListPxpCallers } from "@workspace/api-client-react";
 import { setCallerSession } from "@/lib/session";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 const inputStyle = {
   width: "100%",
@@ -21,7 +20,8 @@ const inputStyle = {
 
 export default function CallerLoginPage() {
   const [, navigate] = useLocation();
-  const [campus, setCampus] = useState("HALLMARK");
+  const CAMPUSES = getOrgCampuses();
+  const [campus, setCampus] = useState(() => CAMPUSES[0] ?? "HALLMARK");
   const [selectedCallerId, setSelectedCallerId] = useState<number | null>(null);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

@@ -1,15 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { getValidCampusSession, getValidAdminSession } from "@/lib/session";
-
-const CAMPUSES = [
-  "HALLMARK",
-  "ARROWHEAD",
-  "RIVERSIDE",
-  "POMONA",
-  "LA",
-  "ARIZONA",
-];
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 function campusHref(campus: string): string {
   const map: Record<string, string> = {
@@ -20,11 +12,12 @@ function campusHref(campus: string): string {
     LA: "/campus/la",
     ARIZONA: "/campus/arizona",
   };
-  return map[campus] ?? "#";
+  return map[campus] ?? `/campus/${campus.toLowerCase().replace(/\s+/g, "-")}`;
 }
 
 export default function HomePage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const [showCampuses, setShowCampuses] = useState(false);
 
   const session = useMemo(() => getValidCampusSession(), []);

@@ -4,10 +4,9 @@ import { getValidCampusSession } from "@/lib/session";
 import { useListWorkers, useCreateWorker, useDeleteWorker, useUpdateWorker } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Worker } from "@workspace/api-client-react";
+import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 type Category = "master" | "alt";
-
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 
 function Avatar({ name, photoUrl, size = 44 }: { name: string; photoUrl?: string; size?: number }) {
   const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -137,6 +136,7 @@ function EditForm({ worker, onSave, onCancel, onToggleHold }: { worker: Worker; 
 
 export default function RosterManagerPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Category>("master");
   const [search, setSearch] = useState("");

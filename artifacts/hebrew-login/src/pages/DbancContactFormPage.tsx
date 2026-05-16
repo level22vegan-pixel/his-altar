@@ -9,20 +9,11 @@ import {
   useListWorkers,
 } from "@workspace/api-client-react";
 import { getValidCampusSession } from "@/lib/session";
+import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
 const GENDERS = ["Male", "Female", "Prefer not to say"];
 const PRAYER_TYPES = ["Salvation", "Recommitment", "Came for Prayer"];
-
-const CAMPUS_SERVICES: Record<string, string[]> = {
-  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
-  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
-  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-};
 
 const inputStyle = {
   width: "100%",
@@ -94,6 +85,8 @@ function serviceDateForTime(serviceTime: string): string {
 
 export default function DbancContactFormPage() {
   const [, navigate] = useLocation();
+  const CAMPUSES = getOrgCampuses();
+  const CAMPUS_SERVICES = getOrgServiceTimes();
   const params = useParams<{ id: string }>();
   const isEdit = !!params.id;
 

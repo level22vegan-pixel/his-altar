@@ -85,7 +85,7 @@ router.post("/pin-login", async (req, res) => {
       .where(eq(organizationsTable.id, org.id))
       .catch(() => {});
 
-    res.json({ orgId: org.id, orgName: org.name, token: org.token });
+    res.json({ orgId: org.id, orgName: org.name, token: org.token, campuses: org.campuses, serviceTimes: org.serviceTimes });
   } catch (err) {
     req.log.error({ err }, "Error in PIN login");
     res.status(500).json({ message: "Server error" });
@@ -118,7 +118,7 @@ router.post("/login", async (req, res) => {
       .where(eq(organizationsTable.id, org.id))
       .catch(() => {});
 
-    res.json({ orgId: org.id, orgName: org.name, token: org.token });
+    res.json({ orgId: org.id, orgName: org.name, token: org.token, campuses: org.campuses, serviceTimes: org.serviceTimes });
   } catch (err) {
     req.log.error({ err }, "Error logging in org");
     res.status(500).json({ message: "Server error" });

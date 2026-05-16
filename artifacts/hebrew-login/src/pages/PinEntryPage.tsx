@@ -52,15 +52,9 @@ export default function PinEntryPage() {
         const data = await res.json();
         setCampusSession(data.campus, data.role ?? "campus");
         if (data.role === "attendance") {
-          const campusRoutes: Record<string, string> = {
-            HALLMARK: "/campus/hallmark",
-            ARROWHEAD: "/campus/arrowhead",
-            RIVERSIDE: "/campus/riverside",
-            POMONA: "/campus/pomona",
-            LA: "/campus/la",
-            ARIZONA: "/campus/arizona",
-          };
-          const dest = campusRoutes[data.campus] ?? `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
+          const dest = data.campus === "HALLMARK"
+            ? "/campus/hallmark"
+            : `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
           navigate(dest, { replace: true });
         } else {
           navigate("/team", { replace: true });

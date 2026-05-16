@@ -63,12 +63,7 @@ router.put("/login-code", async (req, res) => {
 // ── Service Times ─────────────────────────────────────────────────────────────
 
 const THE_WAY_DEFAULT_TIMES: Record<string, string[]> = {
-  HALLMARK:  ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  ARROWHEAD: ["Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
-  RIVERSIDE: ["Sunday 10am", "Sunday 12pm"],
-  POMONA:    ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
-  LA:        ["Sunday 8am", "Sunday 9am", "Wednesday 7pm"],
-  ARIZONA:   ["Sunday 9am", "Sunday 11am", "Wednesday 7pm"],
+  HALLMARK: ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"],
 };
 
 router.get("/service-times", async (req, res) => {

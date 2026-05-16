@@ -17,12 +17,7 @@ const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 const THE_WAY_CAMPUS_SERVICES: Record<string, { sunday: string[]; wednesday: string[] }> = {
-  HALLMARK:  { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
-  ARROWHEAD: { sunday: ["10am", "12pm"],        wednesday: ["7pm"] },
-  RIVERSIDE: { sunday: ["10am", "12pm"],        wednesday: [] },
-  POMONA:    { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
-  LA:        { sunday: ["8am", "9am"],          wednesday: ["7pm"] },
-  ARIZONA:   { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
+  HALLMARK: { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
 };
 
 function flatToServiceMap(flat: Record<string, string[]>): Record<string, { sunday: string[]; wednesday: string[] }> {

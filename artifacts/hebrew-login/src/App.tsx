@@ -13,11 +13,6 @@ import TeamPage from "@/pages/TeamPage";
 import HomePage from "@/pages/HomePage";
 import AdminPage from "@/pages/AdminPage";
 import HallmarkPage from "@/pages/HallmarkPage";
-import ArrowheadPage from "@/pages/ArrowheadPage";
-import RiversidePage from "@/pages/RiversidePage";
-import PomonaPage from "@/pages/PomonaPage";
-import LAPage from "@/pages/LAPage";
-import ArizonaPage from "@/pages/ArizonaPage";
 import AltarReportPage from "@/pages/AltarReportPage";
 import DbancPage from "@/pages/DbancPage";
 import DbancContactFormPage from "@/pages/DbancContactFormPage";
@@ -123,11 +118,6 @@ function Router() {
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/campus/hallmark" component={HallmarkPage} />
-        <Route path="/campus/arrowhead" component={ArrowheadPage} />
-        <Route path="/campus/riverside" component={RiversidePage} />
-        <Route path="/campus/pomona" component={PomonaPage} />
-        <Route path="/campus/la" component={LAPage} />
-        <Route path="/campus/arizona" component={ArizonaPage} />
         <Route path="/admin/altar-report" component={AltarReportPage} />
         <Route path="/admin/roster" component={RosterManagerPage} />
         <Route path="/admin/service-times" component={AdminServiceTimesPage} />

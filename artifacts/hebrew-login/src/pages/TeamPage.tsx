@@ -3,11 +3,6 @@ import { getValidOrgSession, clearOrgSession, getValidCampusSession, setCampusSe
 
 const CAMPUS_ROUTES: Record<string, string> = {
   HALLMARK: "/campus/hallmark",
-  ARROWHEAD: "/campus/arrowhead",
-  RIVERSIDE: "/campus/riverside",
-  POMONA: "/campus/pomona",
-  LA: "/campus/la",
-  ARIZONA: "/campus/arizona",
 };
 
 export default function TeamPage() {

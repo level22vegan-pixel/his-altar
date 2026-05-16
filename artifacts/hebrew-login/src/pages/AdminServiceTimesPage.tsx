@@ -8,8 +8,6 @@ const GOLD_DIM    = "hsl(38 40% 46%)";
 const BORDER      = "hsl(38 22% 22%)";
 const BG          = "hsl(30 18% 8%)";
 
-const CAMPUSES = ["HALLMARK", "ARROWHEAD", "RIVERSIDE", "POMONA", "LA", "ARIZONA"];
-
 const SUNDAY_SLOTS  = ["7am", "8am", "9am", "10am", "11am", "12pm", "1pm"];
 const WEDNESDAY_SLOTS = ["6pm", "7pm", "8pm"];
 
@@ -30,7 +28,7 @@ function toFlat(map: ServiceMap): Record<string, string[]> {
 
 function fromFlat(flat: Record<string, string[]>): ServiceMap {
   const result: ServiceMap = {};
-  for (const campus of CAMPUSES) {
+  for (const campus of Object.keys(flat)) {
     const times = flat[campus] ?? [];
     result[campus] = {
       sunday:    times.filter(t => t.startsWith("Sunday")).map(t => t.replace("Sunday ", "")),
@@ -41,12 +39,7 @@ function fromFlat(flat: Record<string, string[]>): ServiceMap {
 }
 
 const DEFAULT_MAP: ServiceMap = {
-  HALLMARK:  { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
-  ARROWHEAD: { sunday: ["10am", "12pm"],        wednesday: ["7pm"] },
-  RIVERSIDE: { sunday: ["10am", "12pm"],        wednesday: []      },
-  POMONA:    { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
-  LA:        { sunday: ["8am", "9am"],          wednesday: ["7pm"] },
-  ARIZONA:   { sunday: ["9am", "11am"],         wednesday: ["7pm"] },
+  HALLMARK: { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
 };
 
 export default function AdminServiceTimesPage() {
@@ -162,7 +155,7 @@ export default function AdminServiceTimesPage() {
           <div style={{ textAlign: "center", color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 13, marginTop: 40 }}>Loading…</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {CAMPUSES.map(campus => (
+            {Object.keys(map).map(campus => (
               <div
                 key={campus}
                 style={{ background: "hsl(35 20% 11%)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "14px 16px" }}

@@ -4,15 +4,8 @@ import { getValidCampusSession, getValidAdminSession } from "@/lib/session";
 import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 function campusHref(campus: string): string {
-  const map: Record<string, string> = {
-    HALLMARK: "/campus/hallmark",
-    ARROWHEAD: "/campus/arrowhead",
-    RIVERSIDE: "/campus/riverside",
-    POMONA: "/campus/pomona",
-    LA: "/campus/la",
-    ARIZONA: "/campus/arizona",
-  };
-  return map[campus] ?? `/campus/${campus.toLowerCase().replace(/\s+/g, "-")}`;
+  if (campus === "HALLMARK") return "/campus/hallmark";
+  return `/campus/${campus.toLowerCase().replace(/\s+/g, "-")}`;
 }
 
 export default function HomePage() {

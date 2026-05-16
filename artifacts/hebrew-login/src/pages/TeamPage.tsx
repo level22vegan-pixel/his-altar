@@ -14,7 +14,8 @@ export default function TeamPage() {
   const [, navigate] = useLocation();
   const orgSession = getValidOrgSession();
   const campusSession = getValidCampusSession();
-  const isAdmin = getValidAdminSession();
+  const adminSession = getValidAdminSession();
+  const isAdmin = adminSession !== null;
 
   const BUBBLES = [
     {
@@ -48,7 +49,9 @@ export default function TeamPage() {
       border: "rgba(100,120,160,0.3)",
     },
   ];
-  const displayName = isAdmin ? "His Altar" : (orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar"));
+  const displayName = isAdmin
+    ? (adminSession?.orgName ?? "His Altar")
+    : (orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar"));
 
   function handleLogout() {
     clearOrgSession();

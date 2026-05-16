@@ -95,7 +95,13 @@ router.post("/admin-login", async (req, res) => {
   const { password } = req.body ?? {};
   const adminPassword = await getAdminPassword();
   if (password && password === adminPassword) {
-    res.json({ valid: true });
+    const orgRows = await db
+      .select({ name: organizationsTable.name })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, 1))
+      .limit(1);
+    const orgName = orgRows[0]?.name ?? "His Altar";
+    res.json({ valid: true, orgName });
   } else {
     res.json({ valid: false });
   }

@@ -76,7 +76,7 @@ export default function PinEntryPage() {
       });
       const adminData = await adminRes.json();
       if (adminData.valid) {
-        setAdminSession();
+        setAdminSession(adminData.orgName ?? undefined);
         navigate("/team", { replace: true });
         return;
       }

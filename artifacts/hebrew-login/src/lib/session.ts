@@ -1,7 +1,7 @@
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-export function setAdminSession() {
-  localStorage.setItem("adminSession", JSON.stringify({ loginAt: Date.now() }));
+export function setAdminSession(orgName?: string) {
+  localStorage.setItem("adminSession", JSON.stringify({ loginAt: Date.now(), orgName: orgName ?? null }));
   localStorage.removeItem("campusSession");
   localStorage.removeItem("callerSession");
   localStorage.removeItem("orgSession");
@@ -46,19 +46,19 @@ export function getValidCampusSession(): { campus: string; role: string } | null
   }
 }
 
-export function getValidAdminSession(): boolean {
+export function getValidAdminSession(): { orgName: string | null } | null {
   try {
     const raw = localStorage.getItem("adminSession");
-    if (!raw) return false;
+    if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed?.loginAt) return false;
+    if (!parsed?.loginAt) return null;
     if (isExpired(parsed.loginAt)) {
       localStorage.removeItem("adminSession");
-      return false;
+      return null;
     }
-    return true;
+    return { orgName: parsed.orgName ?? null };
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -80,7 +80,7 @@ export function getValidCallerSession(): { callerId: number; callerName: string;
 
 export function hasValidSession(): boolean {
   return (
-    getValidAdminSession() ||
+    getValidAdminSession() !== null ||
     getValidCampusSession() !== null ||
     getValidCallerSession() !== null ||
     getValidOrgSession() !== null

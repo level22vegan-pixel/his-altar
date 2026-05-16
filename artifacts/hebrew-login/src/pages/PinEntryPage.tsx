@@ -6,7 +6,7 @@ type Mode = "select" | "campus";
 
 export default function PinEntryPage() {
   const [, navigate] = useLocation();
-  const [mode, setMode] = useState<Mode>("select");
+  const [mode, setMode] = useState<Mode>("campus");
   const [digits, setDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

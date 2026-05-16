@@ -9,6 +9,7 @@ export const organizationsTable = pgTable("organizations", {
   passwordHash: text("password_hash").notNull(),
   contactName: text("contact_name"),
   token: text("token").notNull().unique(),
+  pin: text("pin"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastActiveAt: timestamp("last_active_at"),
 });

@@ -60,6 +60,38 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+// POST /api/orgs/pin-login
+router.post("/pin-login", async (req, res) => {
+  try {
+    const { pin } = req.body as { pin?: string };
+    if (!pin || !/^\d{4}$/.test(pin)) {
+      res.status(400).json({ message: "A 4-digit PIN is required" });
+      return;
+    }
+
+    const [org] = await db
+      .select()
+      .from(organizationsTable)
+      .where(eq(organizationsTable.pin, pin))
+      .limit(1);
+
+    if (!org) {
+      res.status(401).json({ message: "Invalid PIN. Please try again." });
+      return;
+    }
+
+    db.update(organizationsTable)
+      .set({ lastActiveAt: new Date() })
+      .where(eq(organizationsTable.id, org.id))
+      .catch(() => {});
+
+    res.json({ orgId: org.id, orgName: org.name, token: org.token });
+  } catch (err) {
+    req.log.error({ err }, "Error in PIN login");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // POST /api/orgs/login
 router.post("/login", async (req, res) => {
   try {

@@ -3,7 +3,10 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
+import PinEntryPage from "@/pages/PinEntryPage";
+import TeamPage from "@/pages/TeamPage";
 import HomePage from "@/pages/HomePage";
 import AdminPage from "@/pages/AdminPage";
 import HallmarkPage from "@/pages/HallmarkPage";
@@ -37,7 +40,7 @@ import { hasValidSession, clearAllSessions } from "@/lib/session";
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/admin/dbanc/new", "/org/login", "/org/signup"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -65,7 +68,10 @@ function Router() {
     <>
       <SessionGuard />
       <Switch>
-        <Route path="/" component={OrgLoginPage} />
+        <Route path="/" component={LandingPage} />
+        <Route path="/enter" component={PinEntryPage} />
+        <Route path="/team" component={TeamPage} />
+        <Route path="/org/login" component={OrgLoginPage} />
         <Route path="/staff" component={LoginPage} />
         <Route path="/home" component={HomePage} />
         <Route path="/admin" component={AdminPage} />

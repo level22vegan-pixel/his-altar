@@ -54,8 +54,22 @@ export default function PinEntryPage() {
         setTimeout(() => inputs.current[0]?.focus(), 50);
         return;
       }
-      setCampusSession(data.campus, "campus");
-      navigate("/team");
+      setCampusSession(data.campus, data.role ?? "campus");
+      // Attendance-only codes go straight to the campus service page
+      if (data.role === "attendance") {
+        const campusRoutes: Record<string, string> = {
+          HALLMARK: "/campus/hallmark",
+          ARROWHEAD: "/campus/arrowhead",
+          RIVERSIDE: "/campus/riverside",
+          POMONA: "/campus/pomona",
+          LA: "/campus/la",
+          ARIZONA: "/campus/arizona",
+        };
+        const dest = campusRoutes[data.campus] ?? `/campus/${data.campus.toLowerCase().replace(/\s+/g, "-")}`;
+        navigate(dest);
+      } else {
+        navigate("/team");
+      }
     } catch {
       setError("Connection error. Please try again.");
       setDigits(["", "", "", ""]);

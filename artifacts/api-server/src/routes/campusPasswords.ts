@@ -91,7 +91,7 @@ router.post("/verify-code", async (req, res) => {
     const rows = await db.select().from(campusPasswordsTable);
     const match = rows.find(r => r.password === code.trim());
     if (match) {
-      res.json({ campus: match.campus });
+      res.json({ campus: match.campus, role: match.role });
     } else {
       res.status(401).json({ message: "Invalid code" });
     }

@@ -15,17 +15,13 @@ export default function TeamPage() {
   const orgSession = getValidOrgSession();
   const campusSession = getValidCampusSession();
 
-  const altarHref = campusSession
-    ? (CAMPUS_ROUTES[campusSession.campus] ?? `/campus/${campusSession.campus.toLowerCase().replace(/\s+/g, "-")}`)
-    : "/admin/dbanc/new";
-
   const BUBBLES = [
     {
       id: "altar",
       label: "Altar",
-      sublabel: campusSession ? "Select service & check in" : "Register new prayer contacts",
+      sublabel: "Add a new prayer contact",
       icon: "🙏",
-      href: altarHref,
+      href: "/admin/dbanc/new",
       gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
       glow: "rgba(184,134,11,0.35)",
       border: "rgba(184,134,11,0.4)",

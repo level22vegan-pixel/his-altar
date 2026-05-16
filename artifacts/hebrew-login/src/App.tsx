@@ -65,6 +65,12 @@ function SessionGuard() {
         return;
       }
 
+      // Dbanc contact form — campus staff or admin (for adding altar contacts)
+      if (location === "/admin/dbanc/new" || location.startsWith("/admin/dbanc/contacts/")) {
+        if (!isAdmin && !campus) { navigate("/enter"); return; }
+        return;
+      }
+
       // All other /admin/* routes — admin only
       if (location.startsWith("/admin")) {
         if (!isAdmin) { navigate("/admin/login"); return; }

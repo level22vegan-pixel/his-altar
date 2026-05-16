@@ -21,7 +21,7 @@ export default function TeamPage() {
       label: "Altar",
       sublabel: "Add a new prayer contact",
       icon: "🙏",
-      href: "/admin/dbanc/new",
+      href: "/admin/dbanc/new?returnTo=/team",
       gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
       glow: "rgba(184,134,11,0.35)",
       border: "rgba(184,134,11,0.4)",

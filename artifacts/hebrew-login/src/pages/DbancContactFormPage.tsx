@@ -94,6 +94,7 @@ export default function DbancContactFormPage() {
   const campusSession = getValidCampusSession();
   const lockedCampus  = campusSession?.campus ?? null;
   const isPublic      = new URLSearchParams(search).get("public") === "1";
+  const returnTo      = new URLSearchParams(search).get("returnTo") ?? null;
 
   const { data: existingData } = useGetDbancContact(
     parseInt(params.id ?? "0"),
@@ -187,7 +188,7 @@ export default function DbancContactFormPage() {
       } else {
         await createContact.mutateAsync({ data: form });
       }
-      navigate(isPublic ? "/" : isEdit ? "/admin/dbanc" : "/admin/dbanc/new");
+      navigate(returnTo ?? (isPublic ? "/" : isEdit ? "/admin/dbanc" : "/admin/dbanc/new"));
     } catch {
       setError("Failed to save. Please try again.");
     } finally {
@@ -201,7 +202,7 @@ export default function DbancContactFormPage() {
       style={{ background: "linear-gradient(160deg, hsl(215 28% 90%) 0%, hsl(215 22% 84%) 60%, hsl(220 20% 88%) 100%)" }}
     >
       <button
-        onClick={() => navigate(isPublic ? "/" : "/admin/dbanc")}
+        onClick={() => navigate(returnTo ?? (isPublic ? "/" : "/admin/dbanc"))}
         className="fixed top-5 left-6 z-50"
         style={{
           color: "hsl(215 65% 36%)",

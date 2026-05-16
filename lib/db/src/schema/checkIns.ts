@@ -9,6 +9,7 @@ export const checkInsTable = pgTable("check_ins", {
   campus: text("campus").notNull(),
   service: text("service").notNull(),
   serviceDate: text("service_date").notNull(),
+  orgId: integer("org_id").notNull().default(1),
   checkedInAt: timestamp("checked_in_at").defaultNow().notNull(),
 });
 

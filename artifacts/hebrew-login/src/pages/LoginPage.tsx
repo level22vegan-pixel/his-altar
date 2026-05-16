@@ -434,6 +434,24 @@ export default function LoginPage() {
         </div>
       )}
 
+      {/* Subtle church org portal link */}
+      <div style={{ position: "absolute", bottom: 18, width: "100%", textAlign: "center" }}>
+        <a
+          href="/org/login"
+          style={{
+            color: "hsl(38 25% 32%)",
+            fontFamily: "Georgia, serif",
+            fontSize: 11,
+            letterSpacing: "0.12em",
+            textDecoration: "none",
+          }}
+          onMouseOver={(e) => ((e.target as HTMLElement).style.color = "hsl(38 50% 48%)")}
+          onMouseOut={(e) => ((e.target as HTMLElement).style.color = "hsl(38 25% 32%)")}
+        >
+          Church Portal →
+        </a>
+      </div>
+
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { dbancCustomFieldsRouter } from "./dbancCustomFields";
 import { pxpConfigRouter } from "./pxpConfig";
 import { pxpCallLogsRouter } from "./pxpCallLogs";
 import { pxpCallersRouter } from "./pxpCallers";
+import { orgsRouter } from "./orgs";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use("/dbanc/custom-fields", dbancCustomFieldsRouter);
 router.use("/pxp/config", pxpConfigRouter);
 router.use("/pxp/call-logs", pxpCallLogsRouter);
 router.use("/pxp/callers", pxpCallersRouter);
+router.use("/orgs", orgsRouter);
 
 export default router;

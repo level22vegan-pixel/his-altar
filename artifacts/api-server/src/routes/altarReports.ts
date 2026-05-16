@@ -7,9 +7,11 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
+    const orgId = req.orgId ?? 1;
     const reports = await db
       .select()
       .from(altarReportsTable)
+      .where(eq(altarReportsTable.orgId, orgId))
       .orderBy(desc(altarReportsTable.createdAt));
     res.json({ reports });
   } catch (err) {
@@ -26,9 +28,10 @@ router.post("/", async (req, res) => {
       return;
     }
     const { name, campus, service, responseType, phone, email, notes } = parsed.data;
+    const orgId = req.orgId ?? 1;
     const inserted = await db
       .insert(altarReportsTable)
-      .values({ name, campus, service, responseType, phone: phone ?? null, email: email ?? null, notes: notes ?? null })
+      .values({ name, campus, service, responseType, phone: phone ?? null, email: email ?? null, notes: notes ?? null, orgId })
       .returning();
     const row = inserted[0];
     res.status(201).json({

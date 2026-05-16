@@ -7,16 +7,15 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
+    const orgId = req.orgId ?? 1;
     const category = req.query.category as string | undefined;
     const campus = req.query.campus as string | undefined;
 
-    const conditions = [];
-    if (category) conditions.push(eq(workersTable.category, category));
-    if (campus) conditions.push(eq(workersTable.campus, campus));
+    const conditions: ReturnType<typeof eq>[] = [eq(workersTable.orgId, orgId) as ReturnType<typeof eq>];
+    if (category) conditions.push(eq(workersTable.category, category) as ReturnType<typeof eq>);
+    if (campus) conditions.push(eq(workersTable.campus, campus) as ReturnType<typeof eq>);
 
-    const rows = conditions.length
-      ? await db.select().from(workersTable).where(and(...conditions)).orderBy(workersTable.name)
-      : await db.select().from(workersTable).orderBy(workersTable.name);
+    const rows = await db.select().from(workersTable).where(and(...conditions)).orderBy(workersTable.name);
 
     res.json({ workers: rows.map(toDto) });
   } catch (err) {
@@ -32,10 +31,11 @@ router.post("/", async (req, res) => {
       res.status(400).json({ message: "Invalid request" });
       return;
     }
+    const orgId = req.orgId ?? 1;
     const { name, role, category, campus, photoUrl } = parsed.data;
     const inserted = await db
       .insert(workersTable)
-      .values({ name, role: role ?? null, category, campus, photoUrl: photoUrl ?? null })
+      .values({ name, role: role ?? null, category, campus, photoUrl: photoUrl ?? null, orgId })
       .returning();
     res.status(201).json(toDto(inserted[0]));
   } catch (err) {
@@ -51,6 +51,7 @@ router.put("/:id", async (req, res) => {
     const parsed = UpdateWorkerBody.safeParse(req.body);
     if (!parsed.success) { res.status(400).json({ message: "Invalid request" }); return; }
     const { name, role, campus, photoUrl, onHold } = parsed.data;
+    const orgId = req.orgId ?? 1;
     const updated = await db
       .update(workersTable)
       .set({
@@ -60,7 +61,7 @@ router.put("/:id", async (req, res) => {
         ...(photoUrl !== undefined && { photoUrl }),
         ...(onHold !== undefined && { onHold }),
       })
-      .where(eq(workersTable.id, id))
+      .where(and(eq(workersTable.id, id), eq(workersTable.orgId, orgId)))
       .returning();
     if (!updated.length) { res.status(404).json({ message: "Not found" }); return; }
     res.json(toDto(updated[0]));
@@ -74,7 +75,8 @@ router.delete("/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) { res.status(400).json({ message: "Invalid id" }); return; }
-    const deleted = await db.delete(workersTable).where(eq(workersTable.id, id)).returning();
+    const orgId = req.orgId ?? 1;
+    const deleted = await db.delete(workersTable).where(and(eq(workersTable.id, id), eq(workersTable.orgId, orgId))).returning();
     if (!deleted.length) { res.status(404).json({ message: "Not found" }); return; }
     res.json(toDto(deleted[0]));
   } catch (err) {

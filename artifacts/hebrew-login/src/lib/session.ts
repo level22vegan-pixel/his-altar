@@ -81,6 +81,34 @@ export function hasValidSession(): boolean {
   return getValidAdminSession() || getValidCampusSession() !== null || getValidCallerSession() !== null;
 }
 
+export function setOrgSession(orgId: number, orgName: string, token: string) {
+  localStorage.setItem("orgSession", JSON.stringify({ orgId, orgName, token, loginAt: Date.now() }));
+}
+
+export function getValidOrgSession(): { orgId: number; orgName: string; token: string } | null {
+  try {
+    const raw = localStorage.getItem("orgSession");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.orgId || !parsed?.token) return null;
+    if (parsed.loginAt && isExpired(parsed.loginAt)) {
+      localStorage.removeItem("orgSession");
+      return null;
+    }
+    return { orgId: parsed.orgId, orgName: parsed.orgName, token: parsed.token };
+  } catch {
+    return null;
+  }
+}
+
+export function getOrgToken(): string | null {
+  return getValidOrgSession()?.token ?? null;
+}
+
+export function clearOrgSession() {
+  localStorage.removeItem("orgSession");
+}
+
 export function getSessionUserName(): string {
   if (getValidAdminSession()) return "Admin (HALLMARK)";
   const campus = getValidCampusSession();

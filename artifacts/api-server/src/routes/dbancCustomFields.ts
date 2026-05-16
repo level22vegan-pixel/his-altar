@@ -4,11 +4,13 @@ import { eq, asc } from "drizzle-orm";
 
 const router = Router();
 
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
+    const orgId = req.orgId ?? 1;
     const fields = await db
       .select()
       .from(dbancCustomFieldsTable)
+      .where(eq(dbancCustomFieldsTable.orgId, orgId))
       .orderBy(asc(dbancCustomFieldsTable.sortOrder), asc(dbancCustomFieldsTable.id));
     res.json({ fields });
   } catch (err) {
@@ -20,9 +22,10 @@ router.post("/", async (req, res) => {
   try {
     const { label, fieldType = "text", options = [], sortOrder = 0 } = req.body as Record<string, unknown>;
     if (!label) { res.status(400).json({ message: "label is required" }); return; }
+    const orgId = req.orgId ?? 1;
     const [field] = await db
       .insert(dbancCustomFieldsTable)
-      .values({ label: String(label), fieldType: String(fieldType), options: options as string[], sortOrder: Number(sortOrder) })
+      .values({ label: String(label), fieldType: String(fieldType), options: options as string[], sortOrder: Number(sortOrder), orgId })
       .returning();
     res.status(201).json(field);
   } catch (err) {

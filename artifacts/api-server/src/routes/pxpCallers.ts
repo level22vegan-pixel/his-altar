@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, pxpCallersTable } from "@workspace/db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 
 const router = Router();
 
@@ -15,10 +15,11 @@ function generatePassword(): string {
 
 router.get("/", async (req, res) => {
   try {
+    const orgId = req.orgId ?? 1;
     const { campus } = req.query as { campus?: string };
-    let query = db.select().from(pxpCallersTable).$dynamic();
+    let query = db.select().from(pxpCallersTable).where(eq(pxpCallersTable.orgId, orgId)).$dynamic();
     if (campus) {
-      query = query.where(eq(pxpCallersTable.campus, campus));
+      query = query.where(and(eq(pxpCallersTable.orgId, orgId), eq(pxpCallersTable.campus, campus)));
     }
     const callers = await query.orderBy(asc(pxpCallersTable.name));
     res.json({ callers });
@@ -35,10 +36,11 @@ router.post("/", async (req, res) => {
       res.status(400).json({ message: "name and campus are required" });
       return;
     }
+    const orgId = req.orgId ?? 1;
     const password = generatePassword();
     const [caller] = await db
       .insert(pxpCallersTable)
-      .values({ name: String(name), campus: String(campus), phone: String(phone), password })
+      .values({ name: String(name), campus: String(campus), phone: String(phone), password, orgId })
       .returning();
     res.status(201).json(caller);
   } catch (err) {

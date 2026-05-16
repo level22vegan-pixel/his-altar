@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,6 +8,7 @@ export const pxpCallersTable = pgTable("pxp_callers", {
   campus: text("campus").notNull(),
   phone: text("phone").notNull().default(""),
   password: text("password").notNull().default(""),
+  orgId: integer("org_id").notNull().default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

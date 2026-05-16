@@ -33,3 +33,5 @@ export * from "./dbancCustomFields";
 export * from "./pxpConfig";
 export * from "./pxpCallLogs";
 export * from "./pxpCallers";
+export * from "./organizations";
+export * from "./orgMessages";

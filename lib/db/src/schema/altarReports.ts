@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,6 +11,7 @@ export const altarReportsTable = pgTable("altar_reports", {
   phone: text("phone"),
   email: text("email"),
   notes: text("notes"),
+  orgId: integer("org_id").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -7,9 +7,10 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const { campus } = req.query as { campus?: string };
-    let query = db.select().from(dbancContactsTable).$dynamic();
+    const orgId = req.orgId ?? 1;
+    let query = db.select().from(dbancContactsTable).where(eq(dbancContactsTable.orgId, orgId)).$dynamic();
     if (campus) {
-      query = query.where(eq(dbancContactsTable.campus, campus));
+      query = query.where(and(eq(dbancContactsTable.orgId, orgId), eq(dbancContactsTable.campus, campus)));
     }
     const contacts = await query.orderBy(desc(dbancContactsTable.createdAt));
     res.json({ contacts });
@@ -36,7 +37,9 @@ router.get("/prayer-summary", async (req, res) => {
       )
     );
 
+    const orgId = req.orgId ?? 1;
     const conditions: ReturnType<typeof eq>[] = [
+      eq(dbancContactsTable.orgId, orgId) as ReturnType<typeof eq>,
       like(dbancContactsTable.serviceTime, `%${service}%`) as ReturnType<typeof eq>,
       dateCondition as ReturnType<typeof eq>,
     ];
@@ -90,6 +93,7 @@ router.post("/", async (req, res) => {
       res.status(400).json({ message: "firstName, lastName, and phone are required" });
       return;
     }
+    const orgId = req.orgId ?? 1;
     const [contact] = await db
       .insert(dbancContactsTable)
       .values({
@@ -103,6 +107,7 @@ router.post("/", async (req, res) => {
         prayerType: String(prayerType),
         serviceDate: String(serviceDate),
         prayedForBy: String(prayedForBy),
+        orgId,
       })
       .returning();
     res.status(201).json(contact);

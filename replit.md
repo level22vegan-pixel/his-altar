@@ -115,3 +115,34 @@ Default login (YESHUA): י(10), ש(21), ו(6), ע(16), א(1)
 
 ## Admin Password
 Default admin password (set via `ADMIN_PASSWORD` env var): `admin1234`
+
+## Multi-Tenant Architecture
+
+All resource tables have an `org_id INTEGER DEFAULT 1` column. Org 1 = The Way World Outreach (existing data).
+
+### New DB Tables
+- **`organizations`** — id, name, email, password_hash, contact_name, token (UUID), created_at, last_active_at
+- **`org_messages`** — id, org_id, from_admin (bool), message, created_at
+
+### Auth Flow
+1. Church signs up at `/org/signup` → receives UUID `token`
+2. Token stored in `localStorage.orgSession` as `{ orgId, orgName, token, loginAt }`
+3. `setAuthTokenGetter` in `main.tsx` injects `Authorization: Bearer <token>` on all API requests
+4. `orgAuthMiddleware` validates token → sets `req.orgId`
+5. All resource routes filter/insert by `req.orgId ?? 1`
+
+### Org API Routes (`/api/orgs`)
+- `POST /api/orgs/signup` — create org, returns `{ orgId, orgName, token }`
+- `POST /api/orgs/login` — login, returns `{ orgId, orgName, token }`
+- `GET /api/orgs` — list all orgs (requires `X-Admin-Token` header = ADMIN_PASSWORD)
+- `GET /api/orgs/:id/messages` — get messages for org (admin only)
+- `POST /api/orgs/:id/messages` — send message to org (admin only)
+
+### Frontend Pages
+- `/org/login` — Church portal sign-in (email + password)
+- `/org/signup` — New church registration
+- `/org/dashboard` — Post-login dashboard with tool links
+- `/` — Hebrew letter login (staff portal, accessible via "Church Portal →" link at bottom of login page)
+
+### Password Hashing
+SHA-256 + "twwo-salt" (no bcrypt needed, lightweight)

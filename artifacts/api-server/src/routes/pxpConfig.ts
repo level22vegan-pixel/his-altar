@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, pxpConfigTable } from "@workspace/db";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -95,10 +95,11 @@ const DEFAULT_SCRIPT = {
   ],
 };
 
-async function getOrCreate() {
+async function getOrCreate(orgId: number) {
   const [existing] = await db
     .select()
     .from(pxpConfigTable)
+    .where(eq(pxpConfigTable.orgId, orgId))
     .orderBy(desc(pxpConfigTable.id))
     .limit(1);
   if (existing) {
@@ -107,6 +108,7 @@ async function getOrCreate() {
       const [updated] = await db
         .update(pxpConfigTable)
         .set({ scriptTree: DEFAULT_SCRIPT })
+        .where(eq(pxpConfigTable.orgId, orgId))
         .returning();
       return updated;
     }
@@ -114,14 +116,15 @@ async function getOrCreate() {
   }
   const [created] = await db
     .insert(pxpConfigTable)
-    .values({ churchName: "The Way World Outreach", scriptTree: DEFAULT_SCRIPT })
+    .values({ churchName: "The Way World Outreach", scriptTree: DEFAULT_SCRIPT, orgId })
     .returning();
   return created;
 }
 
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const config = await getOrCreate();
+    const orgId = req.orgId ?? 1;
+    const config = await getOrCreate(orgId);
     res.json(config);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -130,14 +133,16 @@ router.get("/", async (_req, res) => {
 
 router.put("/", async (req, res) => {
   try {
+    const orgId = req.orgId ?? 1;
     const { churchName, scriptTree } = req.body as Record<string, unknown>;
-    await getOrCreate();
+    await getOrCreate(orgId);
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (churchName !== undefined) updates.churchName = String(churchName);
     if (scriptTree !== undefined) updates.scriptTree = scriptTree;
     const [updated] = await db
       .update(pxpConfigTable)
       .set(updates)
+      .where(eq(pxpConfigTable.orgId, orgId))
       .returning();
     res.json(updated);
   } catch (err) {

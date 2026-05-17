@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { getValidAdminSession } from "@/lib/session";
 
 const GOLD        = "hsl(38 72% 62%)";
 const GOLD_BRIGHT = "hsl(38 85% 72%)";
@@ -8,49 +7,72 @@ const GOLD_DIM    = "hsl(38 40% 46%)";
 const BORDER      = "hsl(38 22% 22%)";
 const BG          = "hsl(30 18% 8%)";
 
-const SUNDAY_SLOTS  = ["7am", "8am", "9am", "10am", "11am", "12pm", "1pm"];
-const WEDNESDAY_SLOTS = ["6pm", "7pm", "8pm"];
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const ADMIN_PASSWORD = "1001";
 
-type ServiceMap = Record<string, { sunday: string[]; wednesday: string[] }>;
+// campus → day → comma-separated times string (empty = no service that day)
+type CampusDays = Record<string, string>;
+type CampusMap  = Record<string, CampusDays>;
 
-function toFlat(map: ServiceMap): Record<string, string[]> {
+function toFlat(map: CampusMap): Record<string, string[]> {
   const result: Record<string, string[]> = {};
-  for (const [campus, { sunday, wednesday }] of Object.entries(map)) {
-    result[campus] = [
-      ...sunday.map(t => `Sunday ${t}`),
-      ...wednesday.map(t => `Wednesday ${t}`),
-    ];
+  for (const [campus, days] of Object.entries(map)) {
+    const times: string[] = [];
+    for (const day of DAYS) {
+      const raw = days[day]?.trim() ?? "";
+      if (!raw) continue;
+      for (const t of raw.split(",")) {
+        const cleaned = t.trim();
+        if (cleaned) times.push(`${day} ${cleaned}`);
+      }
+    }
+    result[campus] = times;
   }
   return result;
 }
 
-function fromFlat(flat: Record<string, string[]>): ServiceMap {
-  const result: ServiceMap = {};
-  for (const campus of Object.keys(flat)) {
-    const times = flat[campus] ?? [];
-    result[campus] = {
-      sunday:    times.filter(t => t.startsWith("Sunday")).map(t => t.replace("Sunday ", "")),
-      wednesday: times.filter(t => t.startsWith("Wednesday")).map(t => t.replace("Wednesday ", "")),
-    };
+function fromFlat(flat: Record<string, string[]>): CampusMap {
+  const result: CampusMap = {};
+  for (const [campus, times] of Object.entries(flat)) {
+    const days: CampusDays = {};
+    for (const day of DAYS) {
+      const slots = times
+        .filter(t => t.startsWith(day + " "))
+        .map(t => t.slice(day.length + 1));
+      if (slots.length) days[day] = slots.join(", ");
+    }
+    result[campus] = days;
   }
   return result;
 }
 
-const DEFAULT_MAP: ServiceMap = {
-  HALLMARK: { sunday: ["8am", "10am", "12pm"], wednesday: ["7pm"] },
+const DEFAULT_MAP: CampusMap = {
+  HALLMARK: { Sunday: "8am, 10am, 12pm", Wednesday: "7pm" },
+};
+
+const inp: React.CSSProperties = {
+  flex: 1,
+  background: "hsl(35 18% 12%)",
+  border: `1px solid ${BORDER}`,
+  borderRadius: 6,
+  padding: "7px 10px",
+  color: GOLD_BRIGHT,
+  fontFamily: "Georgia, serif",
+  fontSize: 12,
+  letterSpacing: "0.04em",
+  outline: "none",
+  width: "100%",
+  boxSizing: "border-box",
 };
 
 export default function AdminServiceTimesPage() {
   const [, navigate] = useLocation();
-  const [map, setMap]       = useState<ServiceMap>(DEFAULT_MAP);
+  const [map, setMap]       = useState<CampusMap>(DEFAULT_MAP);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
   const [error, setError]     = useState("");
-
-  const adminSession = getValidAdminSession();
 
   useEffect(() => {
     fetch("/api/config/service-times")
@@ -64,17 +86,11 @@ export default function AdminServiceTimesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  function toggle(campus: string, day: "sunday" | "wednesday", slot: string) {
-    setMap(prev => {
-      const current = prev[campus][day];
-      const next = current.includes(slot)
-        ? current.filter(s => s !== slot)
-        : [...current, slot].sort((a, b) => {
-            const rank = [...SUNDAY_SLOTS, ...WEDNESDAY_SLOTS];
-            return rank.indexOf(a) - rank.indexOf(b);
-          });
-      return { ...prev, [campus]: { ...prev[campus], [day]: next } };
-    });
+  function setTime(campus: string, day: string, value: string) {
+    setMap(prev => ({
+      ...prev,
+      [campus]: { ...(prev[campus] ?? {}), [day]: value },
+    }));
     setSaved(false);
   }
 
@@ -103,32 +119,7 @@ export default function AdminServiceTimesPage() {
     }
   }
 
-  function resetToDefaults() {
-    setMap(DEFAULT_MAP);
-    setSaved(false);
-  }
-
-  const labelStyle: React.CSSProperties = {
-    color: GOLD_DIM,
-    fontFamily: "Georgia, serif",
-    fontSize: 9,
-    letterSpacing: "0.2em",
-    textTransform: "uppercase",
-    marginBottom: 6,
-    display: "block",
-  };
-
-  const chipBase: React.CSSProperties = {
-    border: `1px solid ${BORDER}`,
-    borderRadius: 5,
-    padding: "4px 10px",
-    fontFamily: "Georgia, serif",
-    fontSize: 11,
-    letterSpacing: "0.08em",
-    cursor: "pointer",
-    transition: "all 0.15s",
-    userSelect: "none",
-  };
+  const campuses = Object.keys(map);
 
   return (
     <div style={{ minHeight: "100dvh", background: BG, padding: "0 0 60px" }}>
@@ -147,84 +138,54 @@ export default function AdminServiceTimesPage() {
       </div>
 
       <div style={{ padding: "20px 16px 0" }}>
-        <p style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.06em", marginBottom: 24, opacity: 0.7, textAlign: "center" }}>
-          Select which service times each campus holds
+        <p style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", marginBottom: 24, opacity: 0.65, textAlign: "center", lineHeight: 1.6 }}>
+          Enter service times for each day — separate multiple times with commas.<br />
+          <span style={{ opacity: 0.6 }}>Leave blank to skip that day.</span>
         </p>
 
         {loading ? (
           <div style={{ textAlign: "center", color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 13, marginTop: 40 }}>Loading…</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {Object.keys(map).map(campus => (
+            {campuses.map(campus => (
               <div
                 key={campus}
-                style={{ background: "hsl(35 20% 11%)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "14px 16px" }}
+                style={{ background: "hsl(35 20% 11%)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "16px" }}
               >
                 <div style={{ color: GOLD_BRIGHT, fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 14 }}>
                   {campus}
                 </div>
 
-                {/* Sunday */}
-                <div style={{ marginBottom: 12 }}>
-                  <span style={labelStyle}>Sunday</span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {SUNDAY_SLOTS.map(slot => {
-                      const on = map[campus]?.sunday.includes(slot) ?? false;
-                      return (
-                        <button
-                          key={slot}
-                          onClick={() => toggle(campus, "sunday", slot)}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {DAYS.map(day => {
+                    const val = map[campus]?.[day] ?? "";
+                    const active = val.trim().length > 0;
+                    return (
+                      <div key={day} style={{ display: "grid", gridTemplateColumns: "96px 1fr", alignItems: "center", gap: 10 }}>
+                        <span style={{
+                          fontFamily: "Georgia, serif",
+                          fontSize: 11,
+                          letterSpacing: "0.14em",
+                          textTransform: "uppercase",
+                          color: active ? GOLD : GOLD_DIM,
+                          opacity: active ? 1 : 0.55,
+                          transition: "color 0.15s",
+                        }}>
+                          {day}
+                        </span>
+                        <input
+                          type="text"
+                          value={val}
+                          onChange={e => setTime(campus, day, e.target.value)}
+                          placeholder={day === "Sunday" ? "e.g. 8am, 10am, 12pm" : day === "Wednesday" ? "e.g. 7pm" : "e.g. 7pm"}
                           style={{
-                            ...chipBase,
-                            background: on ? "hsl(38 55% 28%)" : "hsl(35 18% 14%)",
-                            color:      on ? GOLD_BRIGHT        : GOLD_DIM,
-                            borderColor: on ? "hsl(38 40% 36%)" : BORDER,
+                            ...inp,
+                            borderColor: active ? "hsl(38 35% 32%)" : BORDER,
                           }}
-                        >
-                          {slot}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Wednesday */}
-                <div>
-                  <span style={labelStyle}>Wednesday</span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {WEDNESDAY_SLOTS.map(slot => {
-                      const on = map[campus]?.wednesday.includes(slot) ?? false;
-                      return (
-                        <button
-                          key={slot}
-                          onClick={() => toggle(campus, "wednesday", slot)}
-                          style={{
-                            ...chipBase,
-                            background: on ? "hsl(200 45% 24%)" : "hsl(35 18% 14%)",
-                            color:      on ? "hsl(200 70% 76%)" : GOLD_DIM,
-                            borderColor: on ? "hsl(200 40% 32%)" : BORDER,
-                          }}
-                        >
-                          {slot}
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={() => toggle(campus, "wednesday", "none")}
-                      style={{
-                        ...chipBase,
-                        background: (map[campus]?.wednesday.length === 0) ? "hsl(0 25% 18%)" : "hsl(35 18% 14%)",
-                        color:      (map[campus]?.wednesday.length === 0) ? "hsl(0 55% 62%)" : GOLD_DIM,
-                        borderColor: (map[campus]?.wednesday.length === 0) ? "hsl(0 35% 26%)" : BORDER,
-                        display: "none",
-                      }}
-                    >
-                      None
-                    </button>
-                  </div>
-                  {map[campus]?.wednesday.length === 0 && (
-                    <div style={{ color: "hsl(38 30% 36%)", fontFamily: "Georgia, serif", fontSize: 10, marginTop: 5, letterSpacing: "0.1em" }}>No Wednesday service</div>
-                  )}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -237,19 +198,18 @@ export default function AdminServiceTimesPage() {
           </div>
         )}
 
-        {/* Actions */}
         {!loading && (
-          <div style={{ marginTop: 24, display: "flex", gap: 10 }}>
+          <div style={{ marginTop: 24 }}>
             <button
               onClick={handleSave}
               disabled={saving}
               style={{
-                flex: 1,
+                width: "100%",
                 background: saved ? "hsl(130 40% 22%)" : "hsl(38 50% 28%)",
                 color: saved ? "hsl(130 65% 68%)" : GOLD_BRIGHT,
                 border: `1px solid ${saved ? "hsl(130 40% 30%)" : "hsl(38 38% 36%)"}`,
                 borderRadius: 7,
-                padding: "12px 0",
+                padding: "13px 0",
                 fontFamily: "Georgia, serif",
                 fontSize: 12,
                 letterSpacing: "0.2em",
@@ -261,31 +221,7 @@ export default function AdminServiceTimesPage() {
             >
               {saving ? "Saving…" : saved ? "✓ Saved" : "Save Changes"}
             </button>
-            <button
-              onClick={resetToDefaults}
-              style={{
-                background: "none",
-                color: GOLD_DIM,
-                border: `1px solid ${BORDER}`,
-                borderRadius: 7,
-                padding: "12px 16px",
-                fontFamily: "Georgia, serif",
-                fontSize: 11,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                opacity: 0.6,
-              }}
-            >
-              Reset
-            </button>
           </div>
-        )}
-
-        {adminSession && (
-          <p style={{ color: GOLD_DIM, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.08em", textAlign: "center", marginTop: 20, opacity: 0.45 }}>
-            Changes apply immediately across all calendar views
-          </p>
         )}
       </div>
     </div>

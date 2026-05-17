@@ -67,13 +67,29 @@ export default function OrgResetPasswordPage() {
             </svg>
           </div>
           <h1 className="text-xl font-semibold text-white mb-2">Password Updated</h1>
-          <p className="text-neutral-400 text-sm mb-6">Your password has been changed. You can now sign in.</p>
-          <button
-            onClick={() => navigate("/org/login")}
-            className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg px-6 py-3 transition"
-          >
-            Go to Sign In
-          </button>
+          <p className="text-neutral-400 text-sm mb-8">Your portal password has been changed.</p>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate("/org/login")}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg py-3 transition"
+            >
+              Sign In to Dashboard
+            </button>
+
+            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-left">
+              <p className="text-neutral-300 text-sm font-medium mb-1">Also reset your staff entry code?</p>
+              <p className="text-neutral-500 text-xs mb-3 leading-relaxed">
+                If you've also forgotten the Hebrew letter login code your staff uses to access the portal, you can reset it from Admin Settings after signing in.
+              </p>
+              <button
+                onClick={() => navigate("/org/login?next=/admin/access-codes")}
+                className="text-purple-400 hover:text-purple-300 text-xs font-medium transition"
+              >
+                Sign in and reset entry code →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

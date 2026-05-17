@@ -69,8 +69,17 @@ export default function OrgLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-white">Church Portal</h1>
-          <p className="text-neutral-400 text-sm mt-1">Sign in to your organization account</p>
+          {!showForgot ? (
+            <>
+              <h1 className="text-2xl font-semibold text-white">Church Portal</h1>
+              <p className="text-neutral-400 text-sm mt-1">Sign in to your organization account</p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-semibold text-white">Forgot Password?</h1>
+              <p className="text-neutral-400 text-sm mt-1">Enter your email and we'll send a reset link</p>
+            </>
+          )}
         </div>
 
         {!showForgot ? (

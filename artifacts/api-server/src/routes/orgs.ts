@@ -298,4 +298,25 @@ router.put("/settings", async (req, res) => {
   }
 });
 
+// DELETE /api/orgs — permanently delete the authenticated org and all its data
+router.delete("/", async (req, res) => {
+  const orgId = req.orgId;
+  if (!orgId) { res.status(401).json({ message: "Authentication required" }); return; }
+  if (orgId === 1) { res.status(403).json({ message: "Cannot delete this account" }); return; }
+  try {
+    await db.execute(sql`DELETE FROM dbanc_contacts WHERE org_id = ${orgId}`);
+    await db.execute(sql`DELETE FROM workers WHERE org_id = ${orgId}`);
+    await db.execute(sql`DELETE FROM check_ins WHERE org_id = ${orgId}`);
+    await db.execute(sql`DELETE FROM altar_reports WHERE org_id = ${orgId}`);
+    await db.execute(sql`DELETE FROM daily_altar_reports WHERE org_id = ${orgId}`);
+    await db.execute(sql`DELETE FROM pxp_call_logs WHERE org_id = ${orgId}`);
+    await db.execute(sql`DELETE FROM org_messages WHERE org_id = ${orgId}`);
+    await db.delete(organizationsTable).where(eq(organizationsTable.id, orgId));
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error deleting org");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export { router as orgsRouter };

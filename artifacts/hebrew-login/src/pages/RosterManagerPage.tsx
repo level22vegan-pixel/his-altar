@@ -418,17 +418,13 @@ export default function RosterManagerPage() {
           </>
         )}
 
-        {/* Service Lead Access Codes */}
-        <ServiceLeadSection campus={campus} />
-
-        {/* Altar Worker Access Codes */}
-        <AltarWorkerSection campus={campus} />
       </div>
     </div>
   );
 }
 
-function AltarWorkerSection({ campus }: { campus: string }) {
+// Access code management moved to /admin/access-codes
+function _unused_AltarWorkerSection({ campus }: { campus: string }) {
   const [code, setCode] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);

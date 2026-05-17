@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { getValidCampusSession, getValidAdminSession, clearAllSessions, getOrgToken } from "@/lib/session";
+import { getValidCampusSession, getValidAdminSession, getValidOrgSession, clearAllSessions, getOrgToken } from "@/lib/session";
 
 type FlaggedLog = {
   id: number;
@@ -86,16 +86,32 @@ function MessageCenter() {
   );
 }
 
+const subBtn = (borderRight = true): React.CSSProperties => ({
+  flex: 1,
+  padding: "7px 10px",
+  background: "hsl(38 20% 10%)",
+  border: "none",
+  borderRight: borderRight ? "1px solid hsl(38 15% 16%)" : "none",
+  color: "hsl(38 40% 50%)",
+  fontFamily: "Georgia, serif",
+  fontSize: 10,
+  letterSpacing: "0.15em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+  transition: "all 0.15s",
+});
 
 export default function AdminPage() {
   const [, navigate] = useLocation();
 
-  const session      = useMemo(() => getValidCampusSession(), []);
+  const session       = useMemo(() => getValidCampusSession(), []);
   const isMasterAdmin = useMemo(() => getValidAdminSession(), []);
+  const orgSession    = useMemo(() => getValidOrgSession(), []);
 
   const isCampusUser = session !== null;
   const isLead       = session?.role === "lead";
   const campusName   = session?.campus ?? null;
+  const showProfile  = !!(isMasterAdmin || orgSession);
 
   function handleBack() {
     if (isCampusUser) {
@@ -114,6 +130,7 @@ export default function AdminPage() {
       />
 
       <div className="relative z-10 w-full max-w-xl">
+        {/* Top nav */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={handleBack}
@@ -122,7 +139,7 @@ export default function AdminPage() {
           >
             {isCampusUser ? "← Home" : "← Sign Out"}
           </button>
-          {isMasterAdmin && (
+          {showProfile && (
             <button
               onClick={() => navigate("/admin/profile")}
               className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
@@ -146,47 +163,54 @@ export default function AdminPage() {
           {isLead ? "Campus Lead" : "Manage settings & tools"}
         </p>
 
-        {/* Message Center — flagged calls from callers */}
+        {/* Message Center */}
         {isMasterAdmin && <MessageCenter />}
 
-        {/* Tools section */}
-        <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
-          <p className="text-xs uppercase tracking-widest mb-3 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Tools</p>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => navigate("/admin/altar-report")}
-              className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
-            >
-              <span>Altar Report</span>
-              <span style={{ opacity: 0.5 }}>→</span>
-            </button>
-            <button
-              onClick={() => navigate("/admin/roster")}
-              className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
-            >
-              <span>Roster Manager</span>
-              <span style={{ opacity: 0.5 }}>→</span>
-            </button>
-            {(!isCampusUser || isLead) && (
-              <button
-                onClick={() => navigate("/admin/service-times")}
-                className="w-full py-3 px-5 text-sm uppercase tracking-widest rounded text-left flex items-center justify-between transition-all duration-200 hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, hsl(35 35% 18%), hsl(35 30% 15%))", color: "hsl(38 65% 68%)", border: "1px solid hsl(38 30% 28%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em", cursor: "pointer", boxShadow: "0 2px 10px hsl(38 40% 12% / 0.4)" }}
-              >
-                <span>Service Times</span>
-                <span style={{ opacity: 0.5 }}>→</span>
-              </button>
-            )}
-
-          </div>
-        </div>
-
-        {/* Extensions toolbox */}
+        {/* Extensions */}
         <div className="mb-8 p-4 rounded border" style={{ background: "hsl(35 20% 13%)", borderColor: "hsl(38 20% 22%)" }}>
           <p className="text-xs uppercase tracking-widest mb-3 opacity-60" style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif" }}>Extensions</p>
           <div className="flex flex-col gap-3">
+
+            {/* Altar & Roster */}
+            <div style={{ borderRadius: 8, border: "1px solid hsl(38 28% 22%)", overflow: "hidden" }}>
+              <button
+                onClick={() => navigate("/admin/altar-report")}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", background: "linear-gradient(135deg, hsl(38 45% 18%), hsl(38 38% 13%))", color: "hsl(38 70% 74%)", border: "none", fontFamily: "Georgia, serif", fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer" }}
+              >
+                <span>Altar Report</span>
+                <span style={{ opacity: 0.45 }}>→</span>
+              </button>
+              <div style={{ display: "flex", borderTop: "1px solid hsl(38 15% 16%)" }}>
+                <button
+                  onClick={() => navigate("/admin/roster")}
+                  style={subBtn()}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
+                >
+                  Roster
+                </button>
+                {(!isCampusUser || isLead) && (
+                  <button
+                    onClick={() => navigate("/admin/service-times")}
+                    style={subBtn()}
+                    onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
+                  >
+                    Service Times
+                  </button>
+                )}
+                {(!isCampusUser || isLead) && (
+                  <button
+                    onClick={() => navigate("/admin/access-codes")}
+                    style={subBtn(false)}
+                    onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
+                  >
+                    Access Codes
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* Dbanc */}
             <div style={{ borderRadius: 8, border: "1px solid hsl(215 35% 24%)", overflow: "hidden" }}>
@@ -231,7 +255,6 @@ export default function AdminPage() {
                 <span style={{ opacity: 0.45 }}>→</span>
               </button>
               <div style={{ display: "flex", borderTop: "1px solid hsl(270 20% 14%)" }}>
-                {/* Script editor — lead or master admin */}
                 {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/pxp/script")}
@@ -258,7 +281,6 @@ export default function AdminPage() {
                 >
                   History
                 </button>
-                {/* Activity Log — lead or master admin */}
                 {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/activity-log/pxp")}

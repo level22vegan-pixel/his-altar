@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { db, organizationsTable, orgMessagesTable, couponCodesTable } from "@workspace/db";
+import { db, organizationsTable, orgMessagesTable, couponCodesTable, systemConfigTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "crypto";
-import { sendWelcomeEmail, sendPasswordResetEmail } from "../lib/email";
+import { sendWelcomeEmail, sendPasscodeEmail } from "../lib/email";
 
 const router = Router();
 
@@ -298,47 +298,26 @@ router.put("/settings", async (req, res) => {
   }
 });
 
-// POST /api/orgs/forgot-password — send a password reset email
-router.post("/forgot-password", async (req, res) => {
+// POST /api/orgs/forgot-passcode — email the org their current admin passcode
+router.post("/forgot-passcode", async (req, res) => {
   const { email } = req.body as { email?: string };
   if (!email?.trim()) { res.status(400).json({ message: "Email is required" }); return; }
   try {
-    const [org] = await db.select().from(organizationsTable).where(eq(organizationsTable.email, email.trim().toLowerCase())).limit(1);
-    // Always respond the same to avoid email enumeration
+    const [org] = await db.select().from(organizationsTable)
+      .where(eq(organizationsTable.email, email.trim().toLowerCase())).limit(1);
     if (org) {
-      const token = randomUUID();
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-      await db.update(organizationsTable).set({ resetToken: token, resetTokenExpiresAt: expiresAt }).where(eq(organizationsTable.id, org.id));
-      const domain = (process.env.REPLIT_DOMAINS ?? "localhost").split(",")[0].trim();
-      const resetUrl = `https://${domain}/org/reset-password?token=${token}`;
+      const rows = await db.select().from(systemConfigTable)
+        .where(eq(systemConfigTable.key, "admin_password")).limit(1);
+      const passcode = rows.length > 0 ? rows[0].value : (process.env.ADMIN_PASSWORD || "admin1234");
       try {
-        await sendPasswordResetEmail({ toEmail: org.email, orgName: org.name, resetUrl });
+        await sendPasscodeEmail({ toEmail: org.email, orgName: org.name, passcode });
       } catch (emailErr) {
-        req.log.error({ emailErr }, "Failed to send password reset email");
+        req.log.error({ emailErr }, "Failed to send passcode email");
       }
     }
     res.json({ success: true });
   } catch (err) {
-    req.log.error({ err }, "Error in forgot-password");
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// POST /api/orgs/reset-password — validate token and set new password
-router.post("/reset-password", async (req, res) => {
-  const { token, password } = req.body as { token?: string; password?: string };
-  if (!token?.trim() || !password?.trim()) { res.status(400).json({ message: "Token and password are required" }); return; }
-  if (password.length < 6) { res.status(400).json({ message: "Password must be at least 6 characters" }); return; }
-  try {
-    const [org] = await db.select().from(organizationsTable).where(eq(organizationsTable.resetToken, token.trim())).limit(1);
-    if (!org || !org.resetTokenExpiresAt || org.resetTokenExpiresAt < new Date()) {
-      res.status(400).json({ message: "This reset link is invalid or has expired." }); return;
-    }
-    const passwordHash = createHash("sha256").update(password + "twwo-salt").digest("hex");
-    await db.update(organizationsTable).set({ passwordHash, resetToken: null, resetTokenExpiresAt: null }).where(eq(organizationsTable.id, org.id));
-    res.json({ success: true });
-  } catch (err) {
-    req.log.error({ err }, "Error in reset-password");
+    req.log.error({ err }, "Error in forgot-passcode");
     res.status(500).json({ message: "Server error" });
   }
 });

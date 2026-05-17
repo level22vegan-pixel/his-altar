@@ -48,13 +48,13 @@ export default function OrgLoginPage() {
     setForgotLoading(true);
     setForgotMsg(null);
     try {
-      const res = await fetch("/api/orgs/forgot-password", {
+      const res = await fetch("/api/orgs/forgot-passcode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
       });
       if (res.ok) {
-        setForgotMsg({ ok: true, text: "If that email is on file, a reset link is on its way. Check your inbox." });
+        setForgotMsg({ ok: true, text: "If that email is on file, your passcode is on its way. Check your inbox." });
       } else {
         setForgotMsg({ ok: false, text: "Something went wrong. Please try again." });
       }
@@ -76,8 +76,8 @@ export default function OrgLoginPage() {
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-semibold text-white">Forgot Password?</h1>
-              <p className="text-neutral-400 text-sm mt-1">Enter your email and we'll send a reset link</p>
+              <h1 className="text-2xl font-semibold text-white">Forgot Passcode?</h1>
+              <p className="text-neutral-400 text-sm mt-1">Enter your email and we'll send your admin passcode</p>
             </>
           )}
         </div>
@@ -125,7 +125,7 @@ export default function OrgLoginPage() {
                   onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotMsg(null); }}
                   className="text-neutral-500 hover:text-neutral-400 text-xs transition"
                 >
-                  Forgot your password?
+                  Forgot your passcode?
                 </button>
               </div>
             </form>

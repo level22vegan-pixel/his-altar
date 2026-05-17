@@ -10,6 +10,7 @@ router.get("/", async (req, res) => {
     const passwords = rows.map(r => ({
       campus: r.campus,
       role: r.role,
+      code: r.password,
       hasPassword: true,
     }));
     res.json({ passwords });

@@ -12,6 +12,7 @@ export default function TeamPage() {
   const adminSession = getValidAdminSession();
   const isAdmin = adminSession !== null;
   const isLead = campusSession?.role === "lead";
+  const isMinistryOnly = campusSession?.role === "altar";
   const hasAdminAccess = isAdmin || isLead;
 
   const BUBBLES = [
@@ -125,7 +126,7 @@ export default function TeamPage() {
         gap: 14,
         padding: "18px 20px 24px",
       }}>
-        {BUBBLES.map((bubble) => (
+        {BUBBLES.filter(b => !(isMinistryOnly && b.id === "admin")).map((bubble) => (
           <button
             key={bubble.id}
             onClick={() => navigate(bubble.href)}

@@ -12,7 +12,7 @@ const INPUT: React.CSSProperties = {
   color: "hsl(38 65% 72%)",
   fontFamily: "Georgia, serif",
   fontSize: 16,
-  letterSpacing: "0.3em",
+  letterSpacing: "0.4em",
   outline: "none",
   boxSizing: "border-box" as const,
   textAlign: "center" as const,
@@ -28,37 +28,30 @@ const LABEL: React.CSSProperties = {
   marginBottom: 6,
 };
 
+type CodeEntry = { campus: string; role: string; code: string };
+
 function CodeSection({
   title,
   description,
+  badge,
   role,
   campus,
+  currentCode,
   accentHue = 38,
 }: {
   title: string;
   description: string;
+  badge: string;
   role: string;
   campus: string;
+  currentCode?: string;
   accentHue?: number;
 }) {
   const [code, setCode] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState("");
-  const [existing, setExisting] = useState(false);
-
-  useEffect(() => {
-    if (!campus) return;
-    fetch("/api/campus-passwords")
-      .then(r => r.json())
-      .then(d => {
-        const has = (d.passwords ?? []).some(
-          (p: { campus: string; role: string }) => p.campus === campus && p.role === role
-        );
-        setExisting(has);
-      })
-      .catch(() => {});
-  }, [campus, role, saved]);
+  const [show, setShow] = useState(false);
 
   async function handleSave() {
     if (code.length !== 4 || !/^\d{4}$/.test(code)) {
@@ -85,35 +78,66 @@ function CodeSection({
   }
 
   const ready = code.length === 4 && !saving;
+  const displayCode = show ? (currentCode ?? "——") : (currentCode ? "••••" : "——");
 
   return (
     <div
       style={{
-        marginBottom: 20,
-        padding: "18px 20px",
-        borderRadius: 8,
-        background: `hsl(${accentHue} 20% 11%)`,
-        border: `1px solid hsl(${accentHue} 22% 22%)`,
+        marginBottom: 16,
+        padding: "16px 18px",
+        borderRadius: 10,
+        background: `hsl(${accentHue} 20% 10%)`,
+        border: `1px solid hsl(${accentHue} 22% 20%)`,
       }}
     >
-      <p style={{ fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: `hsl(${accentHue} 45% 55%)`, marginBottom: 4 }}>
-        {title}
-      </p>
-      <p style={{ color: `hsl(${accentHue} 22% 38%)`, fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.03em", marginBottom: 14 }}>
+      {/* Header row */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <div>
+          <p style={{ fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: `hsl(${accentHue} 55% 60%)`, margin: 0 }}>
+            {title}
+          </p>
+          <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: `hsl(${accentHue} 25% 38%)`, letterSpacing: "0.06em", margin: "3px 0 0" }}>
+            {badge}
+          </p>
+        </div>
+        {/* Current code display */}
+        {campus ? (
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", color: `hsl(${accentHue} 25% 38%)`, margin: "0 0 3px" }}>
+              Current
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
+              <span style={{ fontFamily: "Georgia, serif", fontSize: 15, letterSpacing: "0.35em", color: currentCode ? `hsl(${accentHue} 65% 68%)` : `hsl(${accentHue} 20% 32%)` }}>
+                {displayCode}
+              </span>
+              {currentCode && (
+                <button
+                  onClick={() => setShow(s => !s)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: `hsl(${accentHue} 30% 40%)`, fontSize: 11, padding: "0 2px", fontFamily: "Georgia, serif" }}
+                >
+                  {show ? "hide" : "show"}
+                </button>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Description */}
+      <p style={{ color: `hsl(${accentHue} 20% 36%)`, fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.03em", margin: "0 0 14px", lineHeight: 1.5 }}>
         {description}
-        {existing && (
-          <span style={{ color: "hsl(130 45% 48%)", marginLeft: 8 }}>✓ Code set for {campus}</span>
-        )}
       </p>
+
+      {/* Input + save */}
       {campus ? (
         <>
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
             <div style={{ flex: 1 }}>
-              <label style={LABEL}>{existing ? "Update" : "Set"} Code</label>
+              <label style={LABEL}>{currentCode ? "Update" : "Set"} Code</label>
               <input
                 value={code}
                 onChange={e => { setCode(e.target.value.replace(/\D/g, "").slice(0, 4)); setErr(""); setSaved(false); }}
-                placeholder="4-digit code"
+                placeholder="• • • •"
                 inputMode="numeric"
                 maxLength={4}
                 style={INPUT}
@@ -123,23 +147,23 @@ function CodeSection({
               onClick={handleSave}
               disabled={!ready}
               style={{
-                background: ready ? `hsl(${accentHue} 50% 28%)` : `hsl(${accentHue} 20% 16%)`,
-                color: ready ? `hsl(${accentHue} 70% 80%)` : `hsl(${accentHue} 20% 35%)`,
-                border: `1px solid hsl(${accentHue} 30% 28%)`,
-                fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em",
-                textTransform: "uppercase", padding: "8px 18px", borderRadius: 4,
+                background: ready ? `hsl(${accentHue} 50% 26%)` : `hsl(${accentHue} 18% 14%)`,
+                color: ready ? `hsl(${accentHue} 70% 78%)` : `hsl(${accentHue} 18% 34%)`,
+                border: `1px solid hsl(${accentHue} 28% 26%)`,
+                fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em",
+                textTransform: "uppercase", padding: "10px 16px", borderRadius: 6,
                 cursor: ready ? "pointer" : "not-allowed", whiteSpace: "nowrap",
               }}
             >
-              {saving ? "Saving…" : saved ? "Saved ✓" : "Save Code"}
+              {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
             </button>
           </div>
-          {err && <p style={{ color: "hsl(0 55% 55%)", fontFamily: "Georgia, serif", fontSize: 12, marginTop: 8 }}>{err}</p>}
-          {saved && <p style={{ color: "hsl(130 45% 52%)", fontFamily: "Georgia, serif", fontSize: 12, marginTop: 8 }}>Code updated for {campus}.</p>}
+          {err && <p style={{ color: "hsl(0 55% 55%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 8 }}>{err}</p>}
+          {saved && <p style={{ color: "hsl(130 45% 52%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 8 }}>Code saved for {campus}.</p>}
         </>
       ) : (
-        <p style={{ color: `hsl(${accentHue} 22% 35%)`, fontFamily: "Georgia, serif", fontSize: 12, fontStyle: "italic" }}>
-          Select a campus above to manage codes.
+        <p style={{ color: `hsl(${accentHue} 20% 32%)`, fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic" }}>
+          Select a campus above.
         </p>
       )}
     </div>
@@ -151,6 +175,18 @@ export default function AccessCodesPage() {
   const CAMPUSES = getOrgCampuses();
   const sessionCampus = getValidCampusSession()?.campus ?? null;
   const [campus, setCampus] = useState<string>(sessionCampus ?? CAMPUSES[0] ?? "");
+  const [codes, setCodes] = useState<CodeEntry[]>([]);
+
+  useEffect(() => {
+    fetch("/api/campus-passwords")
+      .then(r => r.json())
+      .then(d => setCodes(d.passwords ?? []))
+      .catch(() => {});
+  }, [campus]);
+
+  function currentCode(role: string) {
+    return codes.find(c => c.campus === campus && c.role === role)?.code;
+  }
 
   return (
     <div
@@ -163,7 +199,7 @@ export default function AccessCodesPage() {
         background: "radial-gradient(ellipse at 50% 30%, hsl(35 28% 12%) 0%, hsl(35 18% 7%) 100%)",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 420 }}>
+      <div style={{ width: "100%", maxWidth: 440 }}>
         <button
           onClick={() => navigate("/admin")}
           style={{
@@ -179,11 +215,11 @@ export default function AccessCodesPage() {
           Access Codes
         </h1>
         <p style={{ textAlign: "center", color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 28 }}>
-          Manage staff login codes by campus
+          Staff login codes by campus
         </p>
 
         {/* Campus selector */}
-        {!sessionCampus && (
+        {!sessionCampus && CAMPUSES.length > 0 && (
           <div style={{ marginBottom: 24 }}>
             <p style={{ ...LABEL, marginBottom: 8 }}>Campus</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
@@ -215,25 +251,33 @@ export default function AccessCodesPage() {
         )}
 
         <CodeSection
-          title="Lead Access"
-          description="Full admin access — altar reports, roster, Dbanc, PXP, and settings."
+          title="Full Access"
+          badge="Teams page · All tools"
+          description="Brings staff to the Teams page with access to Altar, Follow-Up Calls, and the Admin panel."
           role="lead"
           campus={campus}
+          currentCode={currentCode("lead")}
           accentHue={38}
         />
+
         <CodeSection
-          title="Attendance Code"
-          description="Check-in only — no admin tools or team page access."
-          role="attendance"
-          campus={campus}
-          accentHue={200}
-        />
-        <CodeSection
-          title="Altar Worker Code"
-          description="Goes directly to the prayer contact form — no team page, no admin tools."
+          title="Ministry Code"
+          badge="Teams page · Altar & Follow-Up Calls only"
+          description="Brings staff to the Teams page to do altar intake or follow-up calls. Admin panel is not accessible."
           role="altar"
           campus={campus}
-          accentHue={270}
+          currentCode={currentCode("altar")}
+          accentHue={200}
+        />
+
+        <CodeSection
+          title="Attendance Code"
+          badge="Direct to check-in · No Teams page"
+          description="Skips the Teams page and goes straight to service time check-in for that campus."
+          role="attendance"
+          campus={campus}
+          currentCode={currentCode("attendance")}
+          accentHue={130}
         />
       </div>
     </div>

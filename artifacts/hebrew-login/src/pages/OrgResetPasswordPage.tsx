@@ -80,7 +80,7 @@ export default function OrgResetPasswordPage() {
             <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-left">
               <p className="text-neutral-300 text-sm font-medium mb-1">Also reset your staff entry code?</p>
               <p className="text-neutral-500 text-xs mb-3 leading-relaxed">
-                If you've also forgotten the Hebrew letter login code your staff uses to access the portal, you can reset it from Admin Settings after signing in.
+                If you've also forgotten the passcode your staff uses to access the portal, you can reset it from Admin Settings after signing in.
               </p>
               <button
                 onClick={() => navigate("/org/login?next=/admin/access-codes")}

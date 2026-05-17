@@ -89,16 +89,7 @@ export default function OrgLoginPage() {
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-neutral-300 text-sm font-medium">Password</label>
-                  <button
-                    type="button"
-                    onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotMsg(null); }}
-                    className="text-purple-400 hover:text-purple-300 text-xs transition"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                <label className="block text-neutral-300 text-sm font-medium mb-1.5">Password</label>
                 <input
                   type="password"
                   value={password}
@@ -118,6 +109,16 @@ export default function OrgLoginPage() {
               >
                 {loading ? "Signing in…" : "Sign In"}
               </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotMsg(null); }}
+                  className="text-neutral-500 hover:text-neutral-400 text-xs transition"
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </form>
 
             <div className="mt-6 text-center space-y-2">

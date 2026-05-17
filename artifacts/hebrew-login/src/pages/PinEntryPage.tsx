@@ -74,7 +74,7 @@ export default function PinEntryPage() {
         const data = await res.json();
         setCampusSession(data.campus, data.role ?? "campus");
         if (data.role === "altar") {
-          navigate("/admin/dbanc/new?returnTo=/team", { replace: true });
+          navigate("/team", { replace: true });
         } else if (data.role === "attendance") {
           const dest = data.campus === "HALLMARK"
             ? "/campus/hallmark"

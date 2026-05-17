@@ -81,7 +81,7 @@ router.post("/verify", async (req, res) => {
 });
 
 // Look up a campus by its 4-digit code — returns highest-priority role
-const ROLE_PRIORITY = ["lead", "deputy_lead", "attendance"];
+const ROLE_PRIORITY = ["lead", "deputy_lead", "attendance", "altar"];
 router.post("/verify-code", async (req, res) => {
   try {
     const { code } = req.body;

@@ -420,7 +420,96 @@ export default function RosterManagerPage() {
 
         {/* Service Lead Access Codes */}
         <ServiceLeadSection campus={campus} />
+
+        {/* Altar Worker Access Codes */}
+        <AltarWorkerSection campus={campus} />
       </div>
+    </div>
+  );
+}
+
+function AltarWorkerSection({ campus }: { campus: string }) {
+  const [code, setCode] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState("");
+  const [existing, setExisting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/campus-passwords")
+      .then(r => r.json())
+      .then(d => {
+        const has = (d.passwords ?? []).some(
+          (p: { campus: string; role: string }) => p.campus === campus && p.role === "altar"
+        );
+        setExisting(has);
+      })
+      .catch(() => {});
+  }, [campus, saved]);
+
+  async function handleSave() {
+    if (code.length !== 4 || !/^\d{4}$/.test(code)) {
+      setErr("Code must be exactly 4 digits.");
+      return;
+    }
+    setSaving(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/campus-passwords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campus, role: "altar", password: code }),
+      });
+      if (!res.ok) throw new Error();
+      setSaved(true);
+      setCode("");
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setErr("Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 24, borderTop: "1px solid hsl(38 15% 18%)", paddingTop: 24 }}>
+      <p style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4 }}>
+        Altar Worker Access
+      </p>
+      <p style={{ color: "hsl(38 22% 36%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.04em", marginBottom: 14 }}>
+        Altar workers use this code at the login screen to go directly to the prayer contact form — no team page, no admin tools.
+        {existing && <span style={{ color: "hsl(130 45% 48%)", marginLeft: 8 }}>✓ Code is set for {campus}</span>}
+      </p>
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+        <div style={{ flex: 1 }}>
+          <label style={LABEL}>{existing ? "Update" : "Set"} Altar Code</label>
+          <input
+            value={code}
+            onChange={e => { setCode(e.target.value.replace(/\D/g, "").slice(0, 4)); setErr(""); setSaved(false); }}
+            placeholder="4-digit code"
+            inputMode="numeric"
+            maxLength={4}
+            style={{ ...INPUT, letterSpacing: "0.3em", fontSize: 16 }}
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving || code.length !== 4}
+          style={{
+            background: saving || code.length !== 4 ? "hsl(38 20% 16%)" : "hsl(38 50% 28%)",
+            color: saving || code.length !== 4 ? "hsl(38 20% 35%)" : "hsl(38 70% 80%)",
+            border: "1px solid hsl(38 30% 28%)",
+            fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.15em",
+            textTransform: "uppercase", padding: "8px 18px", borderRadius: 4,
+            cursor: saving || code.length !== 4 ? "not-allowed" : "pointer",
+            whiteSpace: "nowrap", marginBottom: 0,
+          }}
+        >
+          {saving ? "Saving…" : saved ? "Saved ✓" : "Save Code"}
+        </button>
+      </div>
+      {err && <p style={{ color: "hsl(0 55% 55%)", fontFamily: "Georgia, serif", fontSize: 12, marginTop: 8 }}>{err}</p>}
+      {saved && <p style={{ color: "hsl(130 45% 52%)", fontFamily: "Georgia, serif", fontSize: 12, marginTop: 8 }}>Altar code updated for {campus}.</p>}
     </div>
   );
 }

@@ -78,15 +78,15 @@ export default function OrgResetPasswordPage() {
             </button>
 
             <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-left">
-              <p className="text-neutral-300 text-sm font-medium mb-1">Also reset your staff entry code?</p>
+              <p className="text-neutral-300 text-sm font-medium mb-1">Also reset your admin code?</p>
               <p className="text-neutral-500 text-xs mb-3 leading-relaxed">
-                If you've also forgotten the passcode your staff uses to access the portal, you can reset it from Admin Settings after signing in.
+                If you've also forgotten your admin passcode, you can reset it from Admin Settings after signing in.
               </p>
               <button
                 onClick={() => navigate("/org/login?next=/admin/access-codes")}
                 className="text-purple-400 hover:text-purple-300 text-xs font-medium transition"
               >
-                Sign in and reset entry code →
+                Sign in and reset admin code →
               </button>
             </div>
           </div>

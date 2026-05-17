@@ -38,6 +38,7 @@ export default function DbancPage() {
 
   const campusSession = getValidCampusSession();
   const isMasterAdmin = getValidAdminSession();
+  const isLead = campusSession?.role === "lead";
   const lockedCampus = campusSession?.campus ?? null;
 
   // Master admin uses the campusFilter state; campus users use their locked campus
@@ -257,7 +258,7 @@ export default function DbancPage() {
                   >
                     <Pencil size={13} />
                   </button>
-                  {isMasterAdmin && (
+                  {(isMasterAdmin || isLead) && (
                     <button
                       onClick={() => handleDelete(c.id, `${c.firstName} ${c.lastName}`)}
                       style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 55% 82%)", border: "1px solid hsl(0 45% 65%)", color: "hsl(0 65% 35%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer" }}

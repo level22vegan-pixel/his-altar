@@ -11,6 +11,8 @@ export default function TeamPage() {
   const campusSession = getValidCampusSession();
   const adminSession = getValidAdminSession();
   const isAdmin = adminSession !== null;
+  const isLead = campusSession?.role === "lead";
+  const hasAdminAccess = isAdmin || isLead;
 
   const BUBBLES = [
     {
@@ -36,9 +38,9 @@ export default function TeamPage() {
     {
       id: "admin",
       label: "Admin",
-      sublabel: isAdmin ? "Admin panel" : "Admin login required",
+      sublabel: hasAdminAccess ? "Admin panel" : "Admin login required",
       icon: "⚙",
-      href: isAdmin ? "/admin" : "/unauthorized",
+      href: hasAdminAccess ? "/admin" : "/unauthorized",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
       glow: "rgba(100,120,160,0.2)",
       border: "rgba(100,120,160,0.3)",

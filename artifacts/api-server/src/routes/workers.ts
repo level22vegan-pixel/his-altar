@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, workersTable } from "@workspace/db";
 import { CreateWorkerBody, UpdateWorkerBody } from "@workspace/api-zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
 
     const conditions: ReturnType<typeof eq>[] = [eq(workersTable.orgId, orgId) as ReturnType<typeof eq>];
     if (category) conditions.push(eq(workersTable.category, category) as ReturnType<typeof eq>);
-    if (campus) conditions.push(eq(workersTable.campus, campus) as ReturnType<typeof eq>);
+    if (campus) conditions.push(sql`UPPER(${workersTable.campus}) = UPPER(${campus})` as unknown as ReturnType<typeof eq>);
 
     const rows = await db.select().from(workersTable).where(and(...conditions)).orderBy(workersTable.name);
 
@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
     const { name, role, category, campus, photoUrl } = parsed.data;
     const inserted = await db
       .insert(workersTable)
-      .values({ name, role: role ?? null, category, campus, photoUrl: photoUrl ?? null, orgId })
+      .values({ name, role: role ?? null, category, campus: campus.toUpperCase(), photoUrl: photoUrl ?? null, orgId })
       .returning();
     res.status(201).json(toDto(inserted[0]));
   } catch (err) {
@@ -57,7 +57,7 @@ router.put("/:id", async (req, res) => {
       .set({
         ...(name !== undefined && { name }),
         ...(role !== undefined && { role }),
-        ...(campus !== undefined && { campus }),
+        ...(campus !== undefined && { campus: campus.toUpperCase() }),
         ...(photoUrl !== undefined && { photoUrl }),
         ...(onHold !== undefined && { onHold }),
       })

@@ -148,12 +148,12 @@ export default function RosterManagerPage() {
   // Campus selector — persisted in localStorage, but overridden by session
   const [campus, setCampus] = useState<string>(() => {
     if (sessionCampus) return sessionCampus;
-    const stored = localStorage.getItem("rosterCampus") ?? "";
-    // Don't restore a stale hardcoded campus; require an explicit selection
-    return stored === "Hallmark" ? "" : stored;
+    const stored = (localStorage.getItem("rosterCampus") ?? "").toUpperCase();
+    // Only restore if it's still a valid campus for this org
+    return CAMPUSES.includes(stored) ? stored : "";
   });
 
-  useEffect(() => { if (campus && !sessionCampus) localStorage.setItem("rosterCampus", campus); }, [campus, sessionCampus]);
+  useEffect(() => { if (campus && !sessionCampus) localStorage.setItem("rosterCampus", campus.toUpperCase()); }, [campus, sessionCampus]);
 
   const [name, setName] = useState("");
   const [role, setRole] = useState("");

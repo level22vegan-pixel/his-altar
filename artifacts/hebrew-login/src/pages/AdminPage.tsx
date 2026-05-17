@@ -99,7 +99,7 @@ export default function AdminPage() {
 
   function handleBack() {
     if (isCampusUser) {
-      navigate("/home");
+      navigate("/team");
     } else {
       clearAllSessions();
       navigate("/");

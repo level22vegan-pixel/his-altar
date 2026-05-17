@@ -139,11 +139,11 @@ export default function AdminPage() {
         {/* Top nav */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={handleBack}
+            onClick={() => navigate("/team")}
             className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
             style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
           >
-            ← Sign Out
+            ← Back
           </button>
           <button
             onClick={() => navigate("/admin/profile")}

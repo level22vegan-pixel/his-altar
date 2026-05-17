@@ -79,7 +79,24 @@ export default function TeamPage() {
         padding: "18px 24px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: "none",
+            border: "none",
+            color: "rgba(255,255,255,0.25)",
+            fontFamily: "Georgia, serif",
+            fontSize: 11,
+            letterSpacing: "0.08em",
+            cursor: "pointer",
+            padding: "6px 0",
+          }}
+          onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
+          onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.25)")}
+        >
+          Sign Out
+        </button>
+        <div style={{ textAlign: "right" }}>
           <p style={{
             color: "rgba(255,255,255,0.85)",
             fontFamily: "Georgia, serif",
@@ -99,23 +116,6 @@ export default function TeamPage() {
             Select your role to continue
           </p>
         </div>
-        <button
-          onClick={handleLogout}
-          style={{
-            background: "none",
-            border: "none",
-            color: "rgba(255,255,255,0.25)",
-            fontFamily: "Georgia, serif",
-            fontSize: 11,
-            letterSpacing: "0.08em",
-            cursor: "pointer",
-            padding: "6px 10px",
-          }}
-          onMouseOver={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
-          onMouseOut={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.25)")}
-        >
-          Sign Out
-        </button>
       </div>
 
       {/* Bubbles */}

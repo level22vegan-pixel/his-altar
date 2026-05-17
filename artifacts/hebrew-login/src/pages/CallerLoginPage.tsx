@@ -86,9 +86,6 @@ export default function CallerLoginPage() {
 
       <div className="relative z-10 w-full max-w-xs px-4">
         <div className="text-center mb-10">
-          <div style={{ fontFamily: "'Arial Hebrew', 'Arial Unicode MS', Arial, sans-serif", fontSize: 48, color: "hsl(270 60% 62%)", marginBottom: 8, textShadow: "0 0 30px hsl(270 60% 40% / 0.6)" }}>
-            א
-          </div>
           <h1 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "hsl(270 55% 88%)", letterSpacing: "0.28em", textTransform: "uppercase" }}>
             Follow-Up Team Sign In
           </h1>

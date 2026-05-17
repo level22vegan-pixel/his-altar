@@ -143,17 +143,15 @@ export default function AdminPage() {
             className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
             style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
           >
-            {isCampusUser ? "← Home" : "← Sign Out"}
+            ← Sign Out
           </button>
-          {showProfile && (
-            <button
-              onClick={() => navigate("/admin/profile")}
-              className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
-              style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
-            >
-              Profile →
-            </button>
-          )}
+          <button
+            onClick={() => navigate("/admin/profile")}
+            className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
+            style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
+          >
+            Profile →
+          </button>
         </div>
 
         <h1

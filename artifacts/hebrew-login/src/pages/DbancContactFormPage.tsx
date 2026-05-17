@@ -120,6 +120,22 @@ export default function DbancContactFormPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fetchedTimes, setFetchedTimes] = useState<string[]>([]);
+
+  // Fetch service times from API when session doesn't have them for this campus
+  useEffect(() => {
+    const campus = form.campus;
+    if (!campus) return;
+    const known = CAMPUS_SERVICES[campus];
+    if (known && known.length > 0) return;
+    fetch(`/api/orgs/service-times?campus=${encodeURIComponent(campus)}`)
+      .then(r => r.json())
+      .then(d => {
+        const times: string[] = d.serviceTimes?.[campus] ?? [];
+        setFetchedTimes(times);
+      })
+      .catch(() => {});
+  }, [form.campus]);
 
   // Worker search for "Prayed For By" field
   const [workerQuery, setWorkerQuery] = useState("");
@@ -280,9 +296,8 @@ export default function DbancContactFormPage() {
             <div>
               <label style={labelStyle}>Campus</label>
               {lockedCampus ? (
-                <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.8 }}>
+                <div style={{ ...inputStyle, display: "flex", alignItems: "center", opacity: 0.85 }}>
                   <span style={{ color: "hsl(215 60% 30%)" }}>{lockedCampus}</span>
-                  <span style={{ color: "hsl(215 35% 50%)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>Locked</span>
                 </div>
               ) : (
                 <select
@@ -310,7 +325,7 @@ export default function DbancContactFormPage() {
               onChange={e => { setField("serviceTime", e.target.value); if (e.target.value) setField("serviceDate", serviceDateForTime(e.target.value)); }}
             >
               <option value="">Select service time…</option>
-              {(CAMPUS_SERVICES[form.campus] ?? Object.values(CAMPUS_SERVICES).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(s => (
+              {(CAMPUS_SERVICES[form.campus] ?? fetchedTimes).map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>

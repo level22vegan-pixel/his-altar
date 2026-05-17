@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, organizationsTable, orgMessagesTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "crypto";
 import { sendWelcomeEmail } from "../lib/email";
 
@@ -11,6 +11,24 @@ const SUPER_ADMIN_TOKEN = process.env.ADMIN_PASSWORD || "admin1234";
 function hashPassword(password: string): string {
   return createHash("sha256").update(password + "twwo-salt").digest("hex");
 }
+
+// GET /api/orgs/service-times?campus=X — public, looks up by campus name
+router.get("/service-times", async (req, res) => {
+  const campus = (req.query.campus as string | undefined)?.trim();
+  if (!campus) { res.json({ serviceTimes: {} }); return; }
+  try {
+    const orgs = await db
+      .select({ serviceTimes: organizationsTable.serviceTimes })
+      .from(organizationsTable)
+      .where(sql`${organizationsTable.campuses} @> ${JSON.stringify([campus])}::jsonb`)
+      .limit(1);
+    const times: Record<string, string[]> = orgs[0]?.serviceTimes ?? {};
+    res.json({ serviceTimes: times });
+  } catch (err) {
+    req.log.error({ err }, "Error fetching service times");
+    res.json({ serviceTimes: {} });
+  }
+});
 
 // POST /api/orgs/signup
 router.post("/signup", async (req, res) => {

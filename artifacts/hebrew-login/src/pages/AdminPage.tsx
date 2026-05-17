@@ -113,6 +113,12 @@ export default function AdminPage() {
   const campusName   = session?.campus ?? null;
   const showProfile  = !!(isMasterAdmin || orgSession);
 
+  const attendanceRoute = campusName
+    ? campusName === "HALLMARK"
+      ? "/campus/hallmark"
+      : `/campus/${campusName.toLowerCase().replace(/\s+/g, "-")}`
+    : "/campus/hallmark";
+
   function handleBack() {
     if (isCampusUser) {
       navigate("/team");
@@ -202,13 +208,21 @@ export default function AdminPage() {
                 {(!isCampusUser || isLead) && (
                   <button
                     onClick={() => navigate("/admin/access-codes")}
-                    style={subBtn(false)}
+                    style={subBtn()}
                     onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
                   >
                     Access Codes
                   </button>
                 )}
+                <button
+                  onClick={() => navigate(attendanceRoute)}
+                  style={subBtn(false)}
+                  onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
+                >
+                  Attendance
+                </button>
               </div>
             </div>
 

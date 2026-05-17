@@ -4,7 +4,6 @@ export function setAdminSession(orgName?: string) {
   localStorage.setItem("adminSession", JSON.stringify({ loginAt: Date.now(), orgName: orgName ?? null }));
   localStorage.removeItem("campusSession");
   localStorage.removeItem("callerSession");
-  localStorage.removeItem("orgSession");
 }
 
 export function setCampusSession(campus: string, role: string) {

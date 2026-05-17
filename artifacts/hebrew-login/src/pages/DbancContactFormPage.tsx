@@ -8,7 +8,7 @@ import {
   useListDbancCustomFields,
   useListWorkers,
 } from "@workspace/api-client-react";
-import { getValidCampusSession } from "@/lib/session";
+import { getValidCampusSession, getOrgToken } from "@/lib/session";
 import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Metro PCS", "Boost", "Cricket", "Other"];
@@ -121,6 +121,7 @@ export default function DbancContactFormPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [fetchedTimes, setFetchedTimes] = useState<string[]>([]);
+  const [timesLoading, setTimesLoading] = useState(false);
 
   // Fetch service times from API when session doesn't have them for this campus
   useEffect(() => {
@@ -128,13 +129,23 @@ export default function DbancContactFormPage() {
     if (!campus) return;
     const known = CAMPUS_SERVICES[campus];
     if (known && known.length > 0) return;
-    fetch(`/api/orgs/service-times?campus=${encodeURIComponent(campus)}`)
+    setTimesLoading(true);
+    const headers: HeadersInit = {};
+    const token = getOrgToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch(`/api/orgs/service-times?campus=${encodeURIComponent(campus)}`, { headers })
       .then(r => r.json())
       .then(d => {
-        const times: string[] = d.serviceTimes?.[campus] ?? [];
+        const map: Record<string, string[]> = d.serviceTimes ?? {};
+        // Try the specific campus key first, then take any populated list
+        const times: string[] =
+          map[campus] ??
+          Object.values(map).find(arr => arr.length > 0) ??
+          [];
         setFetchedTimes(times);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setTimesLoading(false));
   }, [form.campus]);
 
   // Worker search for "Prayed For By" field
@@ -313,23 +324,48 @@ export default function DbancContactFormPage() {
           </div>
 
           {/* Service Time */}
-          <div>
-            <label style={labelStyle}>Service Time *</label>
-            <select
-              style={{
-                ...inputStyle,
-                appearance: "none" as const,
-                borderColor: !form.serviceTime ? "hsl(215 55% 50%)" : "hsl(215 30% 68%)",
-              }}
-              value={form.serviceTime}
-              onChange={e => { setField("serviceTime", e.target.value); if (e.target.value) setField("serviceDate", serviceDateForTime(e.target.value)); }}
-            >
-              <option value="">Select service time…</option>
-              {(CAMPUS_SERVICES[form.campus] ?? fetchedTimes).map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+          {(() => {
+            const timeOptions = CAMPUS_SERVICES[form.campus] ?? fetchedTimes;
+            const borderColor = !form.serviceTime ? "hsl(215 55% 50%)" : "hsl(215 30% 68%)";
+            if (timesLoading) {
+              return (
+                <div>
+                  <label style={labelStyle}>Service Time *</label>
+                  <div style={{ ...inputStyle, color: "hsl(215 40% 55%)", fontStyle: "italic" }}>Loading…</div>
+                </div>
+              );
+            }
+            if (timeOptions.length > 0) {
+              return (
+                <div>
+                  <label style={labelStyle}>Service Time *</label>
+                  <select
+                    style={{ ...inputStyle, appearance: "none" as const, borderColor }}
+                    value={form.serviceTime}
+                    onChange={e => { setField("serviceTime", e.target.value); if (e.target.value) setField("serviceDate", serviceDateForTime(e.target.value)); }}
+                  >
+                    <option value="">Select service time…</option>
+                    {timeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              );
+            }
+            return (
+              <div>
+                <label style={labelStyle}>Service Time *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sunday 10am"
+                  style={{ ...inputStyle, borderColor }}
+                  value={form.serviceTime}
+                  onChange={e => setField("serviceTime", e.target.value)}
+                />
+                <div style={{ color: "hsl(215 35% 55%)", fontSize: 11, marginTop: 4 }}>
+                  No service times configured — type it in, or set them up in Admin → Settings.
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Prayer Type */}
           <div>

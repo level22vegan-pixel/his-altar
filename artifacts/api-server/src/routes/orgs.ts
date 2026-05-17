@@ -12,18 +12,35 @@ function hashPassword(password: string): string {
   return createHash("sha256").update(password + "twwo-salt").digest("hex");
 }
 
-// GET /api/orgs/service-times?campus=X — public, looks up by campus name
+// GET /api/orgs/service-times?campus=X — public
+// If Authorization: Bearer <token> header is present, looks up by org token (correct org).
+// Otherwise falls back to campus name lookup (best-effort).
 router.get("/service-times", async (req, res) => {
   const campus = (req.query.campus as string | undefined)?.trim();
-  if (!campus) { res.json({ serviceTimes: {} }); return; }
   try {
-    const orgs = await db
-      .select({ serviceTimes: organizationsTable.serviceTimes })
-      .from(organizationsTable)
-      .where(sql`${organizationsTable.campuses} @> ${JSON.stringify([campus])}::jsonb`)
-      .limit(1);
-    const times: Record<string, string[]> = orgs[0]?.serviceTimes ?? {};
-    res.json({ serviceTimes: times });
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      const rows = await db
+        .select({ serviceTimes: organizationsTable.serviceTimes })
+        .from(organizationsTable)
+        .where(eq(organizationsTable.token, token))
+        .limit(1);
+      if (rows[0]) {
+        res.json({ serviceTimes: rows[0].serviceTimes ?? {} });
+        return;
+      }
+    }
+    if (campus) {
+      const rows = await db
+        .select({ serviceTimes: organizationsTable.serviceTimes })
+        .from(organizationsTable)
+        .where(sql`${organizationsTable.campuses} @> ${JSON.stringify([campus])}::jsonb`)
+        .limit(1);
+      res.json({ serviceTimes: rows[0]?.serviceTimes ?? {} });
+      return;
+    }
+    res.json({ serviceTimes: {} });
   } catch (err) {
     req.log.error({ err }, "Error fetching service times");
     res.json({ serviceTimes: {} });

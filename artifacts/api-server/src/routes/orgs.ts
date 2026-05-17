@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, organizationsTable, orgMessagesTable } from "@workspace/db";
+import { db, organizationsTable, orgMessagesTable, couponCodesTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "crypto";
 import { sendWelcomeEmail } from "../lib/email";
@@ -294,6 +294,39 @@ router.put("/settings", async (req, res) => {
     res.json({ campuses: updated.campuses, serviceTimes: updated.serviceTimes });
   } catch (err) {
     req.log.error({ err }, "Error updating org settings");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /api/orgs/apply-coupon — validate and apply a coupon code to extend trial
+router.post("/apply-coupon", async (req, res) => {
+  const orgId = req.orgId;
+  if (!orgId) { res.status(401).json({ message: "Authentication required" }); return; }
+  const { code } = req.body as { code?: string };
+  if (!code?.trim()) { res.status(400).json({ message: "Code is required" }); return; }
+  try {
+    const [coupon] = await db
+      .select().from(couponCodesTable)
+      .where(eq(couponCodesTable.code, code.trim().toUpperCase()))
+      .limit(1);
+    if (!coupon || !coupon.active) { res.status(404).json({ message: "Invalid or inactive code" }); return; }
+    if (coupon.expiresAt && coupon.expiresAt < new Date()) { res.status(400).json({ message: "This code has expired" }); return; }
+    if (coupon.maxUses && coupon.usesCount >= coupon.maxUses) { res.status(400).json({ message: "This code has reached its usage limit" }); return; }
+    if (coupon.discountType !== "trial_extension") { res.status(400).json({ message: "This code is not valid for trial extensions" }); return; }
+
+    const days = Math.round(parseFloat(coupon.discountValue)) || 30;
+    const [org] = await db.select().from(organizationsTable).where(eq(organizationsTable.id, orgId)).limit(1);
+    if (!org) { res.status(404).json({ message: "Organization not found" }); return; }
+
+    const base = org.trialEndsAt && org.trialEndsAt > new Date() ? org.trialEndsAt : new Date();
+    const newTrialEnd = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+
+    await db.update(organizationsTable).set({ trialEndsAt: newTrialEnd }).where(eq(organizationsTable.id, orgId));
+    await db.update(couponCodesTable).set({ usesCount: coupon.usesCount + 1 }).where(eq(couponCodesTable.id, coupon.id));
+
+    res.json({ success: true, days, newTrialEndsAt: newTrialEnd.toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "Error applying coupon");
     res.status(500).json({ message: "Server error" });
   }
 });

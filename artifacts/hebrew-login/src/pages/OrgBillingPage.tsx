@@ -33,6 +33,9 @@ export default function OrgBillingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "info"; text: string } | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -88,6 +91,34 @@ export default function OrgBillingPage() {
       setMessage({ type: "info", text: "Network error. Try again." });
     } finally {
       setCheckoutLoading(false);
+    }
+  }
+
+  async function handleApplyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponMsg(null);
+    try {
+      const res = await fetch("/api/orgs/apply-coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.token ?? ""}` },
+        body: JSON.stringify({ code: couponCode.trim() }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        const ends = new Date(json.newTrialEndsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        setCouponMsg({ ok: true, text: `✓ ${json.days} days added — trial now ends ${ends}` });
+        setCouponCode("");
+        // Refresh billing status
+        const statusRes = await fetch("/api/stripe/billing-status", { headers: { Authorization: `Bearer ${session?.token ?? ""}` } });
+        if (statusRes.ok) setBilling(await statusRes.json());
+      } else {
+        setCouponMsg({ ok: false, text: json.message ?? "Invalid code." });
+      }
+    } catch {
+      setCouponMsg({ ok: false, text: "Network error. Try again." });
+    } finally {
+      setCouponLoading(false);
     }
   }
 
@@ -188,6 +219,36 @@ export default function OrgBillingPage() {
                 </div>
               )}
             </div>
+
+            {/* Coupon code */}
+            {!billing?.subscription && (
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">
+                  Have a Code?
+                </h2>
+                <div className="flex gap-3">
+                  <input
+                    value={couponCode}
+                    onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponMsg(null); }}
+                    onKeyDown={e => e.key === "Enter" && handleApplyCoupon()}
+                    placeholder="Enter code (e.g. FOREVER22)"
+                    className="flex-1 bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-neutral-500 outline-none focus:border-purple-500 transition font-mono tracking-wider uppercase"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white text-sm font-semibold rounded-xl px-5 py-2.5 transition shrink-0"
+                  >
+                    {couponLoading ? "…" : "Apply"}
+                  </button>
+                </div>
+                {couponMsg && (
+                  <p className={`text-sm mt-3 ${couponMsg.ok ? "text-green-400" : "text-red-400"}`}>
+                    {couponMsg.text}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Subscription card */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">

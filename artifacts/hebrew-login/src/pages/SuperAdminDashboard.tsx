@@ -540,16 +540,17 @@ export default function SuperAdminDashboard() {
                     </div>
                     <div>
                       <label style={{ color: "#64748b", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>Discount Type</label>
-                      <select value={newCoupon.discountType} onChange={e => setNewCoupon(p => ({ ...p, discountType: e.target.value }))} style={{ ...inp, cursor: "pointer" }}>
+                      <select value={newCoupon.discountType} onChange={e => setNewCoupon(p => ({ ...p, discountType: e.target.value, discountValue: "" }))} style={{ ...inp, cursor: "pointer" }}>
                         <option value="percent">Percent Off (%)</option>
                         <option value="flat">Flat Amount ($)</option>
+                        <option value="trial_extension">Trial Extension (days)</option>
                       </select>
                     </div>
                     <div>
                       <label style={{ color: "#64748b", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 6 }}>
-                        Discount Value * {newCoupon.discountType === "percent" ? "(%)" : "($)"}
+                        {newCoupon.discountType === "percent" ? "Value (%)" : newCoupon.discountType === "trial_extension" ? "Days to Extend *" : "Value ($)"}
                       </label>
-                      <input type="number" min="0" step="0.01" value={newCoupon.discountValue} onChange={e => setNewCoupon(p => ({ ...p, discountValue: e.target.value }))} placeholder={newCoupon.discountType === "percent" ? "e.g. 50" : "e.g. 20.00"} style={inp} />
+                      <input type="number" min="0" step={newCoupon.discountType === "trial_extension" ? "1" : "0.01"} value={newCoupon.discountValue} onChange={e => setNewCoupon(p => ({ ...p, discountValue: e.target.value }))} placeholder={newCoupon.discountType === "percent" ? "e.g. 50" : newCoupon.discountType === "trial_extension" ? "e.g. 30" : "e.g. 20.00"} style={inp} />
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
@@ -602,8 +603,8 @@ export default function SuperAdminDashboard() {
                           <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: c.active ? "#93c5fd" : "#475569", letterSpacing: "0.05em" }}>{c.code}</span>
                         </div>
                         <div style={{ color: "#64748b", fontSize: 12 }}>{c.description || <span style={{ color: "#334155" }}>—</span>}</div>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: c.discountType === "percent" ? "#a78bfa" : "#34d399" }}>
-                          {c.discountType === "percent" ? `${parseFloat(c.discountValue).toFixed(0)}% off` : `$${parseFloat(c.discountValue).toFixed(2)} off`}
+                        <div style={{ fontWeight: 600, fontSize: 13, color: c.discountType === "percent" ? "#a78bfa" : c.discountType === "trial_extension" ? "#fbbf24" : "#34d399" }}>
+                          {c.discountType === "percent" ? `${parseFloat(c.discountValue).toFixed(0)}% off` : c.discountType === "trial_extension" ? `+${Math.round(parseFloat(c.discountValue))}d trial` : `$${parseFloat(c.discountValue).toFixed(2)} off`}
                         </div>
                         <div>{c.plan ? <Badge label={c.plan} color={PLAN_COLORS[c.plan] ?? "#475569"} /> : <span style={{ color: "#334155", fontSize: 12 }}>Any</span>}</div>
                         <div style={{ fontSize: 12, color: "#94a3b8" }}>

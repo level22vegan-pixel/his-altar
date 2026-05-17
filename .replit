@@ -51,3 +51,4 @@ channel = "stable-25_05"
 
 [userenv.shared]
 ADMIN_PASSWORD = "1001"
+RESEND_API_KEY = "re_C6Ufhgz7_PZwt4n7W8VDPMsEkAiBRXsqD"

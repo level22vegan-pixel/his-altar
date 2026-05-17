@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, organizationsTable, orgMessagesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { createHash, randomUUID } from "crypto";
+import { sendWelcomeEmail } from "../lib/email";
 
 const router = Router();
 
@@ -59,6 +60,10 @@ router.post("/signup", async (req, res) => {
       .returning({ id: organizationsTable.id, name: organizationsTable.name });
 
     res.json({ orgId: org.id, orgName: org.name, token, campuses: [orgName] });
+
+    // Send welcome email in background — don't block the response
+    sendWelcomeEmail({ toEmail: emailLower, orgName, contactName: contactName?.trim() || null })
+      .catch((err: unknown) => req.log.error({ err }, "Failed to send welcome email"));
   } catch (err) {
     req.log.error({ err }, "Error signing up org");
     res.status(500).json({ message: "Server error" });

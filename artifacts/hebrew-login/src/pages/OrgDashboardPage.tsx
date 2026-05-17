@@ -124,7 +124,7 @@ export default function OrgDashboardPage() {
           <p className="text-neutral-500 text-sm">
             Need help?{" "}
             <a
-              href="mailto:support@theway.org"
+              href="mailto:Support@HisAltar.com"
               className="text-purple-400 hover:text-purple-300 transition"
             >
               Contact support

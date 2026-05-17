@@ -33,6 +33,7 @@ import AccessCodesPage from "@/pages/AccessCodesPage";
 import ServiceReportPage from "@/pages/ServiceReportPage";
 import NotFound from "@/pages/not-found";
 import OrgLoginPage from "@/pages/OrgLoginPage";
+import OrgResetPasswordPage from "@/pages/OrgResetPasswordPage";
 import OrgSignupPage from "@/pages/OrgSignupPage";
 import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
@@ -46,7 +47,7 @@ import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampus
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/admin/login", "/about", "/unauthorized", "/superadmin/login", "/superadmin"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/org/reset-password", "/admin/login", "/about", "/unauthorized", "/superadmin/login", "/superadmin"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -147,6 +148,7 @@ function Router() {
         <Route path="/org/login" component={OrgLoginPage} />
 
         <Route path="/org/signup" component={OrgSignupPage} />
+        <Route path="/org/reset-password" component={OrgResetPasswordPage} />
         <Route path="/org/dashboard" component={OrgDashboardPage} />
         <Route path="/org/billing" component={OrgBillingPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>

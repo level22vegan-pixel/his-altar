@@ -18,6 +18,8 @@ export const organizationsTable = pgTable("organizations", {
   suspended: boolean("suspended").notNull().default(false),
   trialEndsAt: timestamp("trial_ends_at"),
   stripeCustomerId: text("stripe_customer_id"),
+  resetToken: text("reset_token"),
+  resetTokenExpiresAt: timestamp("reset_token_expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastActiveAt: timestamp("last_active_at"),
 });

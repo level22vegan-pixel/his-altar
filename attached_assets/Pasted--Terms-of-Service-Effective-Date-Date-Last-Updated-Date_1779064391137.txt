@@ -1,0 +1,209 @@
+# Terms of Service
+
+**Effective Date:** [Date]  
+**Last Updated:** [Date]
+
+-----
+
+## 1. Acceptance of Terms
+
+By creating an account on [App Name] (“the Platform”), you (“Church Administrator,” “User,” or “You”) agree to be bound by these Terms of Service (“Terms”) on behalf of yourself and your church or ministry organization (“Church”). If you do not agree to these Terms, you may not use the Platform.
+
+These Terms constitute a legally binding agreement between you and [Company Name] (“we,” “us,” or “our”).
+
+-----
+
+## 2. Description of Service
+
+[App Name] is a pastoral care management platform designed to help churches and ministries record, organize, and follow up with individuals who come forward during altar calls and prayer services. The Platform provides tools for:
+
+- Recording altar call and prayer request information
+- Managing follow-up call schedules and logs
+- Tracking spiritual care history for congregation members
+- Coordinating pastoral staff and volunteers
+
+-----
+
+## 3. Eligibility
+
+To use this Platform, you must:
+
+- Be at least 18 years of age
+- Be an authorized representative of a legitimate church, ministry, or religious organization
+- Have legal authority to enter into binding agreements on behalf of your organization
+- Provide accurate and complete registration information
+
+We reserve the right to verify the legitimacy of any church or ministry and to decline service at our discretion.
+
+-----
+
+## 4. Account Registration and Security
+
+**4.1** You must provide accurate, current, and complete information when creating your account.
+
+**4.2** You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account.
+
+**4.3** You must immediately notify us at [support email] if you suspect unauthorized access to your account.
+
+**4.4** You may not share your account credentials with unauthorized individuals or allow anyone outside your church staff to access the Platform under your account.
+
+**4.5** You are responsible for all staff accounts you create under your church’s account and for revoking access when staff members leave your organization.
+
+-----
+
+## 5. Subscription Plans and Billing
+
+**5.1 Free Trial.** New accounts receive a 30-day free trial with full access to all features of your selected plan. No payment is required during the trial period.
+
+**5.2 Trial Expiration.** At the end of your 30-day trial, your account will require an active paid subscription to continue accessing the Platform. Your data will be retained for [X] days after trial expiration before permanent deletion.
+
+**5.3 Subscription Fees.** Subscription fees are billed monthly or annually depending on your chosen billing cycle. Fees are charged in advance at the beginning of each billing period.
+
+**5.4 Price Changes.** We reserve the right to change subscription pricing with [30] days advance written notice. Continued use of the Platform after a price change constitutes acceptance of the new pricing.
+
+**5.5 Refunds.** All subscription fees are non-refundable except where required by applicable law. We do not offer prorated refunds for unused portions of a billing period.
+
+**5.6 Failed Payments.** If a payment fails, we will notify you and attempt to process payment again. Accounts with failed payments may be suspended after [7] days. Your data will be preserved during a [30]-day grace period.
+
+**5.7 Cancellation.** You may cancel your subscription at any time. Cancellation takes effect at the end of your current billing period. You will retain access to the Platform until the billing period ends.
+
+-----
+
+## 6. Acceptable Use
+
+You agree to use the Platform only for its intended purpose of pastoral care and church ministry management. You agree not to:
+
+- Use the Platform for any unlawful purpose
+- Record information about individuals without a legitimate pastoral care purpose
+- Share access to the Platform with individuals outside your church staff or authorized volunteers
+- Attempt to access another church’s data or accounts
+- Upload malicious code, viruses, or harmful content
+- Use the Platform to harass, intimidate, or harm any individual
+- Sell, resell, or sublicense access to the Platform to any third party
+- Attempt to reverse engineer, decompile, or extract the Platform’s source code
+- Use automated tools to scrape or extract data from the Platform
+
+-----
+
+## 7. Sensitive Personal Data
+
+**7.1 Nature of Data.** You acknowledge that the Platform is used to store sensitive personal information, including but not limited to prayer requests, health disclosures, family matters, addiction struggles, mental health concerns, and other deeply personal matters shared during altar calls and prayer moments.
+
+**7.2 Your Responsibility.** You are solely responsible for:
+
+- Obtaining any consent required from individuals whose information you record
+- Informing your congregation that altar and prayer records may be kept
+- Ensuring all staff with Platform access handle data with appropriate confidentiality
+- Complying with all applicable privacy laws regarding the data you collect
+
+**7.3 Minors.** If you record information about individuals under the age of 18, you agree to handle such records with the highest standard of care and in compliance with all applicable laws protecting minors.
+
+**7.4 Our Role.** We act as a data processor on your behalf. We do not access, use, or share individual congregation member records except as required to provide technical support at your request or as required by law.
+
+-----
+
+## 8. Data Ownership and Portability
+
+**8.1** All congregation member data you enter into the Platform remains your property and the property of your church.
+
+**8.2** You may export a full copy of your church’s data at any time through the Platform’s export feature or by contacting [support email].
+
+**8.3** Upon cancellation or account deletion, we will provide a [30]-day window during which you may export your data. After this window, all data will be permanently and irreversibly deleted from our systems.
+
+-----
+
+## 9. Privacy
+
+Your use of the Platform is also governed by our Privacy Policy, which is incorporated into these Terms by reference. Please read the Privacy Policy carefully before using the Platform.
+
+-----
+
+## 10. Confidentiality
+
+You acknowledge that altar call records, prayer requests, and follow-up notes stored in the Platform are confidential pastoral communications. You agree to:
+
+- Limit staff access to records on a need-to-know basis
+- Not discuss or disclose individual records outside of appropriate pastoral care contexts
+- Implement reasonable internal policies governing staff access to the Platform
+- Promptly revoke Platform access for any staff member who is no longer authorized
+
+-----
+
+## 11. Intellectual Property
+
+**11.1** The Platform, including its design, features, code, and content, is owned by [Company Name] and protected by applicable intellectual property laws.
+
+**11.2** We grant you a limited, non-exclusive, non-transferable license to use the Platform during your active subscription solely for your church’s internal pastoral care purposes.
+
+**11.3** Your church’s data belongs to you. We claim no ownership over any congregation member information you enter into the Platform.
+
+-----
+
+## 12. Disclaimers
+
+**12.1** The Platform is provided “as is” and “as available” without warranties of any kind, express or implied.
+
+**12.2** We do not warrant that the Platform will be uninterrupted, error-free, or completely secure.
+
+**12.3** We are not responsible for the pastoral care decisions made by your church or staff using information stored in the Platform.
+
+**12.4** The Platform is a management tool only. We make no representations regarding the spiritual, emotional, or psychological outcomes of any pastoral care activity.
+
+-----
+
+## 13. Limitation of Liability
+
+To the fullest extent permitted by law, [Company Name] shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform, including but not limited to loss of data, loss of revenue, or unauthorized access to congregation member records. Our total liability to you for any claim shall not exceed the amount you paid us in the [3] months preceding the claim.
+
+-----
+
+## 14. Indemnification
+
+You agree to indemnify, defend, and hold harmless [Company Name] and its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including reasonable legal fees) arising from:
+
+- Your use of the Platform
+- Your violation of these Terms
+- Any data you store on the Platform
+- Your failure to obtain required consents from congregation members
+- Any breach of confidentiality by you or your staff
+
+-----
+
+## 15. Termination
+
+**15.1** You may terminate your account at any time by canceling your subscription and requesting account deletion.
+
+**15.2** We may suspend or terminate your account immediately if you violate these Terms, engage in unlawful activity, or pose a risk to other users or the Platform.
+
+**15.3** Upon termination, your right to access the Platform ceases immediately. Data retention and deletion will follow the terms in Section 8.
+
+-----
+
+## 16. Changes to These Terms
+
+We reserve the right to update these Terms at any time. We will notify you of material changes by email and through an in-app notice at least [30] days before changes take effect. Your continued use of the Platform after changes take effect constitutes acceptance of the updated Terms.
+
+-----
+
+## 17. Governing Law
+
+These Terms are governed by the laws of the State of [State], without regard to its conflict of law provisions. Any disputes shall be resolved in the courts of [County, State].
+
+-----
+
+## 18. Contact
+
+For questions about these Terms, contact us at:
+
+[Company Name]  
+[Address]  
+[Email]  
+[Phone]
+
+-----
+
+*By checking the acceptance box during registration, you confirm that you have read, understood, and agree to these Terms of Service.*
+
+-----
+
+IMPORTANT: Have a licensed attorney review this document before publishing. This is a strong starting framework but should be reviewed for your specific jurisdiction and business structure.

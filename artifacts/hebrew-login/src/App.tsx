@@ -39,6 +39,8 @@ import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
 import OrgBillingPage from "@/pages/OrgBillingPage";
 import AboutPage from "@/pages/AboutPage";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import SuperAdminLoginPage from "@/pages/SuperAdminLoginPage";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
@@ -47,7 +49,7 @@ import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampus
 const queryClient = new QueryClient();
 
 const LOGIN_PATH = "/";
-const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/org/reset-password", "/admin/login", "/about", "/unauthorized", "/superadmin/login", "/superadmin"];
+const UNGUARDED = [LOGIN_PATH, "/enter", "/team", "/staff", "/caller-login", "/org/login", "/org/signup", "/org/reset-password", "/admin/login", "/about", "/terms", "/privacy", "/unauthorized", "/superadmin/login", "/superadmin"];
 
 function SessionGuard() {
   const [location, navigate] = useLocation();
@@ -121,6 +123,8 @@ function Router() {
         <Route path="/staff" component={StaffLoginPage} />
         <Route path="/admin/login" component={AdminLoginPage} />
         <Route path="/about" component={AboutPage} />
+        <Route path="/terms" component={TermsPage} />
+        <Route path="/privacy" component={PrivacyPage} />
         <Route path="/unauthorized" component={UnauthorizedPage} />
         <Route path="/admin/profile" component={AdminProfilePage} />
         <Route path="/home" component={HomePage} />

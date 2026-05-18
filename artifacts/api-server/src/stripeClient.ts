@@ -39,17 +39,17 @@ async function getConnectorCredentials(): Promise<{ publishableKey: string; secr
 }
 
 async function getCredentials(): Promise<{ publishableKey: string; secretKey: string }> {
-  // Try connector first (most up-to-date)
-  const connector = await getConnectorCredentials();
-  if (connector) return connector;
-
-  // Fallback: environment secrets
+  // Environment secrets always win — set these in the Secrets tab
   const envSecret = process.env.STRIPE_SECRET_KEY;
   const envPublishable = process.env.STRIPE_PUBLISHABLE_KEY;
 
-  if (envSecret?.startsWith("sk_") && envPublishable) {
+  if (envSecret?.startsWith("sk_") && envPublishable?.startsWith("pk_")) {
     return { secretKey: envSecret, publishableKey: envPublishable };
   }
+
+  // Fallback: Replit connector (dev only)
+  const connector = await getConnectorCredentials();
+  if (connector) return connector;
 
   throw new Error(
     "Stripe not configured. Add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in the Secrets tab."

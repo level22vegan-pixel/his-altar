@@ -36,6 +36,7 @@ export default function OrgSignupPage() {
     confidential: false,
     authority: false,
   });
+  const [modal, setModal] = useState<null | "terms" | "privacy">(null);
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -96,6 +97,7 @@ export default function OrgSignupPage() {
     "w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg px-4 py-3 text-sm placeholder-neutral-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition";
 
   return (
+    <>
     <div className="min-h-screen flex items-center justify-center bg-neutral-950 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
@@ -237,7 +239,7 @@ export default function OrgSignupPage() {
                 key: "terms" as const,
                 label: (
                   <>I agree to the{" "}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Terms of Service</a>
+                    <button type="button" onClick={(e) => { e.preventDefault(); setModal("terms"); }} className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Terms of Service</button>
                   </>
                 ),
               },
@@ -245,7 +247,7 @@ export default function OrgSignupPage() {
                 key: "privacy" as const,
                 label: (
                   <>I agree to the{" "}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Privacy Policy</a>
+                    <button type="button" onClick={(e) => { e.preventDefault(); setModal("privacy"); }} className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Privacy Policy</button>
                   </>
                 ),
               },
@@ -306,5 +308,39 @@ export default function OrgSignupPage() {
         </p>
       </div>
     </div>
+
+    {/* Document modal */}
+    {modal && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+        onClick={() => setModal(null)}
+      >
+        <div
+          className="relative w-full max-w-2xl bg-neutral-950 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col"
+          style={{ height: "80vh" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800 shrink-0">
+            <p className="text-white font-semibold text-sm">
+              {modal === "terms" ? "Terms of Service" : "Privacy Policy"}
+            </p>
+            <button
+              onClick={() => setModal(null)}
+              className="text-neutral-500 hover:text-white transition text-xl leading-none"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <iframe
+            src={modal === "terms" ? "/terms" : "/privacy"}
+            className="flex-1 w-full border-0"
+            title={modal === "terms" ? "Terms of Service" : "Privacy Policy"}
+          />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -115,7 +115,6 @@ export default function OrgSignupPage() {
               "Roster & Check-in management",
               "Dbanc — prayer contact database",
               "PXP — prayer follow-up call system",
-              "Multi-campus support",
             ].map((feature) => (
               <li key={feature} className="flex items-center gap-2 text-neutral-300 text-xs">
                 <svg className="w-3.5 h-3.5 text-purple-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">

@@ -575,25 +575,7 @@ export default function SuperAdminDashboard() {
                                   <InfoRow label="Org ID" value={`#${org.id}`} />
                                   <InfoRow label="Email" value={org.email} />
                                   <InfoRow label="Contact" value={org.contactName ?? "—"} />
-                                  <div>
-                                    <span style={{ color: "#64748b", fontSize: 12 }}>Campuses</span>
-                                    <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}>
-                                      {(editCampuses[org.id] ?? org.campuses ?? []).length === 0 ? (
-                                        <span style={{ color: "#334155", fontSize: 12 }}>None</span>
-                                      ) : (editCampuses[org.id] ?? org.campuses ?? []).map((c, idx) => (
-                                        <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#1e293b", border: "1px solid #334155", borderRadius: 6, padding: "5px 10px" }}>
-                                          <span style={{ color: "#94a3b8", fontSize: 12 }}>{c}</span>
-                                          <button onClick={() => setEditCampuses(prev => ({ ...prev, [org.id]: (prev[org.id] ?? org.campuses ?? []).filter((_, i) => i !== idx) }))} style={{ background: "none", border: "none", color: "#ef4444", fontSize: 14, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}>×</button>
-                                        </div>
-                                      ))}
-                                      <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
-                                        <input value={newCampusInput[org.id] ?? ""} onChange={e => setNewCampusInput(prev => ({ ...prev, [org.id]: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") { const val = (newCampusInput[org.id] ?? "").trim().toUpperCase(); if (!val) return; setEditCampuses(prev => ({ ...prev, [org.id]: [...(prev[org.id] ?? org.campuses ?? []), val] })); setNewCampusInput(prev => ({ ...prev, [org.id]: "" })); } }} placeholder="Add campus…" style={{ ...inp, fontSize: 11, padding: "5px 8px", flex: 1 }} />
-                                        <button onClick={() => { const val = (newCampusInput[org.id] ?? "").trim().toUpperCase(); if (!val) return; setEditCampuses(prev => ({ ...prev, [org.id]: [...(prev[org.id] ?? org.campuses ?? []), val] })); setNewCampusInput(prev => ({ ...prev, [org.id]: "" })); }} style={{ ...btn("#1e293b"), border: "1px solid #334155", color: "#94a3b8", fontSize: 11, padding: "5px 10px" }}>+</button>
-                                      </div>
-                                      <button onClick={() => saveCampuses(org.id)} disabled={campusSaving === org.id} style={{ ...btn("#1d4ed8"), fontSize: 11, padding: "5px 0" }}>{campusSaving === org.id ? "Saving…" : "Save Campuses"}</button>
-                                    </div>
-                                  </div>
-                                  <InfoRow label="Registered" value={new Date(org.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} />
+                                    <InfoRow label="Registered" value={new Date(org.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} />
                                   <InfoRow label="Last Active" value={org.lastActiveAt ? new Date(org.lastActiveAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Never"} />
                                 </div>
 

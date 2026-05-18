@@ -79,9 +79,9 @@ export default function AboutPage() {
           </Section>
 
           <Section title="Built for the Church">
-            Every feature in His Altar was designed with local church ministry in mind. Whether
-            you run one campus or many, our platform scales with your congregation and keeps your
-            data organized and accessible to the right people.
+            Every feature in His Altar was designed with local church ministry in mind. Our
+            platform grows with your congregation and keeps your data organized and accessible
+            to the right people.
           </Section>
         </div>
 

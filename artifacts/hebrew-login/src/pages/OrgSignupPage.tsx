@@ -30,6 +30,12 @@ export default function OrgSignupPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState({
+    terms: false,
+    privacy: false,
+    confidential: false,
+    authority: false,
+  });
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -50,6 +56,10 @@ export default function OrgSignupPage() {
     }
     if (password !== confirmPassword) {
       setError("Passwords don't match.");
+      return;
+    }
+    if (!agreed.terms || !agreed.privacy || !agreed.confidential || !agreed.authority) {
+      setError("Please check all boxes below before creating your account.");
       return;
     }
 
@@ -218,6 +228,61 @@ export default function OrgSignupPage() {
                 <EyeIcon open={showConfirm} />
               </button>
             </div>
+          </div>
+
+          {/* Agreement checkboxes */}
+          <div className="space-y-3 pt-1">
+            {[
+              {
+                key: "terms" as const,
+                label: (
+                  <>I agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Terms of Service</a>
+                  </>
+                ),
+              },
+              {
+                key: "privacy" as const,
+                label: (
+                  <>I agree to the{" "}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Privacy Policy</a>
+                  </>
+                ),
+              },
+              {
+                key: "confidential" as const,
+                label: "I understand that member altar records are confidential and I am responsible for my staff's access",
+              },
+              {
+                key: "authority" as const,
+                label: "I confirm I have authority to create this account on behalf of my church",
+              },
+            ].map(({ key, label }) => (
+              <label key={key} className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative mt-0.5 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={agreed[key]}
+                    onChange={(e) => setAgreed((a) => ({ ...a, [key]: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-4 h-4 rounded border transition ${
+                      agreed[key]
+                        ? "bg-purple-600 border-purple-600"
+                        : "bg-neutral-900 border-neutral-600 group-hover:border-neutral-400"
+                    } flex items-center justify-center`}
+                  >
+                    {agreed[key] && (
+                      <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <span className="text-neutral-400 text-xs leading-relaxed">{label}</span>
+              </label>
+            ))}
           </div>
 
           {error && (

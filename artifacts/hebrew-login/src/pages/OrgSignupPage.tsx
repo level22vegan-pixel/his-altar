@@ -260,30 +260,31 @@ export default function OrgSignupPage() {
                 label: "I confirm I have authority to create this account on behalf of my church",
               },
             ].map(({ key, label }) => (
-              <label key={key} className="flex items-start gap-3 cursor-pointer group">
-                <div className="relative mt-0.5 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={agreed[key]}
-                    onChange={(e) => setAgreed((a) => ({ ...a, [key]: e.target.checked }))}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 rounded border transition ${
-                      agreed[key]
-                        ? "bg-purple-600 border-purple-600"
-                        : "bg-neutral-900 border-neutral-600 group-hover:border-neutral-400"
-                    } flex items-center justify-center`}
-                  >
-                    {agreed[key] && (
-                      <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <span className="text-neutral-400 text-xs leading-relaxed">{label}</span>
-              </label>
+              <div key={key} className="flex items-start gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAgreed((a) => ({ ...a, [key]: !a[key] }))}
+                  className={`mt-0.5 w-4 h-4 rounded border transition shrink-0 flex items-center justify-center ${
+                    agreed[key]
+                      ? "bg-purple-600 border-purple-600"
+                      : "bg-neutral-900 border-neutral-600 hover:border-neutral-400"
+                  }`}
+                  aria-checked={agreed[key]}
+                  role="checkbox"
+                >
+                  {agreed[key] && (
+                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l6.879-6.879a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+                <span
+                  className="text-neutral-400 text-xs leading-relaxed cursor-pointer select-none"
+                  onClick={() => setAgreed((a) => ({ ...a, [key]: !a[key] }))}
+                >
+                  {label}
+                </span>
+              </div>
             ))}
           </div>
 

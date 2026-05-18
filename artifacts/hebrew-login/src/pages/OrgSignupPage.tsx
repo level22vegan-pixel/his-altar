@@ -239,7 +239,7 @@ export default function OrgSignupPage() {
                 key: "terms" as const,
                 label: (
                   <>I agree to the{" "}
-                    <button type="button" onClick={(e) => { e.preventDefault(); setModal("terms"); }} className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Terms of Service</button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModal("terms"); }} className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Terms of Service</button>
                   </>
                 ),
               },
@@ -247,7 +247,7 @@ export default function OrgSignupPage() {
                 key: "privacy" as const,
                 label: (
                   <>I agree to the{" "}
-                    <button type="button" onClick={(e) => { e.preventDefault(); setModal("privacy"); }} className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Privacy Policy</button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModal("privacy"); }} className="text-purple-400 hover:text-purple-300 underline underline-offset-2">Privacy Policy</button>
                   </>
                 ),
               },

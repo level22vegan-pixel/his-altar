@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, loginConfigTable, organizationsTable } from "@workspace/db";
+import { db, loginConfigTable, organizationsTable, systemConfigTable } from "@workspace/db";
 import { UpdateLoginCodeBody } from "@workspace/api-zod";
 import { desc, eq, and } from "drizzle-orm";
 
@@ -206,6 +206,16 @@ router.put("/service-times", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Error updating service times");
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET /api/config/banner — public, no auth required — returns active global banner
+router.get("/banner", async (_req, res) => {
+  try {
+    const [row] = await db.select().from(systemConfigTable).where(eq(systemConfigTable.key, "global_banner"));
+    res.json({ banner: row ? JSON.parse(row.value) : null });
+  } catch (_) {
+    res.json({ banner: null });
   }
 });
 

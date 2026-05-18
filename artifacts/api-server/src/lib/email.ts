@@ -5,6 +5,45 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "His Altar <Support@HisAltar.com>";
 const SUPPORT = "Support@HisAltar.com";
 
+export async function sendBroadcastEmail(opts: { toEmail: string; orgName: string; subject: string; body: string }) {
+  await resend.emails.send({
+    from: FROM,
+    to: opts.toEmail,
+    subject: opts.subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0d0c0b;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0c0b;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#131210;border:1px solid #3a2e1e;border-radius:12px;overflow:hidden;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#2a1f0e,#1a1408);padding:28px 40px;text-align:center;border-bottom:1px solid #3a2e1e;">
+            <p style="margin:0 0 4px;color:#c8a060;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">His Altar</p>
+            <h1 style="margin:0;color:#e8c882;font-size:20px;letter-spacing:0.1em;font-weight:normal;">${opts.subject}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 40px;">
+            <p style="margin:0 0 12px;color:#c8a870;font-size:14px;">Hi ${opts.orgName},</p>
+            <div style="color:#a08850;font-size:14px;line-height:1.8;white-space:pre-wrap;">${opts.body.replace(/\n/g, "<br>")}</div>
+            <p style="margin:28px 0 0;color:#5a4a30;font-size:12px;">— The His Altar Team</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 40px;border-top:1px solid #2a2218;text-align:center;">
+            <p style="margin:0;color:#5a4a30;font-size:11px;">His Altar · <a href="mailto:${SUPPORT}" style="color:#5a4a30;text-decoration:none;">${SUPPORT}</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim(),
+  });
+}
+
 export async function sendPasscodeEmail(opts: { toEmail: string; orgName: string; passcode: string }) {
   await resend.emails.send({
     from: FROM,

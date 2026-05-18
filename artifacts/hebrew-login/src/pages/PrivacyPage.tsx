@@ -259,7 +259,6 @@ export default function PrivacyPage() {
                   support@hisaltar.com
                 </a>
               </p>
-              <p>(424) 234-1669</p>
               <p className="text-neutral-600 text-xs pt-1">Response time: within 30 days of receipt</p>
             </div>
           </Section>

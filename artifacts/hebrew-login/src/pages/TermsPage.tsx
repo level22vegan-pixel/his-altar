@@ -178,7 +178,6 @@ export default function TermsPage() {
                   support@hisaltar.com
                 </a>
               </p>
-              <p>(424) 234-1669</p>
             </div>
           </Section>
         </div>

@@ -1,0 +1,310 @@
+# Privacy Policy
+
+**Effective Date:** [Date]  
+**Last Updated:** [Date]
+
+-----
+
+## Introduction
+
+At [Company Name], we take privacy seriously — especially given the deeply personal nature of the information entrusted to our platform. This Privacy Policy explains how we collect, use, store, protect, and handle data when you use [App Name] (“the Platform”), a pastoral care management tool designed for churches and ministries.
+
+Please read this policy carefully. By using the Platform, you agree to the practices described here.
+
+-----
+
+## 1. Who This Policy Applies To
+
+This policy applies to:
+
+- **Church Administrators** — authorized representatives who create and manage a church account
+- **Church Staff and Volunteers** — individuals added to the Platform by a Church Administrator
+- **Congregation Members** — individuals whose information is recorded in the Platform by church staff
+
+If you are a congregation member whose information has been recorded by a church using this Platform, please contact that church directly for questions about how they manage your information. You may also contact us at [privacy email].
+
+-----
+
+## 2. Information We Collect
+
+### 2.1 Information You Provide Directly
+
+**Account Registration Information:**
+
+- Church name, address, and contact details
+- Administrator name, email address, and password
+- Billing information (processed securely through our payment provider, Stripe)
+- Church size, denomination, and other onboarding details
+
+**Staff and Volunteer Profiles:**
+
+- Name, email address, and role
+- Login credentials
+- Activity logs within the Platform
+
+**Congregation Member Records (entered by church staff):**
+
+- Full name and contact information
+- Date and type of altar call or prayer request
+- Nature of prayer request or spiritual need
+- Follow-up call logs and notes
+- Spiritual care history and progress notes
+- Any additional information church staff chooses to record
+
+### 2.2 Information Collected Automatically
+
+When you use the Platform, we automatically collect:
+
+- IP address and device information
+- Browser type and operating system
+- Pages visited and features used
+- Login timestamps and session duration
+- Error logs and performance data
+
+This information is used solely to operate, maintain, and improve the Platform.
+
+### 2.3 Information from Third Parties
+
+We may receive limited information from:
+
+- **Stripe** — payment confirmation and subscription status (we never store full card numbers)
+- **Email service providers** — delivery confirmations for system notifications
+
+-----
+
+## 3. How We Use Your Information
+
+We use the information collected to:
+
+- Create and manage your church account
+- Provide and operate the Platform’s features
+- Process subscription payments and billing
+- Send account-related notifications (trial reminders, payment receipts, system alerts)
+- Provide customer support when you contact us
+- Monitor and improve Platform performance and security
+- Comply with legal obligations
+- Investigate and prevent fraud or abuse
+
+We do not use congregation member records for any purpose other than providing the Platform service to your church.
+
+-----
+
+## 4. How We Do NOT Use Your Information
+
+We make the following firm commitments:
+
+- We will **never sell** your data or your congregation’s data to any third party
+- We will **never use** congregation member records for advertising or marketing purposes
+- We will **never share** individual prayer requests, altar call records, or follow-up notes with any outside party except as required by law
+- We will **never use** your congregation’s data to train artificial intelligence or machine learning models
+- We will **never contact** your congregation members directly
+
+-----
+
+## 5. How We Share Information
+
+We do not sell or rent your information. We share information only in the following limited circumstances:
+
+### 5.1 Service Providers
+
+We work with trusted third-party service providers who help us operate the Platform. These providers are contractually bound to handle data securely and only for the purposes we specify. They include:
+
+- **Stripe** — payment processing
+- **[Hosting Provider]** — cloud infrastructure and data storage
+- **[Email Provider]** — transactional email delivery
+- **[Analytics Provider]** — anonymized platform usage analytics
+
+### 5.2 Legal Requirements
+
+We may disclose information if required to do so by law, court order, or governmental authority, or if we believe in good faith that disclosure is necessary to protect the rights, property, or safety of [Company Name], our users, or the public.
+
+### 5.3 Business Transfers
+
+In the event of a merger, acquisition, or sale of assets, your information may be transferred to the acquiring entity. We will notify you by email and in-app notice at least [30] days before any such transfer and provide the option to delete your account and data.
+
+### 5.4 With Your Consent
+
+We may share information in any other circumstance with your explicit written consent.
+
+-----
+
+## 6. Data Storage and Security
+
+### 6.1 Where Data is Stored
+
+All data is stored on secure servers located in the [United States / specify region]. If you are located outside this region, you consent to the transfer of your data to our servers.
+
+### 6.2 Security Measures
+
+We implement industry-standard security practices including:
+
+- AES-256 encryption for data at rest
+- TLS 1.2+ encryption for all data in transit
+- Role-based access controls limiting who can view data
+- Regular security audits and vulnerability assessments
+- Multi-factor authentication options for all accounts
+- Automated backups with secure offsite storage
+- Activity logging and anomaly detection
+
+### 6.3 Security Limitations
+
+While we implement strong security measures, no system is completely secure. We cannot guarantee absolute security of your data. In the event of a data breach that affects your church’s information, we will notify you within [72] hours of becoming aware of the breach.
+
+-----
+
+## 7. Data Retention
+
+### 7.1 Active Accounts
+
+We retain your church’s data for as long as your account remains active.
+
+### 7.2 After Cancellation
+
+Upon cancellation of your subscription, your data is retained for [30] days during which you may export it. After this period, all data is permanently and irreversibly deleted from our systems and backups within [90] days.
+
+### 7.3 Trial Accounts
+
+If a trial account is not converted to a paid subscription, data is retained for [30] days after trial expiration before permanent deletion.
+
+### 7.4 Congregation Member Records
+
+Church administrators may set custom retention periods for congregation member records within their account settings. Records may also be manually deleted by authorized church staff at any time.
+
+-----
+
+## 8. Your Rights and Choices
+
+### 8.1 Church Administrator Rights
+
+As a Church Administrator, you have the right to:
+
+- Access all data stored under your church account at any time
+- Export a complete copy of your church’s data in CSV or PDF format
+- Correct or update any account information
+- Delete individual congregation member records
+- Request permanent deletion of your entire account and all associated data
+- Restrict certain types of data processing by contacting us
+
+### 8.2 Congregation Member Rights
+
+If you are a congregation member whose information has been recorded by a church using this Platform, your rights regarding that data are primarily governed by your relationship with that church. However, you may contact us at [privacy email] and we will work with the relevant church administrator to address your request.
+
+### 8.3 How to Exercise Your Rights
+
+To exercise any of the above rights, contact us at:
+
+- **Email:** [privacy email]
+- **Response Time:** We will respond to all requests within [30] days
+
+-----
+
+## 9. Sensitive Personal Information
+
+We recognize that altar call and prayer request records represent some of the most sensitive personal information a person can share. This may include:
+
+- Health and medical disclosures
+- Mental health concerns
+- Addiction and substance struggles
+- Family crises and relationship matters
+- Grief and loss
+- Financial hardship
+- Spiritual and faith struggles
+
+We treat all such information with the highest level of care and confidentiality. Access to congregation member records within our own organization is strictly limited to essential technical personnel and only when required for support or maintenance purposes. Any such internal access is logged and audited.
+
+-----
+
+## 10. Children’s Privacy
+
+The Platform is not designed for direct use by individuals under the age of 13. Church staff may record information about minors who come to the altar as part of their pastoral care responsibilities. When such records exist:
+
+- They must be handled in compliance with all applicable laws protecting minors
+- Church administrators are responsible for ensuring appropriate consent and care
+- We recommend restricting access to minor records to senior pastoral staff only
+
+If you believe we have inadvertently collected personal information from a minor without appropriate authorization, please contact us immediately at [privacy email].
+
+-----
+
+## 11. Cookies and Tracking
+
+We use cookies and similar technologies to:
+
+- Keep you logged in during your session
+- Remember your preferences and settings
+- Analyze how the Platform is used (anonymized)
+- Detect and prevent security threats
+
+We do not use third-party advertising cookies. You may configure your browser to refuse cookies, but doing so may affect Platform functionality.
+
+-----
+
+## 12. Third-Party Links
+
+The Platform may contain links to third-party websites or resources. We are not responsible for the privacy practices or content of those third parties. We encourage you to review the privacy policies of any third-party sites you visit.
+
+-----
+
+## 13. California Privacy Rights (CCPA)
+
+If you are a California resident, you have additional rights under the California Consumer Privacy Act, including the right to:
+
+- Know what personal information we collect and how it is used
+- Request deletion of your personal information
+- Opt out of the sale of your personal information (we do not sell personal information)
+- Non-discrimination for exercising your privacy rights
+
+To exercise these rights, contact us at [privacy email].
+
+-----
+
+## 14. European Privacy Rights (GDPR)
+
+If you are located in the European Economic Area, you have rights under the General Data Protection Regulation, including the right to:
+
+- Access your personal data
+- Correct inaccurate personal data
+- Request erasure of your personal data
+- Object to or restrict processing of your personal data
+- Data portability
+- Lodge a complaint with your local supervisory authority
+
+Our legal basis for processing your data is the performance of our contract with you (providing the Platform service) and our legitimate interests in operating a secure and effective service.
+
+To exercise these rights, contact us at [privacy email].
+
+-----
+
+## 15. Changes to This Policy
+
+We may update this Privacy Policy from time to time. We will notify you of material changes by:
+
+- Sending an email to your registered address
+- Displaying a prominent notice within the Platform
+- Updating the “Last Updated” date at the top of this policy
+
+We will provide at least [30] days notice before material changes take effect. Your continued use of the Platform after changes take effect constitutes acceptance of the updated policy.
+
+-----
+
+## 16. Contact Us
+
+If you have questions, concerns, or requests regarding this Privacy Policy or how we handle your data, please contact us:
+
+**[Company Name]**  
+Attn: Privacy Officer  
+[Address]  
+[City, State, ZIP]  
+[Country]
+
+**Email:** [privacy email]  
+**Phone:** [phone number]  
+**Response Time:** Within 30 days of receipt
+
+-----
+
+*By using [App Name], you acknowledge that you have read and understood this Privacy Policy and agree to its terms.*
+
+-----
+
+IMPORTANT: Have a licensed attorney review this document before publishing, particularly the GDPR and CCPA sections. Requirements vary by jurisdiction and your specific business structure. This document is a strong starting framework and should be tailored to your actual data practices.

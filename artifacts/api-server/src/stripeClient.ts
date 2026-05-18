@@ -39,20 +39,27 @@ async function getConnectorCredentials(): Promise<{ publishableKey: string; secr
 }
 
 async function getCredentials(): Promise<{ publishableKey: string; secretKey: string }> {
-  // Environment secrets always win — set these in the Secrets tab
+  // STRIPE_LIVE_SECRET_KEY / STRIPE_LIVE_PUBLISHABLE_KEY are never injected by the
+  // Replit Stripe connector, so they reliably hold whatever you set in Secrets.
+  const liveSecret = process.env.STRIPE_LIVE_SECRET_KEY;
+  const livePublishable = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
+  if (liveSecret?.startsWith("sk_") && livePublishable?.startsWith("pk_")) {
+    return { secretKey: liveSecret, publishableKey: livePublishable };
+  }
+
+  // Fallback: Replit connector proxy (works in dev with the connector installed)
+  const connector = await getConnectorCredentials();
+  if (connector) return connector;
+
+  // Last resort: plain env vars (may be overridden by connector in dev)
   const envSecret = process.env.STRIPE_SECRET_KEY;
   const envPublishable = process.env.STRIPE_PUBLISHABLE_KEY;
-
   if (envSecret?.startsWith("sk_") && envPublishable?.startsWith("pk_")) {
     return { secretKey: envSecret, publishableKey: envPublishable };
   }
 
-  // Fallback: Replit connector (dev only)
-  const connector = await getConnectorCredentials();
-  if (connector) return connector;
-
   throw new Error(
-    "Stripe not configured. Add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY in the Secrets tab."
+    "Stripe not configured. Add STRIPE_LIVE_SECRET_KEY and STRIPE_LIVE_PUBLISHABLE_KEY in the Secrets tab."
   );
 }
 

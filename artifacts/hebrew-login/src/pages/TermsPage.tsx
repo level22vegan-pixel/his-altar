@@ -17,7 +17,7 @@ export default function TermsPage() {
           <h1 className="text-2xl font-semibold text-white tracking-wide">Terms of Service</h1>
           <p className="text-neutral-500 text-xs mt-2 tracking-wider uppercase">His Altar Ministry Management Platform</p>
           <p className="text-neutral-600 text-xs mt-3">
-            Effective Date: <span className="text-neutral-500">[Date]</span> &nbsp;·&nbsp; Last Updated: <span className="text-neutral-500">[Date]</span>
+            Effective Date: <span className="text-neutral-500">May 18, 2026</span> &nbsp;·&nbsp; Last Updated: <span className="text-neutral-500">May 18, 2026</span>
           </p>
         </div>
 
@@ -27,7 +27,7 @@ export default function TermsPage() {
           <Section num="1" title="Acceptance of Terms">
             By creating an account on His Altar ("the Platform"), you ("Church Administrator," "User," or "You") agree to be bound by these Terms of Service ("Terms") on behalf of yourself and your church or ministry organization ("Church"). If you do not agree to these Terms, you may not use the Platform.
             <br /><br />
-            These Terms constitute a legally binding agreement between you and [Company Name] ("we," "us," or "our").
+            These Terms constitute a legally binding agreement between you and His Altar ("we," "us," or "our").
           </Section>
 
           <Section num="2" title="Description of Service">
@@ -55,7 +55,7 @@ export default function TermsPage() {
             <SubList items={[
               ["4.1", "You must provide accurate, current, and complete information when creating your account."],
               ["4.2", "You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account."],
-              ["4.3", "You must immediately notify us at [support email] if you suspect unauthorized access to your account."],
+              ["4.3", "You must immediately notify us at support@hisaltar.com if you suspect unauthorized access to your account."],
               ["4.4", "You may not share your account credentials with unauthorized individuals or allow anyone outside your church staff to access the Platform under your account."],
               ["4.5", "You are responsible for all staff accounts you create under your church's account and for revoking access when staff members leave your organization."],
             ]} />
@@ -64,7 +64,7 @@ export default function TermsPage() {
           <Section num="5" title="Subscription Plans and Billing">
             <SubList items={[
               ["5.1 Free Trial", "New accounts receive a 30-day free trial with full access to all features of your selected plan. No payment is required during the trial period."],
-              ["5.2 Trial Expiration", "At the end of your 30-day trial, your account will require an active paid subscription to continue accessing the Platform. Your data will be retained for [X] days after trial expiration before permanent deletion."],
+              ["5.2 Trial Expiration", "At the end of your 30-day trial, your account will require an active paid subscription to continue accessing the Platform. Your data will be retained for 90 days after trial expiration before permanent deletion."],
               ["5.3 Subscription Fees", "Subscription fees are billed monthly or annually depending on your chosen billing cycle. Fees are charged in advance at the beginning of each billing period."],
               ["5.4 Price Changes", "We reserve the right to change subscription pricing with 30 days advance written notice. Continued use of the Platform after a price change constitutes acceptance of the new pricing."],
               ["5.5 Refunds", "All subscription fees are non-refundable except where required by applicable law. We do not offer prorated refunds for unused portions of a billing period."],
@@ -100,7 +100,7 @@ export default function TermsPage() {
           <Section num="8" title="Data Ownership and Portability">
             <SubList items={[
               ["8.1", "All congregation member data you enter into the Platform remains your property and the property of your church."],
-              ["8.2", "You may export a full copy of your church's data at any time through the Platform's export feature or by contacting [support email]."],
+              ["8.2", "You may export a full copy of your church's data at any time through the Platform's export feature or by contacting support@hisaltar.com."],
               ["8.3", "Upon cancellation or account deletion, we will provide a 30-day window during which you may export your data. After this window, all data will be permanently and irreversibly deleted from our systems."],
             ]} />
           </Section>
@@ -123,7 +123,7 @@ export default function TermsPage() {
 
           <Section num="11" title="Intellectual Property">
             <SubList items={[
-              ["11.1", "The Platform, including its design, features, code, and content, is owned by [Company Name] and protected by applicable intellectual property laws."],
+              ["11.1", "The Platform, including its design, features, code, and content, is owned by His Altar and protected by applicable intellectual property laws."],
               ["11.2", "We grant you a limited, non-exclusive, non-transferable license to use the Platform during your active subscription solely for your church's internal pastoral care purposes."],
               ["11.3", "Your church's data belongs to you. We claim no ownership over any congregation member information you enter into the Platform."],
             ]} />
@@ -139,11 +139,11 @@ export default function TermsPage() {
           </Section>
 
           <Section num="13" title="Limitation of Liability">
-            To the fullest extent permitted by law, [Company Name] shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform, including but not limited to loss of data, loss of revenue, or unauthorized access to congregation member records. Our total liability to you for any claim shall not exceed the amount you paid us in the 3 months preceding the claim.
+            To the fullest extent permitted by law, His Altar shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform, including but not limited to loss of data, loss of revenue, or unauthorized access to congregation member records. Our total liability to you for any claim shall not exceed the amount you paid us in the 3 months preceding the claim.
           </Section>
 
           <Section num="14" title="Indemnification">
-            You agree to indemnify, defend, and hold harmless [Company Name] and its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including reasonable legal fees) arising from:
+            You agree to indemnify, defend, and hold harmless His Altar and its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including reasonable legal fees) arising from:
             <BulletList items={[
               "Your use of the Platform",
               "Your violation of these Terms",
@@ -166,16 +166,19 @@ export default function TermsPage() {
           </Section>
 
           <Section num="17" title="Governing Law">
-            These Terms are governed by the laws of the State of [State], without regard to its conflict of law provisions. Any disputes shall be resolved in the courts of [County, State].
+            These Terms are governed by the laws of the State of California, without regard to its conflict of law provisions. Any disputes shall be resolved in the courts of Riverside County, California.
           </Section>
 
           <Section num="18" title="Contact">
             For questions about these Terms, contact us at:
             <div className="mt-3 text-neutral-500 space-y-0.5">
-              <p>[Company Name]</p>
-              <p>[Address]</p>
-              <p>[Email]</p>
-              <p>[Phone]</p>
+              <p>His Altar</p>
+              <p>
+                <a href="mailto:support@hisaltar.com" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">
+                  support@hisaltar.com
+                </a>
+              </p>
+              <p>(424) 234-1669</p>
             </div>
           </Section>
         </div>

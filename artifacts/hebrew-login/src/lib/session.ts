@@ -114,10 +114,7 @@ export function getValidOrgSession(): {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed?.orgId || !parsed?.token) return null;
-    if (parsed.loginAt && isExpired(parsed.loginAt)) {
-      localStorage.removeItem("orgSession");
-      return null;
-    }
+    // No client-side expiry — the server validates the token on every request
     return {
       orgId: parsed.orgId,
       orgName: parsed.orgName,

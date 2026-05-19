@@ -51,10 +51,7 @@ export function getValidAdminSession(): { orgName: string | null } | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed?.loginAt) return null;
-    if (isExpired(parsed.loginAt)) {
-      localStorage.removeItem("adminSession");
-      return null;
-    }
+    // No client-side expiry — server validates org token on every request
     return { orgName: parsed.orgName ?? null };
   } catch {
     return null;

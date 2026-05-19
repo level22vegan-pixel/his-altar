@@ -76,10 +76,10 @@ export default function HamburgerMenu() {
           )}
 
           {[
-            { label: "Profile", icon: "👤", path: "/admin/profile", orgOnly: false },
-            { label: "Billing & Subscription", icon: "💳", path: "/org/billing", orgOnly: true },
-            { label: "Gift Subscription", icon: "🎁", path: "/org/billing", orgOnly: true },
-          ].filter(item => !item.orgOnly || !!orgSession).map(item => (
+            { label: "Profile", icon: "👤", path: "/admin/profile" },
+            { label: "Billing & Subscription", icon: "💳", path: "/org/billing" },
+            { label: "Gift Subscription", icon: "🎁", path: "/org/billing" },
+          ].map(item => (
             <button
               key={item.label}
               onClick={() => go(item.path)}

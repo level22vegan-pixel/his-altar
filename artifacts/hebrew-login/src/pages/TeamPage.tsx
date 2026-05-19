@@ -42,7 +42,7 @@ export default function TeamPage() {
     {
       id: "calls",
       label: "Follow-Up Calls",
-      icon: "📱",
+      icon: "📞",
       href: "/caller-login",
       gradient: "linear-gradient(150deg, #4c1d95 0%, #7c3aed 50%, #6d28d9 100%)",
       glow: "rgba(124,58,237,0.4)",

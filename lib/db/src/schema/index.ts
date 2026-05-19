@@ -38,3 +38,4 @@ export * from "./orgMessages";
 export * from "./systemConfig";
 export * from "./couponCodes";
 export * from "./saAuditLog";
+export * from "./webauthnCredentials";

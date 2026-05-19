@@ -19,6 +19,7 @@ import { pxpCallersRouter } from "./pxpCallers";
 import { orgsRouter } from "./orgs";
 import { superadminRouter } from "./superadmin";
 import { stripeRouter } from "./stripe";
+import { webauthnRouter } from "./webauthn";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use("/pxp/callers", pxpCallersRouter);
 router.use("/orgs", orgsRouter);
 router.use("/superadmin", superadminRouter);
 router.use("/stripe", stripeRouter);
+router.use("/webauthn", webauthnRouter);
 
 export default router;

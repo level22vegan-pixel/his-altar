@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { getValidCampusSession, getValidAdminSession, getValidOrgSession, clearAllSessions, getOrgToken } from "@/lib/session";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 type FlaggedLog = {
   id: number;
@@ -145,13 +146,7 @@ export default function AdminPage() {
           >
             ← Back
           </button>
-          <button
-            onClick={() => navigate("/admin/profile")}
-            className="text-xs uppercase tracking-widest opacity-50 hover:opacity-80 transition-opacity"
-            style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", letterSpacing: "0.2em" }}
-          >
-            Profile →
-          </button>
+          <HamburgerMenu />
         </div>
 
         <h1

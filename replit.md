@@ -28,11 +28,13 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Artifacts
 
-### Hebrew Login Portal (`artifacts/hebrew-login`)
+### His Altar Portal (`artifacts/hebrew-login`)
 - **Preview path**: `/`
-- **Purpose**: A rustic Hebrew alphabet login page where users click letters in sequence to authenticate
+- **Purpose**: Church staff portal and SaaS platform for altar ministry, prayer contacts, and follow-up calls
 - **Pages**:
-  - `/` — Login page: all 22 Hebrew letters displayed, users click in order then press Enter. ת held 3s → admin access
+  - `/` — Landing page (Enter Site → numeric PIN login, or church admin sign-in)
+  - `/enter` — Numeric PIN entry → Teams page
+  - `/team` — Teams page: Altar, Follow-Up Calls, Admin bubbles
   - `/home` — Post-login landing page with "Select Campus" button (6 campuses)
   - `/campus/hallmark` — Hallmark campus page with 4 service time buttons
   - `/checkin?campus=X&service=Y` — Check-in page: 3-tab slider (Roster | Active | Alt)
@@ -102,16 +104,10 @@ Log of completed follow-up calls:
 - `id`, `contact_id`, `caller_name`, `campus`, `outcome`, `notes`, `called_at`
 
 ### `login_config`
-Stores the login code sequences (each insert creates a new row; latest is used):
+Stores numeric access code sequences (each insert creates a new row; latest is used):
 - `id` — serial primary key
-- `code` — integer array of letter numbers in order
+- `code` — integer array representing the numeric PIN sequence
 - `updated_at` — timestamp
-
-## Hebrew Alphabet Numbering
-Each letter has a hidden number (1–22) in order:
-א=1, ב=2, ג=3, ד=4, ה=5, ו=6, ז=7, ח=8, ט=9, י=10, כ=11, ל=12, מ=13, נ=14, ס=15, ע=16, פ=17, צ=18, ק=19, ר=20, ש=21, ת=22
-
-Default login (YESHUA): י(10), ש(21), ו(6), ע(16), א(1)
 
 ## Admin Password
 Default admin password (set via `ADMIN_PASSWORD` env var): `admin1234`
@@ -139,10 +135,10 @@ All resource tables have an `org_id INTEGER DEFAULT 1` column. Org 1 = The Way W
 - `POST /api/orgs/:id/messages` — send message to org (admin only)
 
 ### Frontend Pages
-- `/org/login` — Church portal sign-in (email + password)
+- `/org/login` — Church portal sign-in (email + password) → redirects to `/team`
 - `/org/signup` — New church registration
-- `/org/dashboard` — Post-login dashboard with tool links
-- `/` — Hebrew letter login (staff portal, accessible via "Church Portal →" link at bottom of login page)
+- `/team` — Teams page (Altar, Follow-Up Calls, Admin)
+- `/` — Landing page with "Enter Site" (numeric PIN) and church sign-in links
 
 ### Password Hashing
 SHA-256 + "twwo-salt" (no bcrypt needed, lightweight)

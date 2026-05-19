@@ -75,23 +75,25 @@ export default function OrgBillingPage() {
   // Sign-in prompt shown inline when a payment action requires it
   if (showSignIn) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center gap-4 px-6">
-        <p className="text-white font-semibold text-base">Sign in to continue</p>
-        <p className="text-neutral-400 text-sm text-center max-w-xs">
-          Enter your church admin email and password to manage payments.
-        </p>
-        <button
-          onClick={() => navigate("/org/login")}
-          className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl px-6 py-3 transition"
-        >
-          Sign In with Email
-        </button>
-        <button
-          onClick={() => setShowSignIn(false)}
-          className="text-neutral-600 hover:text-neutral-400 text-xs transition"
-        >
-          ← Go back
-        </button>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6" style={{ background: "#f5f5f7" }}>
+        <div className="bg-white rounded-2xl shadow-md px-8 py-10 flex flex-col items-center gap-4 w-full max-w-sm">
+          <p className="text-gray-900 font-semibold text-lg text-center">Sign in to manage billing</p>
+          <p className="text-gray-500 text-sm text-center">
+            Enter your church admin email and password to change your plan or payment details.
+          </p>
+          <button
+            onClick={() => navigate("/org/login")}
+            className="w-full bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold rounded-xl px-6 py-3 transition"
+          >
+            Sign In with Email
+          </button>
+          <button
+            onClick={() => setShowSignIn(false)}
+            className="text-gray-400 hover:text-gray-600 text-xs transition"
+          >
+            ← Go back
+          </button>
+        </div>
       </div>
     );
   }

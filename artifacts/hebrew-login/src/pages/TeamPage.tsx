@@ -4,8 +4,6 @@ import {
   getValidOrgSession,
   getValidCampusSession,
   getValidAdminSession,
-  setAdminSession,
-  setOrgSession,
 } from "@/lib/session";
 import HamburgerMenu from "@/components/HamburgerMenu";
 
@@ -19,12 +17,7 @@ export default function TeamPage() {
   const isMinistryOnly = campusSession?.role === "altar";
   const hasAdminAccess = isAdmin || isLead;
 
-  // Inline admin login modal
-  const [adminModal, setAdminModal] = useState(false);
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
-  const [adminError, setAdminError] = useState("");
-  const [adminLoading, setAdminLoading] = useState(false);
+  const [showRestricted, setShowRestricted] = useState(false);
 
 
   const BUBBLES = [
@@ -61,45 +54,46 @@ export default function TeamPage() {
   ];
 
   function handleBubbleClick(bubble: typeof BUBBLES[0]) {
-    if (bubble.id === "admin" && !hasAdminAccess) {
-      setAdminModal(true);
-      setAdminEmail("");
-      setAdminPassword("");
-      setAdminError("");
+    if (bubble.id === "admin") {
+      if (isAdmin) {
+        navigate(bubble.href);
+      } else {
+        setShowRestricted(true);
+      }
       return;
     }
     navigate(bubble.href);
   }
 
-  async function handleAdminLogin(e: React.FormEvent) {
-    e.preventDefault();
-    if (!adminEmail.trim() || !adminPassword.trim()) {
-      setAdminError("Enter your email and password.");
-      return;
-    }
-    setAdminLoading(true);
-    setAdminError("");
-    try {
-      const res = await fetch("/api/orgs/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: adminEmail.trim(), password: adminPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAdminError(data.message || "Invalid credentials.");
-        return;
-      }
-      setOrgSession(data.orgId, data.orgName, data.token, data.campuses ?? [], data.serviceTimes ?? {});
-      setAdminSession(data.orgName);
-      setAdminModal(false);
-    } catch {
-      setAdminError("Connection error. Try again.");
-    } finally {
-      setAdminLoading(false);
-    }
-  }
 
+  if (showRestricted) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(160deg, #06050f 0%, #0d0818 60%, #06050f 100%)",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 16, padding: 32, textAlign: "center",
+      }}>
+        <span style={{ fontSize: 48 }}>🔒</span>
+        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "rgba(255,255,255,0.85)", margin: 0, letterSpacing: "0.05em" }}>
+          Access Restricted
+        </h2>
+        <p style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, maxWidth: 280, lineHeight: 1.6 }}>
+          This section requires administrator access. Enter the admin code at the login screen to continue.
+        </p>
+        <button
+          onClick={() => setShowRestricted(false)}
+          style={{
+            marginTop: 8, background: "none", border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: 8, color: "rgba(255,255,255,0.45)", fontFamily: "Georgia, serif",
+            fontSize: 12, letterSpacing: "0.1em", padding: "10px 24px", cursor: "pointer",
+          }}
+        >
+          ← Back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -190,99 +184,6 @@ export default function TeamPage() {
         ))}
       </div>
 
-      {/* Admin Login Modal */}
-      {adminModal && (
-        <div
-          onClick={() => setAdminModal(false)}
-          style={{
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            zIndex: 200, padding: 24,
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "hsl(35 20% 10%)",
-              border: "1px solid hsl(38 20% 22%)",
-              borderRadius: 14,
-              padding: 28,
-              width: "100%",
-              maxWidth: 360,
-            }}
-          >
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: "hsl(38 60% 65%)", textAlign: "center", margin: "0 0 4px", letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              Admin Login
-            </h2>
-            <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 25% 40%)", textAlign: "center", margin: "0 0 22px", letterSpacing: "0.08em" }}>
-              Enter your church admin credentials
-            </p>
-
-            <form onSubmit={handleAdminLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={adminEmail}
-                onChange={e => { setAdminEmail(e.target.value); setAdminError(""); }}
-                autoFocus
-                style={{
-                  padding: "11px 14px", background: "hsl(35 18% 8%)",
-                  border: "1px solid hsl(38 20% 22%)", borderRadius: 8,
-                  color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif", fontSize: 13,
-                  outline: "none", width: "100%", boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={adminPassword}
-                onChange={e => { setAdminPassword(e.target.value); setAdminError(""); }}
-                style={{
-                  padding: "11px 14px", background: "hsl(35 18% 8%)",
-                  border: "1px solid hsl(38 20% 22%)", borderRadius: 8,
-                  color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif", fontSize: 13,
-                  outline: "none", width: "100%", boxSizing: "border-box",
-                }}
-              />
-
-              {adminError && (
-                <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 60% 58%)", textAlign: "center", margin: 0 }}>
-                  {adminError}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={adminLoading}
-                style={{
-                  padding: "12px 0", background: "hsl(38 45% 26%)",
-                  color: "hsl(38 70% 78%)", border: "1px solid hsl(38 35% 34%)",
-                  borderRadius: 8, fontFamily: "Georgia, serif", fontSize: 11,
-                  letterSpacing: "0.2em", textTransform: "uppercase",
-                  cursor: adminLoading ? "not-allowed" : "pointer",
-                  opacity: adminLoading ? 0.6 : 1,
-                }}
-              >
-                {adminLoading ? "Verifying…" : "Sign In"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAdminModal(false)}
-                style={{
-                  padding: "8px 0", background: "none", border: "none",
-                  color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif",
-                  fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase",
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

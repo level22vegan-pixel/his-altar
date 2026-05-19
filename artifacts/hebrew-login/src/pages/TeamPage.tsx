@@ -9,7 +9,6 @@ export default function TeamPage() {
   const adminSession = getValidAdminSession();
   const orgSession = getValidOrgSession();
 
-  // Admin code or org login = full access. Staff PIN code = restricted on Admin.
   const isAdminUser = !!(adminSession || orgSession);
   const isMinistryOnly = campusSession?.role === "altar";
   const [showRestricted, setShowRestricted] = useState(false);
@@ -18,18 +17,28 @@ export default function TeamPage() {
     {
       id: "altar",
       label: "Altar",
-      sublabel: "Add a new prayer contact",
+      infoIcons: ["📇", "➕"],
       icon: "🙏",
       href: "/admin/dbanc/new?returnTo=/team",
-      gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
-      glow: "rgba(184,134,11,0.35)",
-      border: "rgba(184,134,11,0.4)",
+      gradient: "linear-gradient(150deg, #091828 0%, #0d2240 40%, #091828 100%)",
+      glow: "rgba(56,130,200,0.35)",
+      border: "rgba(56,130,200,0.4)",
+    },
+    {
+      id: "attendance",
+      label: "Altar Attendance",
+      infoIcons: ["✅", "📋"],
+      icon: "🙋",
+      href: "/home",
+      gradient: "linear-gradient(150deg, #071a0f 0%, #0d2b18 40%, #071a0f 100%)",
+      glow: "rgba(52,168,83,0.35)",
+      border: "rgba(52,168,83,0.4)",
     },
     {
       id: "calls",
       label: "Follow-Up Calls",
-      sublabel: "Prayer call team sign-in",
-      icon: "📞",
+      infoIcons: ["📱", "💬"],
+      icon: "📱",
       href: "/caller-login",
       gradient: "linear-gradient(150deg, #4c1d95 0%, #7c3aed 50%, #6d28d9 100%)",
       glow: "rgba(124,58,237,0.4)",
@@ -38,7 +47,7 @@ export default function TeamPage() {
     {
       id: "admin",
       label: "Admin",
-      sublabel: isAdminUser ? "Admin panel" : "Restricted",
+      infoIcons: isAdminUser ? ["🔧", "📊"] : ["🔒"],
       icon: "⚙",
       href: "/admin",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
@@ -117,8 +126,8 @@ export default function TeamPage() {
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        gap: 14,
-        padding: "18px 20px 24px",
+        gap: 12,
+        padding: "16px 20px 22px",
       }}>
         {BUBBLES.filter(b => !(isMinistryOnly && b.id === "admin")).map((bubble) => (
           <button
@@ -130,43 +139,40 @@ export default function TeamPage() {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 8,
               background: bubble.gradient,
               border: `1.5px solid ${bubble.border}`,
-              borderRadius: 24,
+              borderRadius: 22,
               cursor: "pointer",
-              boxShadow: `0 0 40px ${bubble.glow}, 0 8px 32px rgba(0,0,0,0.5)`,
+              boxShadow: `0 0 36px ${bubble.glow}, 0 8px 28px rgba(0,0,0,0.5)`,
               transition: "transform 0.15s, box-shadow 0.15s",
-              minHeight: 160,
+              minHeight: 130,
             }}
             onMouseOver={(e) => {
               (e.currentTarget as HTMLElement).style.transform = "scale(1.015)";
-              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 64px ${bubble.glow}, 0 12px 40px rgba(0,0,0,0.6)`;
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 60px ${bubble.glow}, 0 12px 36px rgba(0,0,0,0.6)`;
             }}
             onMouseOut={(e) => {
               (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px ${bubble.glow}, 0 8px 32px rgba(0,0,0,0.5)`;
+              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 36px ${bubble.glow}, 0 8px 28px rgba(0,0,0,0.5)`;
             }}
           >
-            <span style={{ fontSize: 36 }}>{bubble.icon}</span>
+            <span style={{ fontSize: 32 }}>{bubble.icon}</span>
             <span style={{
               color: "#ffffff",
               fontFamily: "Georgia, serif",
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: 400,
               letterSpacing: "0.05em",
               textShadow: "0 2px 8px rgba(0,0,0,0.5)",
             }}>
               {bubble.label}
             </span>
-            <span style={{
-              color: "rgba(255,255,255,0.6)",
-              fontFamily: "Georgia, serif",
-              fontSize: 13,
-              letterSpacing: "0.06em",
-            }}>
-              {bubble.sublabel}
-            </span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {bubble.infoIcons.map((ic, i) => (
+                <span key={i} style={{ fontSize: 16, opacity: 0.7 }}>{ic}</span>
+              ))}
+            </div>
           </button>
         ))}
       </div>

@@ -493,7 +493,7 @@ export default function CheckInPage() {
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-4 pt-5 pb-3">
         <button
-          onClick={() => navigate(`/campus/${campus.toLowerCase()}`)}
+          onClick={() => navigate("/team")}
           style={{ color: "hsl(38 35% 50%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.2em", background: "none", border: "none", cursor: "pointer", textTransform: "uppercase", opacity: 0.6 }}
         >
           ← Back

@@ -32,8 +32,8 @@ export default function TeamPage() {
     },
     {
       id: "attendance",
-      label: "Altar Attendance",
-      icon: "🙋",
+      label: "",
+      icon: "✅",
       href: attendanceHref,
       gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
       glow: "rgba(184,134,11,0.35)",
@@ -160,17 +160,21 @@ export default function TeamPage() {
               (e.currentTarget as HTMLElement).style.boxShadow = `0 0 36px ${bubble.glow}, 0 8px 28px rgba(0,0,0,0.5)`;
             }}
           >
-            <span style={{ fontSize: 34 }}>{bubble.icon}</span>
-            <span style={{
-              color: "#ffffff",
-              fontFamily: "Georgia, serif",
-              fontSize: 22,
-              fontWeight: 400,
-              letterSpacing: "0.05em",
-              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
-            }}>
-              {bubble.label}
-            </span>
+            {bubble.id === "attendance" ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: 56, lineHeight: 1 }}>✅</span>
+                <span style={{
+                  fontSize: 28,
+                  fontFamily: "'Comic Sans MS', 'Chalkboard SE', cursive",
+                  fontWeight: 700,
+                  color: "#fff",
+                  textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                  letterSpacing: "-0.02em",
+                }}>-in</span>
+              </div>
+            ) : (
+              <span style={{ fontSize: 42 }}>{bubble.icon}</span>
+            )}
           </button>
         ))}
       </div>

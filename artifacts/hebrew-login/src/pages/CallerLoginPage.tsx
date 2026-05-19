@@ -63,7 +63,7 @@ export default function CallerLoginPage() {
       style={{ background: "hsl(270 8% 3%)" }}
     >
       <button
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/team")}
         style={{
           position: "fixed",
           top: 20,

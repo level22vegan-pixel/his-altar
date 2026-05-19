@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
     >
       <div style={{ width: "100%", maxWidth: 360 }}>
         <button
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/team")}
           style={{
             marginBottom: 28,
             color: "hsl(38 30% 42%)",

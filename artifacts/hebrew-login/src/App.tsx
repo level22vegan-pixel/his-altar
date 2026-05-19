@@ -35,7 +35,6 @@ import NotFound from "@/pages/not-found";
 import OrgLoginPage from "@/pages/OrgLoginPage";
 import OrgResetPasswordPage from "@/pages/OrgResetPasswordPage";
 import OrgSignupPage from "@/pages/OrgSignupPage";
-import OrgDashboardPage from "@/pages/OrgDashboardPage";
 import OrgSetupPage from "@/pages/OrgSetupPage";
 import OrgBillingPage from "@/pages/OrgBillingPage";
 import AboutPage from "@/pages/AboutPage";
@@ -90,10 +89,15 @@ function SessionGuard() {
         return;
       }
 
-      // Org dashboard / setup / billing — org session or admin
-      if (location.startsWith("/org/dashboard") || location.startsWith("/org/setup") || location.startsWith("/org/billing")) {
+      // Org setup / billing — org session or admin
+      if (location.startsWith("/org/setup") || location.startsWith("/org/billing")) {
         if (!isAdmin && !org) { navigate("/org/login"); return; }
         return;
+      }
+
+      // Legacy dashboard redirect
+      if (location.startsWith("/org/dashboard")) {
+        navigate("/team", { replace: true }); return;
       }
 
       // Everything else — any valid session
@@ -153,7 +157,6 @@ function Router() {
 
         <Route path="/org/signup" component={OrgSignupPage} />
         <Route path="/org/reset-password" component={OrgResetPasswordPage} />
-        <Route path="/org/dashboard" component={OrgDashboardPage} />
         <Route path="/org/billing" component={OrgBillingPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>

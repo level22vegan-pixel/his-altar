@@ -34,7 +34,7 @@ export default function OrgLoginPage() {
         return;
       }
       setOrgSession(data.orgId, data.orgName, data.token, data.campuses ?? [], data.serviceTimes ?? {});
-      navigate("/org/dashboard");
+      navigate("/team");
     } catch {
       setError("Connection error. Please try again.");
     } finally {

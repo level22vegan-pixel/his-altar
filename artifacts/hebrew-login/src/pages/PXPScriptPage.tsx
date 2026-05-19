@@ -62,7 +62,7 @@ function NodeEditor({
               }}
             />
             <p style={{ color: "hsl(270 20% 36%)", fontFamily: "Georgia, serif", fontSize: 10, marginTop: 4 }}>
-              Use: <code style={{ color: "hsl(270 55% 65%)" }}>{"{contact_name}"}</code> · <code style={{ color: "hsl(270 55% 65%)" }}>{"{caller_name}"}</code> · <code style={{ color: "hsl(270 55% 65%)" }}>{"{campus}"}</code> · <code style={{ color: "hsl(270 55% 65%)" }}>{"{church_name}"}</code>
+              Use: <code style={{ color: "hsl(270 55% 65%)" }}>{"{contact_name}"}</code> · <code style={{ color: "hsl(270 55% 65%)" }}>{"{caller_name}"}</code> · <code style={{ color: "hsl(270 55% 65%)" }}>{"{campus}"}</code>
             </p>
           </div>
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { clearAllSessions } from "@/lib/session";
+import { clearAllSessions, getValidOrgSession } from "@/lib/session";
 
 const BASE = "/api";
 
@@ -17,158 +17,214 @@ async function apiFetch(path: string, opts?: RequestInit) {
   });
 }
 
-function Section({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 20, padding: "18px 20px", borderRadius: 8, background: "hsl(35 20% 13%)", border: `1px solid ${accent ?? "hsl(38 20% 22%)"}` }}>
-      <p style={{ fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: accent ?? "hsl(38 30% 42%)", marginBottom: 14 }}>
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-const IS = (extra?: React.CSSProperties): React.CSSProperties => ({
-  width: "100%", padding: "10px 14px", background: "hsl(35 18% 10%)",
-  border: "1px solid hsl(38 20% 22%)", borderRadius: 6,
-  color: "hsl(38 55% 70%)", fontFamily: "Georgia, serif", fontSize: 13,
-  outline: "none", boxSizing: "border-box", ...extra,
-});
-
-const BS = (extra?: React.CSSProperties): React.CSSProperties => ({
-  padding: "10px 0", width: "100%", background: "hsl(38 45% 26%)",
-  color: "hsl(38 70% 78%)", border: "1px solid hsl(38 35% 34%)", borderRadius: 6,
-  fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em",
-  textTransform: "uppercase", cursor: "pointer", ...extra,
-});
+const S = {
+  page: {
+    minHeight: "100vh",
+    background: "radial-gradient(ellipse at 50% 20%, hsl(35 28% 12%) 0%, hsl(35 18% 7%) 100%)",
+    padding: "0 0 60px",
+  } as React.CSSProperties,
+  wrap: { width: "100%", maxWidth: 460, margin: "0 auto", padding: "0 16px" } as React.CSSProperties,
+  sectionWrap: {
+    marginBottom: 6,
+    borderRadius: 10,
+    background: "hsl(35 20% 11%)",
+    border: "1px solid hsl(38 18% 20%)",
+    overflow: "hidden",
+  } as React.CSSProperties,
+  sectionHeader: {
+    padding: "10px 16px",
+    background: "hsl(35 22% 9%)",
+    fontFamily: "Georgia, serif",
+    fontSize: 9,
+    letterSpacing: "0.22em",
+    textTransform: "uppercase" as const,
+    color: "hsl(38 35% 38%)",
+    borderBottom: "1px solid hsl(38 18% 18%)",
+  },
+  row: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "13px 16px",
+    borderBottom: "1px solid hsl(38 15% 16%)",
+    cursor: "pointer",
+    transition: "background 0.1s",
+  } as React.CSSProperties,
+  rowLabel: { fontFamily: "Georgia, serif", fontSize: 13, color: "hsl(38 55% 68%)" },
+  rowSub: { fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 30% 42%)", marginTop: 2 },
+  rowRight: { fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 30% 38%)", letterSpacing: "0.06em" },
+  chevron: { color: "hsl(38 25% 35%)", fontSize: 14 },
+  inp: {
+    width: "100%",
+    padding: "10px 14px",
+    background: "hsl(35 18% 8%)",
+    border: "1px solid hsl(38 20% 22%)",
+    borderRadius: 6,
+    color: "hsl(38 55% 70%)",
+    fontFamily: "Georgia, serif",
+    fontSize: 13,
+    outline: "none",
+    boxSizing: "border-box",
+  } as React.CSSProperties,
+  btn: (accent = false, danger = false): React.CSSProperties => ({
+    padding: "10px 0",
+    width: "100%",
+    background: danger ? "hsl(0 40% 18%)" : accent ? "hsl(38 45% 26%)" : "hsl(35 22% 16%)",
+    color: danger ? "hsl(0 60% 65%)" : accent ? "hsl(38 70% 78%)" : "hsl(38 40% 50%)",
+    border: `1px solid ${danger ? "hsl(0 38% 28%)" : accent ? "hsl(38 35% 34%)" : "hsl(38 20% 24%)"}`,
+    borderRadius: 6,
+    fontFamily: "Georgia, serif",
+    fontSize: 10,
+    letterSpacing: "0.2em",
+    textTransform: "uppercase" as const,
+    cursor: "pointer",
+  }),
+};
 
 type BillingStatus = {
   trialActive: boolean;
   trialDaysLeft: number;
   trialEndsAt: string | null;
-  subscription: {
-    id: string;
-    status: string;
-    current_period_end: string;
-    cancel_at_period_end: boolean;
-  } | null;
+  subscription: { id: string; status: string; current_period_end: string; cancel_at_period_end: boolean } | null;
 };
+
+function RowItem({ label, sub, right, onClick, last }: { label: string; sub?: string; right?: string; onClick?: () => void; last?: boolean }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseOver={() => setHover(true)}
+      onMouseOut={() => setHover(false)}
+      style={{
+        ...S.row,
+        cursor: onClick ? "pointer" : "default",
+        background: hover && onClick ? "rgba(255,255,255,0.025)" : "transparent",
+        borderBottom: last ? "none" : S.row.borderBottom as string,
+      }}
+    >
+      <div>
+        <div style={S.rowLabel}>{label}</div>
+        {sub && <div style={S.rowSub}>{sub}</div>}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {right && <span style={S.rowRight}>{right}</span>}
+        {onClick && <span style={S.chevron}>›</span>}
+      </div>
+    </div>
+  );
+}
+
+function ComingSoonRow({ label, sub, last }: { label: string; sub?: string; last?: boolean }) {
+  return (
+    <div style={{ ...S.row, cursor: "default", opacity: 0.55, borderBottom: last ? "none" : S.row.borderBottom as string }}>
+      <div>
+        <div style={S.rowLabel}>{label}</div>
+        {sub && <div style={S.rowSub}>{sub}</div>}
+      </div>
+      <span style={{ fontFamily: "Georgia, serif", fontSize: 9, color: "hsl(38 30% 35%)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Soon</span>
+    </div>
+  );
+}
 
 function BillingSection() {
   const [status, setStatus] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [portalErr, setPortalErr] = useState("");
+  const [err, setErr] = useState("");
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     apiFetch("/stripe/billing-status")
-      .then(r => r.json())
-      .then(d => setStatus(d))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then(r => r.json()).then(d => setStatus(d)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   async function openPortal() {
-    setPortalLoading(true);
-    setPortalErr("");
+    setPortalLoading(true); setErr("");
     try {
       const res = await apiFetch("/stripe/portal", { method: "POST" });
       const d = await res.json();
-      if (d.url) {
-        window.location.href = d.url;
-      } else {
-        setPortalErr(d.error ?? "Could not open billing portal.");
-      }
-    } catch {
-      setPortalErr("Something went wrong. Try again.");
-    } finally {
-      setPortalLoading(false);
-    }
+      if (d.url) window.location.href = d.url;
+      else setErr(d.error ?? "Could not open billing portal.");
+    } catch { setErr("Something went wrong."); }
+    finally { setPortalLoading(false); }
   }
 
-  const subStatus = status?.subscription?.status;
-  const cancelAtEnd = status?.subscription?.cancel_at_period_end;
-  const periodEnd = status?.subscription?.current_period_end
-    ? new Date(status.subscription.current_period_end).toLocaleDateString()
-    : null;
+  const sub = status?.subscription;
+  const subColor = sub?.status === "active" || sub?.status === "trialing" ? "hsl(120 40% 55%)"
+    : sub?.status === "past_due" ? "hsl(38 70% 58%)" : "hsl(0 55% 55%)";
 
-  function statusColor(s?: string) {
-    if (s === "active" || s === "trialing") return "hsl(120 40% 55%)";
-    if (s === "past_due" || s === "unpaid") return "hsl(38 70% 58%)";
-    if (s === "canceled") return "hsl(0 55% 55%)";
-    return "hsl(38 45% 55%)";
+  return (
+    <div style={S.sectionWrap}>
+      <div style={S.sectionHeader}>Billing &amp; Subscription</div>
+      {loading ? (
+        <div style={{ padding: "14px 16px", fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 30% 42%)" }}>Loading…</div>
+      ) : (
+        <>
+          {status?.trialActive && (
+            <RowItem label="Free Trial" sub={`${status.trialDaysLeft} day${status.trialDaysLeft !== 1 ? "s" : ""} remaining`} right="Active" />
+          )}
+          {sub ? (
+            <>
+              <RowItem label="His Altar Pro" sub={sub.cancel_at_period_end ? "Cancels at period end" : `Renews ${new Date(sub.current_period_end).toLocaleDateString()}`} right={sub.status} />
+              <div style={{ padding: "12px 16px", borderTop: "1px solid hsl(38 15% 16%)" }}>
+                <button onClick={openPortal} disabled={portalLoading} style={S.btn(true)}>
+                  {portalLoading ? "Opening…" : "Manage Subscription"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ padding: "12px 16px" }}>
+              <button onClick={() => navigate("/org/billing")} style={S.btn(true)}>
+                Subscribe · $9.99 / month
+              </button>
+            </div>
+          )}
+          {err && <p style={{ padding: "0 16px 12px", fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(0 55% 58%)", margin: 0 }}>{err}</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ChangePasswordSection() {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault(); setMsg(null);
+    if (!current || !next || !confirm) { setMsg({ text: "All fields required", ok: false }); return; }
+    if (next !== confirm) { setMsg({ text: "Passwords don't match", ok: false }); return; }
+    if (next.length < 4) { setMsg({ text: "At least 4 characters required", ok: false }); return; }
+    setLoading(true);
+    try {
+      const res = await apiFetch("/auth/change-admin-password", { method: "POST", body: JSON.stringify({ currentPassword: current, newPassword: next }) });
+      const data = await res.json();
+      if (data.success) { setMsg({ text: "Password updated", ok: true }); setCurrent(""); setNext(""); setConfirm(""); }
+      else setMsg({ text: data.message || "Failed", ok: false });
+    } catch { setMsg({ text: "Something went wrong", ok: false }); }
+    finally { setLoading(false); }
   }
 
   return (
-    <Section title="Billing & Subscription" accent="hsl(38 40% 30%)">
-      {loading ? (
-        <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 30% 42%)" }}>Loading…</p>
+    <div style={S.sectionWrap}>
+      <div style={S.sectionHeader}>Change Password</div>
+      {!open ? (
+        <RowItem label="Change Password" sub="Update your admin password" onClick={() => setOpen(true)} last />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 45% 58%)" }}>Plan</span>
-            <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 65% 70%)", letterSpacing: "0.1em" }}>His Altar Pro</span>
-          </div>
-          <div style={{ height: 1, background: "hsl(38 15% 20%)" }} />
-
-          {status?.trialActive && (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 45% 58%)" }}>Status</span>
-                <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(120 40% 55%)", letterSpacing: "0.08em" }}>Free Trial</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 45% 58%)" }}>Days Remaining</span>
-                <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 65% 72%)" }}>{status.trialDaysLeft} day{status.trialDaysLeft !== 1 ? "s" : ""}</span>
-              </div>
-              <div style={{ height: 1, background: "hsl(38 15% 20%)" }} />
-            </>
-          )}
-
-          {subStatus && (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 45% 58%)" }}>Status</span>
-                <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: statusColor(subStatus), letterSpacing: "0.08em", textTransform: "capitalize" }}>
-                  {cancelAtEnd ? "Cancels at period end" : subStatus}
-                </span>
-              </div>
-              {periodEnd && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 45% 58%)" }}>{cancelAtEnd ? "Ends" : "Renews"}</span>
-                  <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 55% 65%)" }}>{periodEnd}</span>
-                </div>
-              )}
-              <div style={{ height: 1, background: "hsl(38 15% 20%)" }} />
-            </>
-          )}
-
-          {!status?.trialActive && !subStatus && (
-            <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 35% 45%)", marginBottom: 10 }}>
-                No active subscription. Subscribe to keep access after your trial.
-              </p>
-            </div>
-          )}
-
-          {subStatus ? (
-            <button onClick={openPortal} disabled={portalLoading} style={BS({ opacity: portalLoading ? 0.6 : 1 })}>
-              {portalLoading ? "Opening…" : "Manage Subscription"}
-            </button>
-          ) : (
-            <button onClick={openPortal} disabled={portalLoading} style={BS({ background: "hsl(120 35% 20%)", color: "hsl(120 50% 70%)", border: "1px solid hsl(120 30% 28%)", opacity: portalLoading ? 0.6 : 1 })}>
-              {portalLoading ? "Opening…" : "Subscribe · $9.99 / month"}
-            </button>
-          )}
-
-          {portalErr && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(0 55% 58%)", textAlign: "center" }}>{portalErr}</p>}
-
-          <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 22% 36%)", textAlign: "center", letterSpacing: "0.04em" }}>
-            Change payment method, pause, or cancel — all managed through Stripe's secure portal.
-          </p>
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <input type="password" placeholder="Current password" value={current} onChange={e => { setCurrent(e.target.value); setMsg(null); }} style={S.inp} />
+          <input type="password" placeholder="New password" value={next} onChange={e => { setNext(e.target.value); setMsg(null); }} style={S.inp} />
+          <input type="password" placeholder="Confirm new password" value={confirm} onChange={e => { setConfirm(e.target.value); setMsg(null); }} style={S.inp} />
+          {msg && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: msg.ok ? "hsl(120 40% 55%)" : "hsl(0 60% 58%)", textAlign: "center", margin: 0 }}>{msg.text}</p>}
+          <button type="button" onClick={handleSave as unknown as React.MouseEventHandler} disabled={loading} style={S.btn(true)}>{loading ? "Saving…" : "Update Password"}</button>
+          <button type="button" onClick={() => { setOpen(false); setMsg(null); }} style={S.btn()}>Cancel</button>
         </div>
       )}
-    </Section>
+    </div>
   );
 }
 
@@ -180,7 +236,7 @@ function DeleteAccountSection() {
   const [err, setErr] = useState("");
 
   async function handleDelete() {
-    if (typed !== "DELETE") { setErr('Type DELETE (all caps) to confirm'); return; }
+    if (typed !== "DELETE") { setErr("Type DELETE (all caps) to confirm"); return; }
     setDeleting(true); setErr("");
     try {
       const res = await apiFetch("/orgs", { method: "DELETE" });
@@ -193,243 +249,124 @@ function DeleteAccountSection() {
   }
 
   return (
-    <Section title="Danger Zone" accent="hsl(0 40% 30%)">
+    <div style={{ ...S.sectionWrap, borderColor: "hsl(0 35% 22%)" }}>
+      <div style={{ ...S.sectionHeader, color: "hsl(0 45% 45%)" }}>Danger Zone</div>
       {step === "idle" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 30% 42%)", margin: 0 }}>
+        <div style={{ padding: "14px 16px" }}>
+          <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 30% 42%)", margin: "0 0 12px", lineHeight: 1.6 }}>
             Permanently delete your church account, all contacts, rosters, call logs, and settings. This cannot be undone.
           </p>
-          <button
-            onClick={() => setStep("confirm")}
-            style={BS({ background: "hsl(0 40% 18%)", color: "hsl(0 60% 65%)", border: "1px solid hsl(0 38% 28%)" })}
-          >
-            Delete Account
-          </button>
+          <button onClick={() => setStep("confirm")} style={S.btn(false, true)}>Delete Account</button>
         </div>
       )}
       {step === "confirm" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 55% 60%)", margin: 0, lineHeight: 1.6 }}>
-            This will delete all your church data permanently — contacts, rosters, call logs, altar reports, and your account. There is no undo.
+            This will permanently delete all your data — contacts, rosters, call logs, altar reports, and your account. There is no undo.
           </p>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setStep("idle")} style={BS({ background: "hsl(35 20% 16%)", color: "hsl(38 40% 50%)", border: "1px solid hsl(38 20% 24%)" })}>
-              Cancel
-            </button>
-            <button onClick={() => setStep("typing")} style={BS({ background: "hsl(0 45% 20%)", color: "hsl(0 60% 65%)", border: "1px solid hsl(0 38% 28%)" })}>
-              I Understand — Continue
-            </button>
+            <button onClick={() => setStep("idle")} style={{ ...S.btn(), flex: 1 }}>Cancel</button>
+            <button onClick={() => setStep("typing")} style={{ ...S.btn(false, true), flex: 1 }}>Continue</button>
           </div>
         </div>
       )}
       {step === "typing" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 55% 60%)", margin: 0 }}>
-            Type <strong style={{ color: "hsl(0 65% 68%)" }}>DELETE</strong> to permanently remove your account.
+            Type <strong style={{ color: "hsl(0 65% 68%)" }}>DELETE</strong> to confirm.
           </p>
-          <input
-            value={typed}
-            onChange={e => { setTyped(e.target.value); setErr(""); }}
-            placeholder="DELETE"
-            style={IS({ borderColor: typed === "DELETE" ? "hsl(0 55% 40%)" : "hsl(38 20% 22%)", letterSpacing: "0.15em", textTransform: "uppercase" })}
-          />
+          <input value={typed} onChange={e => { setTyped(e.target.value); setErr(""); }} placeholder="DELETE" style={{ ...S.inp, textTransform: "uppercase", letterSpacing: "0.15em" }} />
           {err && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(0 55% 58%)", margin: 0 }}>{err}</p>}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { setStep("idle"); setTyped(""); }} style={BS({ background: "hsl(35 20% 16%)", color: "hsl(38 40% 50%)", border: "1px solid hsl(38 20% 24%)" })}>
-              Cancel
-            </button>
-            <button onClick={handleDelete} disabled={deleting || typed !== "DELETE"} style={BS({ background: typed === "DELETE" ? "hsl(0 50% 22%)" : "hsl(35 20% 14%)", color: typed === "DELETE" ? "hsl(0 65% 65%)" : "hsl(38 20% 30%)", border: "1px solid hsl(0 35% 26%)", opacity: deleting ? 0.6 : 1, cursor: typed !== "DELETE" || deleting ? "not-allowed" : "pointer" })}>
-              {deleting ? "Deleting…" : "Delete Everything"}
+            <button onClick={() => { setStep("idle"); setTyped(""); }} style={{ ...S.btn(), flex: 1 }}>Cancel</button>
+            <button onClick={handleDelete} disabled={deleting || typed !== "DELETE"} style={{ ...S.btn(false, true), flex: 1, opacity: typed !== "DELETE" || deleting ? 0.5 : 1, cursor: typed !== "DELETE" || deleting ? "not-allowed" : "pointer" }}>
+              {deleting ? "Deleting…" : "Delete All"}
             </button>
           </div>
         </div>
       )}
-    </Section>
+    </div>
   );
 }
 
 export default function AdminProfilePage() {
   const [, navigate] = useLocation();
-
-  const orgRaw = localStorage.getItem("orgSession");
-  const orgSession = orgRaw ? (() => { try { return JSON.parse(orgRaw); } catch { return null; } })() : null;
-
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [pwMsg, setPwMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [pwLoading, setPwLoading] = useState(false);
-
-  const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
-  const [pinConfirm, setPinConfirm] = useState(["", "", "", ""]);
-  const [pinMsg, setPinMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [pinLoading, setPinLoading] = useState(false);
-  const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const pinConfRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  function handlePinDigit(arr: string[], set: (v: string[]) => void, refs: React.MutableRefObject<(HTMLInputElement | null)[]>, i: number, val: string) {
-    const c = val.replace(/\D/g, "").slice(-1);
-    const n = [...arr]; n[i] = c; set(n); setPinMsg(null);
-    if (c && i < 3) refs.current[i + 1]?.focus();
-  }
-  function handlePinKey(arr: string[], refs: React.MutableRefObject<(HTMLInputElement | null)[]>, i: number, e: React.KeyboardEvent) {
-    if (e.key === "Backspace" && !arr[i] && i > 0) refs.current[i - 1]?.focus();
-  }
-
-  async function handleSavePin() {
-    const pin = pinDigits.join(""); const conf = pinConfirm.join("");
-    if (pin.length < 4) { setPinMsg({ text: "Enter all 4 digits", ok: false }); return; }
-    if (pin !== conf) { setPinMsg({ text: "Codes don't match", ok: false }); return; }
-    setPinLoading(true); setPinMsg(null);
-    try {
-      const res = await apiFetch("/orgs/settings", { method: "PUT", body: JSON.stringify({ pin }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? "Failed");
-      setPinMsg({ text: "Access code updated", ok: true });
-      setPinDigits(["", "", "", ""]); setPinConfirm(["", "", "", ""]);
-    } catch (e: unknown) { setPinMsg({ text: e instanceof Error ? e.message : "Something went wrong", ok: false }); }
-    finally { setPinLoading(false); }
-  }
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault(); setPwMsg(null);
-    if (!current || !next || !confirm) { setPwMsg({ text: "All fields are required", ok: false }); return; }
-    if (next !== confirm) { setPwMsg({ text: "New passwords do not match", ok: false }); return; }
-    if (next.length < 4) { setPwMsg({ text: "Password must be at least 4 characters", ok: false }); return; }
-    setPwLoading(true);
-    try {
-      const res = await apiFetch("/auth/change-admin-password", { method: "POST", body: JSON.stringify({ currentPassword: current, newPassword: next }) });
-      const data = await res.json();
-      if (data.success) { setPwMsg({ text: "Password updated successfully", ok: true }); setCurrent(""); setNext(""); setConfirm(""); }
-      else setPwMsg({ text: data.message || "Failed to update password", ok: false });
-    } catch { setPwMsg({ text: "Something went wrong — try again", ok: false }); }
-    finally { setPwLoading(false); }
-  }
-
-  const pinBoxStyle = (filled: boolean): React.CSSProperties => ({
-    width: 52, height: 60,
-    background: filled ? "hsl(270 40% 14%)" : "hsl(35 18% 10%)",
-    border: `1.5px solid ${filled ? "hsl(270 55% 50%)" : "hsl(38 20% 22%)"}`,
-    borderRadius: 8, color: "hsl(38 55% 78%)",
-    fontFamily: "Georgia, serif", fontSize: 24,
-    textAlign: "center", outline: "none", caretColor: "transparent",
-    transition: "border-color 0.15s, background 0.15s",
-  });
+  const orgSession = getValidOrgSession();
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 16px 60px", background: "radial-gradient(ellipse at 50% 30%, hsl(35 28% 12%) 0%, hsl(35 18% 7%) 100%)" }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <button onClick={() => navigate("/admin")} style={{ marginBottom: 28, color: "hsl(38 30% 42%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", opacity: 0.7 }}>
-          ← Admin Panel
+    <div style={S.page}>
+      {/* Header */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "16px 20px", borderBottom: "1px solid hsl(38 18% 18%)",
+        background: "hsl(35 22% 9%)", position: "sticky", top: 0, zIndex: 10,
+      }}>
+        <button
+          onClick={() => navigate("/team")}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(38 35% 42%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", padding: 0 }}
+        >
+          ← Teams
         </button>
-
-        <h1 style={{ textAlign: "center", color: "hsl(38 60% 65%)", fontFamily: "Georgia, serif", fontSize: 20, letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: 4 }}>
+        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 16, color: "hsl(38 60% 65%)", letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>
           Profile
         </h1>
-        <p style={{ textAlign: "center", color: "hsl(38 25% 40%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 28 }}>
-          Account & Subscription
-        </p>
+        <div style={{ width: 60 }} />
+      </div>
 
-        {/* Church Info */}
-        {orgSession && (
-          <Section title="Church Account">
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {[
-                { label: "Church Name", value: orgSession.orgName },
-                { label: "Email", value: orgSession.email ?? "—" },
-              ].filter(r => r.value).map(({ label, value }) => (
-                <div key={label}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 35% 50%)" }}>{label}</span>
-                    <span style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 60% 70%)" }}>{value}</span>
-                  </div>
-                  <div style={{ height: 1, background: "hsl(38 15% 20%)", marginTop: 8 }} />
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
+      <div style={{ ...S.wrap, paddingTop: 20 }}>
+
+        {/* Account Info */}
+        <div style={S.sectionWrap}>
+          <div style={S.sectionHeader}>Account Info</div>
+          {orgSession && (
+            <RowItem label="Church Name" right={orgSession.orgName} />
+          )}
+          <ComingSoonRow label="Church Profile" sub="Name, address, pastor, phone, logo" />
+          <ComingSoonRow label="My Profile" sub="Personal name, email, photo, title" last />
+        </div>
+
+        {/* Change Password */}
+        <ChangePasswordSection />
 
         {/* Billing */}
         <BillingSection />
 
-        {/* Change Password */}
-        <Section title="Change Password">
-          <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <input type="password" placeholder="Current password" value={current} onChange={e => { setCurrent(e.target.value); setPwMsg(null); }} style={IS()} />
-            <input type="password" placeholder="New password" value={next} onChange={e => { setNext(e.target.value); setPwMsg(null); }} style={IS()} />
-            <input type="password" placeholder="Confirm new password" value={confirm} onChange={e => { setConfirm(e.target.value); setPwMsg(null); }} style={IS()} />
-            {pwMsg && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, textAlign: "center", color: pwMsg.ok ? "hsl(120 40% 55%)" : "hsl(0 60% 58%)", margin: 0 }}>{pwMsg.text}</p>}
-            <button type="submit" disabled={pwLoading} style={BS({ opacity: pwLoading ? 0.6 : 1 })}>{pwLoading ? "Saving..." : "Update Password"}</button>
-          </form>
-        </Section>
+        {/* Staff Access */}
+        <div style={S.sectionWrap}>
+          <div style={S.sectionHeader}>Staff Access</div>
+          <ComingSoonRow label="Manage Staff" sub="Add, remove, or change team roles" />
+          <ComingSoonRow label="Role Permissions" sub="Control what each role can see" />
+          <ComingSoonRow label="Active Sessions" sub="Devices logged in, remote logout" last />
+        </div>
 
-        {/* Church Access Code */}
-        <Section title="Church Access Code">
-          <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 35% 48%)", margin: "0 0 14px", letterSpacing: "0.03em" }}>
-            The 4-digit PIN staff use to sign in from the access code screen.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 42%)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>New code</p>
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                {pinDigits.map((d, i) => (
-                  <input key={i} ref={el => { pinRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1} value={d}
-                    onChange={e => handlePinDigit(pinDigits, setPinDigits, pinRefs, i, e.target.value)}
-                    onKeyDown={e => handlePinKey(pinDigits, pinRefs, i, e)}
-                    style={pinBoxStyle(!!d)} />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 30% 42%)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Confirm code</p>
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                {pinConfirm.map((d, i) => (
-                  <input key={i} ref={el => { pinConfRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1} value={d}
-                    onChange={e => handlePinDigit(pinConfirm, setPinConfirm, pinConfRefs, i, e.target.value)}
-                    onKeyDown={e => handlePinKey(pinConfirm, pinConfRefs, i, e)}
-                    style={pinBoxStyle(!!d)} />
-                ))}
-              </div>
-            </div>
-            {pinMsg && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, textAlign: "center", color: pinMsg.ok ? "hsl(120 40% 55%)" : "hsl(0 60% 58%)", margin: 0 }}>{pinMsg.text}</p>}
-            <button onClick={handleSavePin} disabled={pinLoading} style={BS({ opacity: pinLoading ? 0.6 : 1 })}>{pinLoading ? "Saving..." : "Update Access Code"}</button>
-          </div>
-        </Section>
-
-        {/* Privacy & Data */}
-        <Section title="Privacy & Data">
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { label: "Data storage", value: "Encrypted at rest · US servers" },
-              { label: "Access logs", value: "Admin actions logged for 90 days" },
-              { label: "Contact data", value: "Never sold or shared with third parties" },
-              { label: "Call records", value: "Retained for 12 months, then purged" },
-              { label: "Sessions", value: "Expire after 24 hours of inactivity" },
-              { label: "Passwords", value: "Hashed, never stored in plain text" },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                  <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 35% 50%)", letterSpacing: "0.06em", flexShrink: 0 }}>{label}</span>
-                  <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(38 55% 68%)", letterSpacing: "0.03em", textAlign: "right" }}>{value}</span>
-                </div>
-                <div style={{ height: 1, background: "hsl(38 15% 20%)", marginTop: 8 }} />
-              </div>
-            ))}
-          </div>
-        </Section>
+        {/* Data & Privacy */}
+        <div style={S.sectionWrap}>
+          <div style={S.sectionHeader}>Data &amp; Privacy</div>
+          <ComingSoonRow label="Export My Data" sub="Download all records as CSV or PDF" />
+          <ComingSoonRow label="Data Retention Settings" sub="Auto-delete altar records after set time" />
+          <ComingSoonRow label="Audit Log" sub="See who accessed or changed records" />
+          <RowItem label="Terms of Service" onClick={() => navigate("/terms")} />
+          <RowItem label="Privacy Policy" onClick={() => navigate("/privacy")} last />
+        </div>
 
         {/* Support */}
-        <Section title="Support">
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 45% 58%)", margin: 0 }}>
-              For assistance with your account, reach out to the His Altar support team.
-            </p>
-            <a href="mailto:support@hisaltar.com" style={{ display: "block", textAlign: "center", padding: "10px 0", background: "hsl(35 22% 16%)", color: "hsl(38 60% 62%)", border: "1px solid hsl(38 25% 26%)", borderRadius: 6, fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", textDecoration: "none" }}>
-              support@hisaltar.com
-            </a>
-          </div>
-        </Section>
+        <div style={S.sectionWrap}>
+          <div style={S.sectionHeader}>Support</div>
+          <ComingSoonRow label="Help Center / FAQ" sub="Guides and answers" />
+          <RowItem
+            label="Contact Support"
+            sub="support@hisaltar.com"
+            onClick={() => { window.location.href = "mailto:support@hisaltar.com"; }}
+          />
+          <ComingSoonRow label="Submit Feedback" sub="Feature requests or bug reports" />
+          <ComingSoonRow label="What's New" sub="Changelog of recent updates" last />
+        </div>
+
+        {/* Gift Subscription */}
+        <div style={S.sectionWrap}>
+          <div style={S.sectionHeader}>Gift Subscription</div>
+          <ComingSoonRow label="Gift a Subscription" sub="Give a church free access for a month" last />
+        </div>
 
         {/* Delete Account */}
         {orgSession && <DeleteAccountSection />}

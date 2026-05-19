@@ -60,7 +60,7 @@ export default function TeamPage() {
   ];
 
   function handleBubbleClick(bubble: typeof BUBBLES[0]) {
-    if (bubble.id === "admin" && !isAdminUser) {
+    if ((bubble.id === "admin" || bubble.id === "attendance") && !isAdminUser) {
       setShowRestricted(true);
       return;
     }

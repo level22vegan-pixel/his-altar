@@ -39,6 +39,7 @@ export default function OrgBillingPage() {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -52,20 +53,16 @@ export default function OrgBillingPage() {
   }, []);
 
   useEffect(() => {
-    if (!session) return;
     async function load() {
       setLoading(true);
       try {
-        const token = session!.token ?? "";
-        const [statusRes, pricesRes] = await Promise.all([
-          fetch(`${API}/billing-status`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${API}/prices`),
-        ]);
-        if (statusRes.ok) setBilling(await statusRes.json());
-        if (pricesRes.ok) {
-          const json = await pricesRes.json();
-          setPrices(json.data ?? []);
-        }
+        const token = session?.token ?? "";
+        const fetches: Promise<Response>[] = [fetch(`${API}/prices`)];
+        if (token) fetches.unshift(fetch(`${API}/billing-status`, { headers: { Authorization: `Bearer ${token}` } }));
+        const results = await Promise.all(fetches);
+        if (token && results[0].ok) setBilling(await results[0].json());
+        const pricesRes = token ? results[1] : results[0];
+        if (pricesRes.ok) setPrices((await pricesRes.json()).data ?? []);
       } catch {
         // silently ignore
       } finally {
@@ -75,38 +72,37 @@ export default function OrgBillingPage() {
     load();
   }, []);
 
-  // Guard: must be logged in with org email/password to manage billing
-  if (!session) {
+  // Sign-in prompt shown inline when a payment action requires it
+  if (showSignIn) {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center gap-4 px-6">
+        <p className="text-white font-semibold text-base">Sign in to continue</p>
         <p className="text-neutral-400 text-sm text-center max-w-xs">
-          Sign in with your church admin account to manage billing.
+          Enter your church admin email and password to manage payments.
         </p>
         <button
           onClick={() => navigate("/org/login")}
           className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl px-6 py-3 transition"
         >
-          Sign In
+          Sign In with Email
         </button>
         <button
-          onClick={() => navigate("/team")}
+          onClick={() => setShowSignIn(false)}
           className="text-neutral-600 hover:text-neutral-400 text-xs transition"
         >
-          ← Back to Teams
+          ← Go back
         </button>
       </div>
     );
   }
 
   async function handleSubscribe(priceId: string) {
+    if (!session) { setShowSignIn(true); return; }
     setCheckoutLoading(true);
     try {
       const res = await fetch(`${API}/checkout`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.token ?? ""}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
         body: JSON.stringify({ priceId }),
       });
       const json = await res.json();
@@ -148,11 +144,12 @@ export default function OrgBillingPage() {
   }
 
   async function handlePortal() {
+    if (!session) { setShowSignIn(true); return; }
     setPortalLoading(true);
     try {
       const res = await fetch(`${API}/portal`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${session?.token ?? ""}` },
+        headers: { Authorization: `Bearer ${session.token}` },
       });
       const json = await res.json();
       if (json.url) window.location.href = json.url;

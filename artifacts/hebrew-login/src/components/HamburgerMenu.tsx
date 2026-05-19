@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { clearAllSessions, getValidOrgSession } from "@/lib/session";
+import { clearAllSessions, getValidOrgSession, getValidAdminSession } from "@/lib/session";
 
 export default function HamburgerMenu() {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
   const ref = useRef<HTMLDivElement>(null);
   const orgSession = getValidOrgSession();
+  const adminSession = getValidAdminSession();
+  const isAdmin = !!(orgSession || adminSession);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -15,6 +17,9 @@ export default function HamburgerMenu() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Only render for admin-code or org-admin users — invisible to staff PIN logins
+  if (!isAdmin) return null;
 
   function go(path: string) {
     setOpen(false);

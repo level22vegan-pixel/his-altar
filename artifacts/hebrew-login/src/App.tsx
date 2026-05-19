@@ -42,6 +42,7 @@ import PrivacyPage from "@/pages/PrivacyPage";
 import UnauthorizedPage from "@/pages/UnauthorizedPage";
 import SuperAdminLoginPage from "@/pages/SuperAdminLoginPage";
 import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
+import ToolsPage from "@/pages/ToolsPage";
 import { hasValidSession, clearAllSessions, getValidAdminSession, getValidCampusSession, getValidCallerSession, getValidOrgSession } from "@/lib/session";
 
 const queryClient = new QueryClient();
@@ -159,6 +160,7 @@ function Router() {
         <Route path="/org/billing" component={OrgBillingPage} />
         <Route path="/admin/activity-log/dbanc">{() => <ActivityLogPage tool="dbanc" />}</Route>
         <Route path="/admin/activity-log/pxp">{() => <ActivityLogPage tool="pxp" />}</Route>
+        <Route path="/tools" component={ToolsPage} />
         <Route path="/superadmin/login" component={SuperAdminLoginPage} />
         <Route path="/superadmin" component={SuperAdminDashboard} />
         <Route component={NotFound} />

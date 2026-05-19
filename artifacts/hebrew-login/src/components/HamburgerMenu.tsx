@@ -76,9 +76,9 @@ export default function HamburgerMenu() {
           )}
 
           {[
-            { label: "Profile", icon: "👤", path: "/admin/profile" },
+            { label: "Tools & Extensions", icon: "🛠", path: "/tools" },
             { label: "Billing & Subscription", icon: "💳", path: "/org/billing" },
-            { label: "Gift Subscription", icon: "🎁", path: "/org/billing" },
+            { label: "Profile", icon: "👤", path: "/admin/profile" },
           ].map(item => (
             <button
               key={item.label}

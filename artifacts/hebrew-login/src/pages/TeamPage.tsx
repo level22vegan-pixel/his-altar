@@ -1,11 +1,18 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { getValidCampusSession } from "@/lib/session";
+import { getValidCampusSession, getValidAdminSession, getValidOrgSession } from "@/lib/session";
 import HamburgerMenu from "@/components/HamburgerMenu";
 
 export default function TeamPage() {
   const [, navigate] = useLocation();
   const campusSession = getValidCampusSession();
+  const adminSession = getValidAdminSession();
+  const orgSession = getValidOrgSession();
+
+  // Admin code or org login = full access. Staff PIN code = restricted on Admin.
+  const isAdminUser = !!(adminSession || orgSession);
   const isMinistryOnly = campusSession?.role === "altar";
+  const [showRestricted, setShowRestricted] = useState(false);
 
   const BUBBLES = [
     {
@@ -31,7 +38,7 @@ export default function TeamPage() {
     {
       id: "admin",
       label: "Admin",
-      sublabel: "Admin panel",
+      sublabel: isAdminUser ? "Admin panel" : "Restricted",
       icon: "⚙",
       href: "/admin",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
@@ -41,7 +48,40 @@ export default function TeamPage() {
   ];
 
   function handleBubbleClick(bubble: typeof BUBBLES[0]) {
+    if (bubble.id === "admin" && !isAdminUser) {
+      setShowRestricted(true);
+      return;
+    }
     navigate(bubble.href);
+  }
+
+  if (showRestricted) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(160deg, #06050f 0%, #0d0818 60%, #06050f 100%)",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 16, padding: 32, textAlign: "center",
+      }}>
+        <span style={{ fontSize: 48 }}>🔒</span>
+        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "rgba(255,255,255,0.85)", margin: 0, letterSpacing: "0.05em" }}>
+          Access Restricted
+        </h2>
+        <p style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, maxWidth: 280, lineHeight: 1.6 }}>
+          This section requires the admin code. Enter it at the login screen to continue.
+        </p>
+        <button
+          onClick={() => setShowRestricted(false)}
+          style={{
+            marginTop: 8, background: "none", border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: 8, color: "rgba(255,255,255,0.45)", fontFamily: "Georgia, serif",
+            fontSize: 12, letterSpacing: "0.1em", padding: "10px 24px", cursor: "pointer",
+          }}
+        >
+          ← Back
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -51,7 +91,6 @@ export default function TeamPage() {
       display: "flex",
       flexDirection: "column",
     }}>
-      {/* Header */}
       <div style={{
         display: "flex",
         justifyContent: "space-between",
@@ -74,7 +113,6 @@ export default function TeamPage() {
         <HamburgerMenu />
       </div>
 
-      {/* Bubbles */}
       <div style={{
         flex: 1,
         display: "flex",
@@ -132,7 +170,6 @@ export default function TeamPage() {
           </button>
         ))}
       </div>
-
     </div>
   );
 }

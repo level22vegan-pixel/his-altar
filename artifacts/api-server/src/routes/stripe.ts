@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, organizationsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
+import type Stripe from "stripe";
 import { getUncachableStripeClient, getStripePublishableKey } from "../stripeClient";
 
 const router: IRouter = Router();
@@ -162,8 +163,9 @@ router.post("/portal", async (req: any, res) => {
   }
 });
 
-// GET /api/stripe/prices — list active prices synced from Stripe
+// GET /api/stripe/prices — list active prices (DB-synced first, live API fallback)
 router.get("/prices", async (_req, res) => {
+  // Try DB-synced stripe schema first
   try {
     const result = await db.execute(
       sql`SELECT p.id as price_id, p.unit_amount, p.currency, p.recurring,
@@ -173,9 +175,35 @@ router.get("/prices", async (_req, res) => {
           WHERE p.active = true AND pr.active = true
           ORDER BY p.unit_amount ASC`
     );
-    res.json({ data: result.rows });
+    if (result.rows.length > 0) {
+      res.json({ data: result.rows });
+      return;
+    }
   } catch {
-    // stripe schema may not be ready yet — return empty
+    // stripe schema not ready — fall through to live API
+  }
+
+  // Fall back: fetch directly from Stripe API
+  try {
+    const stripe = await getUncachableStripeClient();
+    const priceList = await stripe.prices.list({ active: true, expand: ["data.product"], limit: 20 });
+    const data = priceList.data
+      .filter(p => p.recurring && typeof p.product === "object" && (p.product as Stripe.Product).active)
+      .map(p => {
+        const product = p.product as Stripe.Product;
+        return {
+          price_id: p.id,
+          unit_amount: p.unit_amount ?? 0,
+          currency: p.currency,
+          recurring: p.recurring,
+          product_id: product.id,
+          product_name: product.name,
+          product_description: product.description ?? null,
+        };
+      })
+      .sort((a, b) => a.unit_amount - b.unit_amount);
+    res.json({ data });
+  } catch (err: any) {
     res.json({ data: [] });
   }
 });

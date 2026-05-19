@@ -13,11 +13,17 @@ export default function TeamPage() {
   const isMinistryOnly = campusSession?.role === "altar";
   const [showRestricted, setShowRestricted] = useState(false);
 
+  // Build attendance href — skip campus/service selection entirely
+  const attendanceCampus =
+    campusSession?.campus ||
+    orgSession?.orgName ||
+    "MAIN";
+  const attendanceHref = `/checkin?campus=${encodeURIComponent(attendanceCampus)}&service=General`;
+
   const BUBBLES = [
     {
       id: "altar",
       label: "Altar",
-      infoIcons: ["📇", "➕"],
       icon: "🙏",
       href: "/admin/dbanc/new?returnTo=/team",
       gradient: "linear-gradient(150deg, #091828 0%, #0d2240 40%, #091828 100%)",
@@ -27,17 +33,15 @@ export default function TeamPage() {
     {
       id: "attendance",
       label: "Altar Attendance",
-      infoIcons: ["✅", "📋"],
       icon: "🙋",
-      href: "/home",
-      gradient: "linear-gradient(150deg, #071a0f 0%, #0d2b18 40%, #071a0f 100%)",
-      glow: "rgba(52,168,83,0.35)",
-      border: "rgba(52,168,83,0.4)",
+      href: attendanceHref,
+      gradient: "linear-gradient(150deg, #92651a 0%, #b8860b 40%, #7a4f10 100%)",
+      glow: "rgba(184,134,11,0.35)",
+      border: "rgba(184,134,11,0.4)",
     },
     {
       id: "calls",
       label: "Follow-Up Calls",
-      infoIcons: ["📱", "💬"],
       icon: "📱",
       href: "/caller-login",
       gradient: "linear-gradient(150deg, #4c1d95 0%, #7c3aed 50%, #6d28d9 100%)",
@@ -47,7 +51,6 @@ export default function TeamPage() {
     {
       id: "admin",
       label: "Admin",
-      infoIcons: isAdminUser ? ["🔧", "📊"] : ["🔒"],
       icon: "⚙",
       href: "/admin",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
@@ -139,7 +142,7 @@ export default function TeamPage() {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 8,
+              gap: 10,
               background: bubble.gradient,
               border: `1.5px solid ${bubble.border}`,
               borderRadius: 22,
@@ -157,7 +160,7 @@ export default function TeamPage() {
               (e.currentTarget as HTMLElement).style.boxShadow = `0 0 36px ${bubble.glow}, 0 8px 28px rgba(0,0,0,0.5)`;
             }}
           >
-            <span style={{ fontSize: 32 }}>{bubble.icon}</span>
+            <span style={{ fontSize: 34 }}>{bubble.icon}</span>
             <span style={{
               color: "#ffffff",
               fontFamily: "Georgia, serif",
@@ -168,11 +171,6 @@ export default function TeamPage() {
             }}>
               {bubble.label}
             </span>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              {bubble.infoIcons.map((ic, i) => (
-                <span key={i} style={{ fontSize: 16, opacity: 0.7 }}>{ic}</span>
-              ))}
-            </div>
           </button>
         ))}
       </div>

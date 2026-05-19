@@ -12,7 +12,7 @@ export default function TeamPage() {
   const orgSession = getValidOrgSession();
   const campusSession = getValidCampusSession();
   const adminSession = getValidAdminSession();
-  const isAdmin = adminSession !== null;
+  const isAdmin = adminSession !== null || orgSession !== null;
   const isLead = campusSession?.role === "lead";
   const isMinistryOnly = campusSession?.role === "altar";
   const hasAdminAccess = isAdmin || isLead;

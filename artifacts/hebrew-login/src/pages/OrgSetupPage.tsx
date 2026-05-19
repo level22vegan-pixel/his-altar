@@ -176,127 +176,132 @@ function StepCallers({ onNext }: { onNext: () => void }) {
   );
 }
 
-// Step 3 — Single Entry Code
+// Step 3 — Two Access Codes
 function StepStaff({ onFinish }: { onFinish: () => void }) {
-  const [digits, setDigits] = useState(["", "", "", ""]);
-  const [confirm, setConfirm] = useState(["", "", "", ""]);
-  const [err, setErr] = useState("");
+  const [adminDigits, setAdminDigits]   = useState(["", "", "", ""]);
+  const [staffDigits, setStaffDigits]   = useState(["", "", "", ""]);
+  const [err, setErr]     = useState("");
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const mainRefs = [0,1,2,3].map(() => ({ current: null as HTMLInputElement | null }));
-  const confRefs = [0,1,2,3].map(() => ({ current: null as HTMLInputElement | null }));
+  const [saved, setSaved]   = useState(false);
+  const adminRefs = [0,1,2,3].map(() => ({ current: null as HTMLInputElement | null }));
+  const staffRefs = [0,1,2,3].map(() => ({ current: null as HTMLInputElement | null }));
 
-  function handleDigit(arr: string[], set: (v: string[]) => void, refs: typeof mainRefs, i: number, val: string) {
+  function handleDigit(arr: string[], set: (v: string[]) => void, refs: typeof adminRefs, i: number, val: string) {
     const c = val.replace(/\D/g, "").slice(-1);
     const next = [...arr]; next[i] = c; set(next); setErr("");
     if (c && i < 3) refs[i + 1].current?.focus();
   }
-  function handleKey(arr: string[], set: (v: string[]) => void, refs: typeof mainRefs, i: number, e: React.KeyboardEvent) {
+  function handleKey(arr: string[], set: (v: string[]) => void, refs: typeof adminRefs, i: number, e: React.KeyboardEvent) {
     if (e.key === "Backspace" && !arr[i] && i > 0) refs[i - 1].current?.focus();
   }
 
   async function handleSave() {
-    const pin = digits.join("");
-    const conf = confirm.join("");
-    if (pin.length < 4) { setErr("Enter all 4 digits"); return; }
-    if (pin !== conf) { setErr("Codes don't match — try again"); return; }
+    const adminPin = adminDigits.join("");
+    const staffPin = staffDigits.join("");
+    if (adminPin.length < 4) { setErr("Enter all 4 digits for the Admin code"); return; }
+    if (staffPin.length < 4) { setErr("Enter all 4 digits for the Staff code"); return; }
+    if (adminPin === staffPin) { setErr("Admin and Staff codes must be different"); return; }
     setSaving(true); setErr("");
     const orgCampus = getValidOrgSession()?.orgName ?? "MAIN";
     try {
       const token = getToken();
-      const roles = ["lead", "deputy_lead", "attendance"];
-      await Promise.all(roles.map(role =>
+      await Promise.all([
         fetch("/api/campus-passwords", {
           method: "POST",
           headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-          body: JSON.stringify({ campus: orgCampus, role, password: pin }),
-        })
-      ));
+          body: JSON.stringify({ campus: orgCampus, role: "lead", password: adminPin }),
+        }),
+        fetch("/api/campus-passwords", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ campus: orgCampus, role: "altar", password: staffPin }),
+        }),
+      ]);
       setSaved(true);
     } catch {
       setErr("Failed to save — try again");
     } finally { setSaving(false); }
   }
 
-  const boxCls = "w-14 h-16 rounded-xl border text-center text-2xl font-light outline-none transition-all duration-150 bg-neutral-900 text-white caret-transparent";
+  const boxCls = "w-12 h-14 rounded-xl border text-center text-2xl font-light outline-none transition-all duration-150 bg-neutral-900 text-white caret-transparent";
   const boxOff = `${boxCls} border-neutral-700`;
   const boxOn  = `${boxCls} border-purple-500 bg-purple-950/30`;
 
+  if (saved) {
+    return (
+      <div>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-full bg-green-900/40 border border-green-700/50 flex items-center justify-center text-green-400 text-lg flex-shrink-0">✓</div>
+          <div>
+            <p className="text-white text-sm font-medium">Codes saved</p>
+            <p className="text-neutral-500 text-xs mt-0.5">Your team can now sign in with their assigned code.</p>
+          </div>
+        </div>
+        <div className="bg-neutral-800/60 border border-neutral-700 rounded-xl p-4 mb-5 flex flex-col gap-3">
+          <div className="flex gap-2.5 items-start">
+            <span className="text-yellow-500 text-sm mt-0.5">🔑</span>
+            <p className="text-neutral-300 text-sm"><span className="text-white font-medium">Admin code</span> — full access to all tools including the Admin panel.</p>
+          </div>
+          <div className="flex gap-2.5 items-start">
+            <span className="text-blue-400 text-sm mt-0.5">👤</span>
+            <p className="text-neutral-300 text-sm"><span className="text-white font-medium">Staff code</span> — access to Altar and Follow-Up Calls. Admin panel is restricted.</p>
+          </div>
+        </div>
+        <div className="flex justify-end pt-4 border-t border-neutral-800">
+          <button onClick={onFinish} className={btnCls}>Next →</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {!saved ? (
-        <>
-          <p className="text-neutral-400 text-sm mb-6">
-            Create one 4-digit code your whole team uses to sign in. Everyone enters the same code — you can set separate codes for different roles later in the Admin Panel.
-          </p>
+      <p className="text-neutral-400 text-sm mb-6">
+        Set two 4-digit codes for your team. The Admin code gives full access. The Staff code gives access to Altar and Follow-Up Calls only — Admin panel is restricted.
+      </p>
 
-          <div className="flex flex-col gap-6 mb-4">
-            <div>
-              <p className="text-neutral-500 text-xs mb-3">Choose your team code</p>
-              <div className="flex gap-3 justify-center">
-                {digits.map((d, i) => (
-                  <input key={i} ref={el => { mainRefs[i].current = el; }} type="text" inputMode="numeric"
-                    maxLength={1} value={d}
-                    onChange={e => handleDigit(digits, setDigits, mainRefs, i, e.target.value)}
-                    onKeyDown={e => handleKey(digits, setDigits, mainRefs, i, e)}
-                    className={d ? boxOn : boxOff} />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-neutral-500 text-xs mb-3">Confirm your code</p>
-              <div className="flex gap-3 justify-center">
-                {confirm.map((d, i) => (
-                  <input key={i} ref={el => { confRefs[i].current = el; }} type="text" inputMode="numeric"
-                    maxLength={1} value={d}
-                    onChange={e => handleDigit(confirm, setConfirm, confRefs, i, e.target.value)}
-                    onKeyDown={e => handleKey(confirm, setConfirm, confRefs, i, e)}
-                    className={d ? boxOn : boxOff} />
-                ))}
-              </div>
-            </div>
+      <div className="flex flex-col gap-7 mb-4">
+        {/* Admin code */}
+        <div className="bg-neutral-900/60 border border-yellow-900/40 rounded-xl p-4">
+          <p className="text-yellow-500 text-xs font-semibold uppercase tracking-wider mb-1">Admin Code</p>
+          <p className="text-neutral-500 text-xs mb-4">Full access — Altar, Follow-Up Calls, and Admin panel</p>
+          <div className="flex gap-3 justify-center">
+            {adminDigits.map((d, i) => (
+              <input key={i} ref={el => { adminRefs[i].current = el; }} type="text" inputMode="numeric"
+                maxLength={1} value={d}
+                onChange={e => handleDigit(adminDigits, setAdminDigits, adminRefs, i, e.target.value)}
+                onKeyDown={e => handleKey(adminDigits, setAdminDigits, adminRefs, i, e)}
+                className={d ? boxOn : boxOff} />
+            ))}
           </div>
+        </div>
 
-          {err && <p className="text-red-400 text-xs text-center mb-2">{err}</p>}
+        {/* Staff code */}
+        <div className="bg-neutral-900/60 border border-blue-900/40 rounded-xl p-4">
+          <p className="text-blue-400 text-xs font-semibold uppercase tracking-wider mb-1">Staff Code</p>
+          <p className="text-neutral-500 text-xs mb-4">Altar and Follow-Up Calls only — Admin panel restricted</p>
+          <div className="flex gap-3 justify-center">
+            {staffDigits.map((d, i) => (
+              <input key={i} ref={el => { staffRefs[i].current = el; }} type="text" inputMode="numeric"
+                maxLength={1} value={d}
+                onChange={e => handleDigit(staffDigits, setStaffDigits, staffRefs, i, e.target.value)}
+                onKeyDown={e => handleKey(staffDigits, setStaffDigits, staffRefs, i, e)}
+                className={d ? boxOn : boxOff} />
+            ))}
+          </div>
+        </div>
+      </div>
 
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-neutral-800">
-            <button onClick={onFinish} className="text-neutral-500 hover:text-neutral-300 text-sm transition">
-              Skip for now →
-            </button>
-            <button onClick={handleSave} disabled={saving} className={btnCls}>
-              {saving ? "Saving…" : "Save Code →"}
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-green-900/40 border border-green-700/50 flex items-center justify-center text-green-400 text-lg flex-shrink-0">✓</div>
-            <div>
-              <p className="text-white text-sm font-medium">Team code saved</p>
-              <p className="text-neutral-500 text-xs mt-0.5">Your whole team can now sign in with that code.</p>
-            </div>
-          </div>
+      {err && <p className="text-red-400 text-xs text-center mb-2">{err}</p>}
 
-          <div className="bg-neutral-800/60 border border-neutral-700 rounded-xl p-4 mb-5 flex flex-col gap-3">
-            <p className="text-purple-300 text-xs font-semibold uppercase tracking-wider">For more security — in your Admin Panel you can:</p>
-            <div className="flex gap-2.5 items-start">
-              <span className="text-neutral-400 text-sm mt-0.5">•</span>
-              <p className="text-neutral-300 text-sm"><span className="text-white font-medium">Service Lead code</span> — a separate code that takes staff directly to the attendance check-in screen, no team page access.</p>
-            </div>
-            <div className="flex gap-2.5 items-start">
-              <span className="text-neutral-400 text-sm mt-0.5">•</span>
-              <p className="text-neutral-300 text-sm"><span className="text-white font-medium">Prayer Contact code</span> — for volunteers adding contacts at the altar. A good default is your church's street address numbers (e.g. <span className="text-neutral-400 italic">1234</span>).</p>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-4 border-t border-neutral-800">
-            <button onClick={onFinish} className={btnCls}>
-              Next →
-            </button>
-          </div>
-        </>
-      )}
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-800">
+        <button onClick={onFinish} className="text-neutral-500 hover:text-neutral-300 text-sm transition">
+          Skip for now →
+        </button>
+        <button onClick={handleSave} disabled={saving} className={btnCls}>
+          {saving ? "Saving…" : "Save Codes →"}
+        </button>
+      </div>
     </div>
   );
 }

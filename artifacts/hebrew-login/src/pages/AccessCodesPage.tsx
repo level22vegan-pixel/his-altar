@@ -251,9 +251,9 @@ export default function AccessCodesPage() {
         )}
 
         <CodeSection
-          title="Full Access"
-          badge="Teams page · All tools"
-          description="Brings staff to the Teams page with access to Altar, Follow-Up Calls, and the Admin panel."
+          title="Admin Code"
+          badge="Full access · Altar, Follow-Up Calls, and Admin panel"
+          description="Gives full access to all tools including the Admin panel."
           role="lead"
           campus={campus}
           currentCode={currentCode("lead")}
@@ -261,23 +261,13 @@ export default function AccessCodesPage() {
         />
 
         <CodeSection
-          title="Ministry Code"
-          badge="Teams page · Altar & Follow-Up Calls only"
-          description="Brings staff to the Teams page to do altar intake or follow-up calls. Admin panel is not accessible."
+          title="Staff Code"
+          badge="Altar and Follow-Up Calls only · Admin panel restricted"
+          description="Lets staff use Altar and Follow-Up Calls. The Admin panel is not accessible with this code."
           role="altar"
           campus={campus}
           currentCode={currentCode("altar")}
           accentHue={200}
-        />
-
-        <CodeSection
-          title="Attendance Code"
-          badge="Direct to check-in · No Teams page"
-          description="Skips the Teams page and goes straight to service time check-in for that campus."
-          role="attendance"
-          campus={campus}
-          currentCode={currentCode("attendance")}
-          accentHue={130}
         />
       </div>
     </div>

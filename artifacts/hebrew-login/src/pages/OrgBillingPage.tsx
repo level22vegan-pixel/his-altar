@@ -28,6 +28,8 @@ interface Price {
 export default function OrgBillingPage() {
   const [, navigate] = useLocation();
   const session = getValidOrgSession();
+
+  // All hooks must come before any early return
   const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [prices, setPrices] = useState<Price[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,14 +52,13 @@ export default function OrgBillingPage() {
   }, []);
 
   useEffect(() => {
+    if (!session) return;
     async function load() {
       setLoading(true);
       try {
-        const token = session?.token ?? "";
+        const token = session!.token ?? "";
         const [statusRes, pricesRes] = await Promise.all([
-          fetch(`${API}/billing-status`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(`${API}/billing-status`, { headers: { Authorization: `Bearer ${token}` } }),
           fetch(`${API}/prices`),
         ]);
         if (statusRes.ok) setBilling(await statusRes.json());
@@ -73,6 +74,29 @@ export default function OrgBillingPage() {
     }
     load();
   }, []);
+
+  // Guard: must be logged in with org email/password to manage billing
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center gap-4 px-6">
+        <p className="text-neutral-400 text-sm text-center max-w-xs">
+          Sign in with your church admin account to manage billing.
+        </p>
+        <button
+          onClick={() => navigate("/org/login")}
+          className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl px-6 py-3 transition"
+        >
+          Sign In
+        </button>
+        <button
+          onClick={() => navigate("/team")}
+          className="text-neutral-600 hover:text-neutral-400 text-xs transition"
+        >
+          ← Back to Teams
+        </button>
+      </div>
+    );
+  }
 
   async function handleSubscribe(priceId: string) {
     setCheckoutLoading(true);

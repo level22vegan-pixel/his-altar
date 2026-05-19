@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListDbancContacts, useListPxpCallers, useCreateActivityLog, useListPxpCallLogs } from "@workspace/api-client-react";
 import { getSessionUserName, getValidCampusSession, getValidCallerSession, getValidOrgSession, clearAllSessions } from "@/lib/session";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
 
@@ -175,15 +176,15 @@ export default function PXPPage() {
       className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden"
       style={{ background: "hsl(270 8% 3%)" }}
     >
-      {isCallerSession ? (
-        <button onClick={handleSignOut} className="fixed top-5 left-6 z-50" style={backBtnStyle}>
-          ← Sign Out
+      <div style={{ position: "fixed", top: 16, left: 20, right: 20, zIndex: 50, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button
+          onClick={isCallerSession ? handleSignOut : () => navigate("/admin")}
+          style={backBtnStyle}
+        >
+          {isCallerSession ? "← Sign Out" : "← Admin"}
         </button>
-      ) : (
-        <button onClick={() => navigate("/admin")} className="fixed top-5 left-6 z-50" style={backBtnStyle}>
-          ← Admin
-        </button>
-      )}
+        <HamburgerMenu />
+      </div>
 
       <div className="relative z-10 w-full max-w-xl px-4 pt-14 pb-20">
         <div className="text-center mb-8">

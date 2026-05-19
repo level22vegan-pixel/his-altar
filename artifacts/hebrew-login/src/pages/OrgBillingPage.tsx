@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { getValidOrgSession } from "@/lib/session";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 const API = "/api/stripe";
 
@@ -156,17 +157,16 @@ export default function OrgBillingPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
-      <header className="border-b border-neutral-800 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">{session?.orgName ?? "Your Church"}</h1>
-          <p className="text-neutral-500 text-xs mt-0.5">Billing & Subscription</p>
-        </div>
+      <header className="border-b border-neutral-800 px-5 py-3 flex items-center justify-between">
         <button
-          onClick={() => navigate("/org/dashboard")}
-          className="text-neutral-400 hover:text-white text-sm transition"
+          onClick={() => navigate("/team")}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.12em", padding: 0 }}
+          onMouseOver={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+          onMouseOut={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
         >
-          Back to Dashboard
+          ← Back
         </button>
+        <HamburgerMenu />
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">

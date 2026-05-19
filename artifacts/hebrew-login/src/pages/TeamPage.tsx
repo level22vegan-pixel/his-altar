@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import {
   getValidOrgSession,
@@ -6,9 +6,8 @@ import {
   getValidAdminSession,
   setAdminSession,
   setOrgSession,
-  clearOrgSession,
-  clearAllSessions,
 } from "@/lib/session";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 export default function TeamPage() {
   const [, navigate] = useLocation();
@@ -20,9 +19,6 @@ export default function TeamPage() {
   const isMinistryOnly = campusSession?.role === "altar";
   const hasAdminAccess = isAdmin || isLead;
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
   // Inline admin login modal
   const [adminModal, setAdminModal] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
@@ -30,20 +26,6 @@ export default function TeamPage() {
   const [adminError, setAdminError] = useState("");
   const [adminLoading, setAdminLoading] = useState(false);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const displayName = isAdmin
-    ? (adminSession?.orgName ?? orgSession?.orgName ?? "His Altar")
-    : (orgSession?.orgName ?? (campusSession ? campusSession.campus : "His Altar"));
 
   const BUBBLES = [
     {
@@ -118,10 +100,6 @@ export default function TeamPage() {
     }
   }
 
-  function handleSignOut() {
-    clearAllSessions();
-    navigate("/");
-  }
 
   return (
     <div style={{
@@ -135,134 +113,22 @@ export default function TeamPage() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "18px 24px",
+        padding: "14px 20px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
-        position: "relative",
       }}>
-        <div>
-          <p style={{
-            color: "rgba(255,255,255,0.85)",
-            fontFamily: "Georgia, serif",
-            fontSize: 15,
-            letterSpacing: "0.04em",
-            margin: 0,
-          }}>
-            {displayName}
-          </p>
-          <p style={{
-            color: "rgba(255,255,255,0.3)",
-            fontFamily: "Georgia, serif",
-            fontSize: 11,
-            letterSpacing: "0.08em",
-            margin: "2px 0 0",
-          }}>
-            Select your role to continue
-          </p>
-        </div>
-
-        {/* Profile hamburger */}
-        <div ref={menuRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setMenuOpen(v => !v)}
-            style={{
-              background: menuOpen ? "rgba(255,255,255,0.08)" : "none",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 8,
-              cursor: "pointer",
-              padding: "8px 10px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "background 0.15s",
-            }}
-            aria-label="Menu"
-          >
-            <span style={{ display: "block", width: 18, height: 1.5, background: "rgba(255,255,255,0.55)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 18, height: 1.5, background: "rgba(255,255,255,0.55)", borderRadius: 2 }} />
-            <span style={{ display: "block", width: 18, height: 1.5, background: "rgba(255,255,255,0.55)", borderRadius: 2 }} />
-          </button>
-
-          {menuOpen && (
-            <div style={{
-              position: "absolute",
-              top: "calc(100% + 8px)",
-              right: 0,
-              background: "#0f0e1a",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 12,
-              minWidth: 200,
-              zIndex: 100,
-              overflow: "hidden",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-            }}>
-              {orgSession && (
-                <div style={{ padding: "12px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p style={{ margin: 0, fontFamily: "Georgia, serif", fontSize: 12, color: "rgba(255,255,255,0.75)", letterSpacing: "0.02em" }}>{orgSession.orgName}</p>
-                  <p style={{ margin: "2px 0 0", fontFamily: "Georgia, serif", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>Church Admin</p>
-                </div>
-              )}
-
-              {[
-                { label: "Profile", icon: "👤", action: () => { setMenuOpen(false); navigate("/admin/profile"); } },
-                { label: "Billing & Subscription", icon: "💳", action: () => { setMenuOpen(false); navigate("/org/billing"); } },
-                { label: "Gift Subscription", icon: "🎁", action: () => { setMenuOpen(false); navigate("/org/billing"); } },
-              ].map(item => (
-                <button
-                  key={item.label}
-                  onClick={item.action}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    width: "100%",
-                    padding: "11px 16px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "Georgia, serif",
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.75)",
-                    textAlign: "left",
-                    transition: "background 0.1s",
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
-                  onMouseOut={e => (e.currentTarget.style.background = "none")}
-                >
-                  <span style={{ fontSize: 15 }}>{item.icon}</span>
-                  {item.label}
-                </button>
-              ))}
-
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <button
-                  onClick={handleSignOut}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    width: "100%",
-                    padding: "11px 16px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "Georgia, serif",
-                    fontSize: 13,
-                    color: "rgba(255,80,80,0.75)",
-                    textAlign: "left",
-                    transition: "background 0.1s",
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.background = "rgba(255,80,80,0.06)")}
-                  onMouseOut={e => (e.currentTarget.style.background = "none")}
-                >
-                  <span style={{ fontSize: 15 }}>⬡</span>
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => navigate("/")}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "rgba(255,255,255,0.35)", fontFamily: "Georgia, serif",
+            fontSize: 11, letterSpacing: "0.1em", padding: "4px 0",
+          }}
+          onMouseOver={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+          onMouseOut={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+        >
+          ← Back
+        </button>
+        <HamburgerMenu />
       </div>
 
       {/* Bubbles */}

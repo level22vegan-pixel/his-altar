@@ -1,24 +1,11 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
-import {
-  getValidOrgSession,
-  getValidCampusSession,
-  getValidAdminSession,
-} from "@/lib/session";
+import { getValidCampusSession } from "@/lib/session";
 import HamburgerMenu from "@/components/HamburgerMenu";
 
 export default function TeamPage() {
   const [, navigate] = useLocation();
-  const orgSession = getValidOrgSession();
   const campusSession = getValidCampusSession();
-  const adminSession = getValidAdminSession();
-  const isAdmin = adminSession !== null || orgSession !== null;
-  const isLead = campusSession?.role === "lead";
   const isMinistryOnly = campusSession?.role === "altar";
-  const hasAdminAccess = isAdmin || isLead;
-
-  const [showRestricted, setShowRestricted] = useState(false);
-
 
   const BUBBLES = [
     {
@@ -44,7 +31,7 @@ export default function TeamPage() {
     {
       id: "admin",
       label: "Admin",
-      sublabel: hasAdminAccess ? "Admin panel" : "Login required",
+      sublabel: "Admin panel",
       icon: "⚙",
       href: "/admin",
       gradient: "linear-gradient(150deg, #111827 0%, #1f2937 50%, #111827 100%)",
@@ -54,45 +41,7 @@ export default function TeamPage() {
   ];
 
   function handleBubbleClick(bubble: typeof BUBBLES[0]) {
-    if (bubble.id === "admin") {
-      if (isAdmin) {
-        navigate(bubble.href);
-      } else {
-        setShowRestricted(true);
-      }
-      return;
-    }
     navigate(bubble.href);
-  }
-
-
-  if (showRestricted) {
-    return (
-      <div style={{
-        minHeight: "100vh",
-        background: "linear-gradient(160deg, #06050f 0%, #0d0818 60%, #06050f 100%)",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        gap: 16, padding: 32, textAlign: "center",
-      }}>
-        <span style={{ fontSize: 48 }}>🔒</span>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "rgba(255,255,255,0.85)", margin: 0, letterSpacing: "0.05em" }}>
-          Access Restricted
-        </h2>
-        <p style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, maxWidth: 280, lineHeight: 1.6 }}>
-          This section requires administrator access. Enter the admin code at the login screen to continue.
-        </p>
-        <button
-          onClick={() => setShowRestricted(false)}
-          style={{
-            marginTop: 8, background: "none", border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: 8, color: "rgba(255,255,255,0.45)", fontFamily: "Georgia, serif",
-            fontSize: 12, letterSpacing: "0.1em", padding: "10px 24px", cursor: "pointer",
-          }}
-        >
-          ← Back
-        </button>
-      </div>
-    );
   }
 
   return (

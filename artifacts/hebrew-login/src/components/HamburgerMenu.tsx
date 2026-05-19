@@ -63,12 +63,12 @@ export default function HamburgerMenu() {
           background: "#0f0e1a",
           border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: 12,
-          minWidth: 210,
+          minWidth: 220,
           zIndex: 200,
           overflow: "hidden",
           boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
         }}>
-          {/* Church name header — only for org admins */}
+          {/* Church name header */}
           {orgSession && (
             <div style={{ padding: "12px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
               <p style={{ margin: 0, fontFamily: "Georgia, serif", fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
@@ -80,24 +80,40 @@ export default function HamburgerMenu() {
             </div>
           )}
 
-          {/* Profile — only for org/admin-code users */}
           {isOrgOrAdmin && (
             <MenuButton icon="👤" label="Profile" onClick={() => go("/admin/profile")} />
           )}
 
-          {/* Billing — only for org/admin-code users */}
+          {isOrgOrAdmin && (
+            <MenuButton icon="🔑" label="Access Codes" onClick={() => go("/admin/access-codes")} />
+          )}
+
           {isOrgOrAdmin && (
             <MenuButton
               icon="💳"
               label="Billing & Subscription"
               onClick={() => {
                 setOpen(false);
-                if (orgSession) {
-                  navigate("/org/billing");
-                } else {
-                  navigate("/org/login");
-                }
+                navigate(orgSession ? "/org/billing" : "/org/login");
               }}
+            />
+          )}
+
+          <MenuButton
+            icon="✉️"
+            label="Contact Support"
+            onClick={() => {
+              setOpen(false);
+              window.location.href = "mailto:support@hisaltar.com";
+            }}
+          />
+
+          {orgSession && (
+            <MenuButton
+              icon="🗑️"
+              label="Delete Account"
+              danger
+              onClick={() => go("/admin/profile")}
             />
           )}
 

@@ -118,18 +118,26 @@ router.post("/checkout", async (req: any, res) => {
         : undefined;
 
     const { priceId } = req.body as { priceId?: string };
-    if (!priceId) {
-      res.status(400).json({ error: "priceId is required" });
-      return;
-    }
 
     const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
     const baseUrl = domain ? `https://${domain}` : `${req.protocol}://${req.get("host")}`;
 
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : {
+          price_data: {
+            currency: "usd",
+            unit_amount: 999,
+            recurring: { interval: "month" as const },
+            product_data: { name: "His Altar Monthly", description: "Full access — Dbanc, PXP, Altar Reports, Roster, Check-in, and more." },
+          },
+          quantity: 1,
+        };
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [lineItem],
       mode: "subscription",
       subscription_data: trialEnd ? { trial_end: trialEnd } : undefined,
       success_url: `${baseUrl}/org/billing?success=true`,

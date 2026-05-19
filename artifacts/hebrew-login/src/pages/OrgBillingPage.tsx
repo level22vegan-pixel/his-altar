@@ -365,9 +365,13 @@ export default function OrgBillingPage() {
                           </p>
                         )}
                       </div>
-                      <p className="text-neutral-500 text-xs ml-4">
-                        Run seed-products script to activate checkout
-                      </p>
+                      <button
+                        onClick={() => handleSubscribe("")}
+                        disabled={checkoutLoading}
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl px-5 py-2.5 transition disabled:opacity-50 shrink-0 ml-4"
+                      >
+                        {checkoutLoading ? "…" : "Subscribe"}
+                      </button>
                     </div>
                   )}
                 </div>

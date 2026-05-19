@@ -198,6 +198,43 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/orgs/me — get own org profile
+router.get("/me", async (req: any, res) => {
+  const token = (req.headers.authorization ?? "").replace("Bearer ", "").trim();
+  if (!token) { res.status(401).json({ message: "Unauthorized" }); return; }
+  try {
+    const [org] = await db
+      .select({ name: organizationsTable.name, email: organizationsTable.email, contactName: organizationsTable.contactName })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.token, token))
+      .limit(1);
+    if (!org) { res.status(404).json({ message: "Not found" }); return; }
+    res.json(org);
+  } catch (err) {
+    req.log.error({ err }, "Error fetching org profile");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// PATCH /api/orgs/me — update own org profile
+router.patch("/me", async (req: any, res) => {
+  const token = (req.headers.authorization ?? "").replace("Bearer ", "").trim();
+  if (!token) { res.status(401).json({ message: "Unauthorized" }); return; }
+  try {
+    const { name, email, contactName } = req.body as { name?: string; email?: string; contactName?: string };
+    const updates: Record<string, unknown> = {};
+    if (name?.trim()) updates.name = name.trim();
+    if (email?.trim()) updates.email = email.trim().toLowerCase();
+    if (contactName !== undefined) updates.contactName = contactName.trim() || null;
+    if (Object.keys(updates).length === 0) { res.status(400).json({ message: "No fields to update" }); return; }
+    await db.update(organizationsTable).set(updates).where(eq(organizationsTable.token, token));
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error updating org profile");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // GET /api/orgs/:id/messages — super admin only
 router.get("/:id/messages", async (req, res) => {
   const adminToken = req.headers["x-admin-token"] as string | undefined;

@@ -1,9 +1,4 @@
 import Stripe from "stripe";
-import { StripeSync } from "stripe-replit-sync";
-
-// Credentials: prefer STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY env vars (set in Secrets tab),
-// then fall back to the Replit connectors proxy.
-// WARNING: Never cache the Stripe client — always call getUncachableStripeClient().
 
 async function getConnectorCredentials(): Promise<{ publishableKey: string; secretKey: string } | null> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
@@ -39,19 +34,15 @@ async function getConnectorCredentials(): Promise<{ publishableKey: string; secr
 }
 
 async function getCredentials(): Promise<{ publishableKey: string; secretKey: string }> {
-  // STRIPE_LIVE_SECRET_KEY / STRIPE_LIVE_PUBLISHABLE_KEY are never injected by the
-  // Replit Stripe connector, so they reliably hold whatever you set in Secrets.
   const liveSecret = process.env.STRIPE_LIVE_SECRET_KEY;
   const livePublishable = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
   if (liveSecret?.startsWith("sk_") && livePublishable?.startsWith("pk_")) {
     return { secretKey: liveSecret, publishableKey: livePublishable };
   }
 
-  // Fallback: Replit connector proxy (works in dev with the connector installed)
   const connector = await getConnectorCredentials();
   if (connector) return connector;
 
-  // Last resort: plain env vars (may be overridden by connector in dev)
   const envSecret = process.env.STRIPE_SECRET_KEY;
   const envPublishable = process.env.STRIPE_PUBLISHABLE_KEY;
   if (envSecret?.startsWith("sk_") && envPublishable?.startsWith("pk_")) {
@@ -71,13 +62,4 @@ export async function getUncachableStripeClient(): Promise<Stripe> {
 export async function getStripePublishableKey(): Promise<string> {
   const { publishableKey } = await getCredentials();
   return publishableKey;
-}
-
-export async function getStripeSync(): Promise<StripeSync> {
-  const { secretKey } = await getCredentials();
-  return new StripeSync({
-    poolConfig: { connectionString: process.env.DATABASE_URL!, max: 2 },
-    stripeSecretKey: secretKey,
-    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-  });
 }

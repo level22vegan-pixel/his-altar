@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, organizationsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getUncachableStripeClient, getStripePublishableKey } from "../stripeClient";
 
@@ -40,14 +40,30 @@ router.get("/billing-status", async (req: any, res) => {
 
     let subscription = null;
     if (org.stripeCustomerId) {
-      const result = await db.execute(
-        sql`SELECT id, status, current_period_end, cancel_at_period_end
-            FROM stripe.subscriptions
-            WHERE customer = ${org.stripeCustomerId}
-              AND status NOT IN ('canceled', 'incomplete_expired')
-            ORDER BY created DESC LIMIT 1`
-      );
-      subscription = result.rows[0] ?? null;
+      try {
+        const stripe = await getUncachableStripeClient();
+        const subs = await stripe.subscriptions.list({
+          customer: org.stripeCustomerId,
+          status: "all",
+          limit: 5,
+        });
+        const active = subs.data.find(
+          (s) => s.status !== "canceled" && s.status !== "incomplete_expired"
+        );
+        if (active) {
+          const a = active as any;
+          subscription = {
+            id: active.id,
+            status: active.status,
+            current_period_end: a.current_period_end
+              ? new Date(a.current_period_end * 1000).toISOString()
+              : null,
+            cancel_at_period_end: active.cancel_at_period_end,
+          };
+        }
+      } catch {
+        // ignore — subscription info optional
+      }
     }
 
     res.json({ trialActive, trialDaysLeft, trialEndsAt, subscription });
@@ -163,27 +179,8 @@ router.post("/portal", async (req: any, res) => {
   }
 });
 
-// GET /api/stripe/prices — list active prices (DB-synced first, live API fallback)
+// GET /api/stripe/prices — list active prices from Stripe API
 router.get("/prices", async (_req, res) => {
-  // Try DB-synced stripe schema first
-  try {
-    const result = await db.execute(
-      sql`SELECT p.id as price_id, p.unit_amount, p.currency, p.recurring,
-                 pr.id as product_id, pr.name as product_name, pr.description as product_description
-          FROM stripe.prices p
-          JOIN stripe.products pr ON pr.id = p.product
-          WHERE p.active = true AND pr.active = true
-          ORDER BY p.unit_amount ASC`
-    );
-    if (result.rows.length > 0) {
-      res.json({ data: result.rows });
-      return;
-    }
-  } catch {
-    // stripe schema not ready — fall through to live API
-  }
-
-  // Fall back: fetch directly from Stripe API
   try {
     const stripe = await getUncachableStripeClient();
     const priceList = await stripe.prices.list({ active: true, expand: ["data.product"], limit: 20 });
@@ -203,7 +200,7 @@ router.get("/prices", async (_req, res) => {
       })
       .sort((a, b) => a.unit_amount - b.unit_amount);
     res.json({ data });
-  } catch (err: any) {
+  } catch {
     res.json({ data: [] });
   }
 });

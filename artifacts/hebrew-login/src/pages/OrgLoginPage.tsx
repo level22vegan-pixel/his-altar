@@ -137,6 +137,11 @@ export default function OrgLoginPage() {
                   Sign up your church
                 </a>
               </p>
+              <p className="mt-2">
+                <a href="/enter" className="text-neutral-600 hover:text-neutral-500 text-xs transition">
+                  Campus lead access
+                </a>
+              </p>
             </div>
           </>
         ) : (

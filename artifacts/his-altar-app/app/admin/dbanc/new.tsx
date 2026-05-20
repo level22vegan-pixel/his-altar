@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useCreateDbancContact, useListDbancCustomFields, useListWorkers } from "@workspace/api-client-react";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
   ActivityIndicator, KeyboardAvoidingView, Platform, Pressable,
@@ -50,10 +49,9 @@ export default function NewContactScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Who prayed
+  // Who prayed — single autocomplete field
   const [prayedBy, setPrayedBy] = useState("");
-  const [manualPrayer, setManualPrayer] = useState("");
-  const [showManual, setShowManual] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
 
@@ -67,7 +65,7 @@ export default function NewContactScreen() {
   async function handleSave() {
     if (!firstName.trim() || !lastName.trim()) { setError("First and last name required."); return; }
     setSaving(true); setError("");
-    const finalPrayedBy = showManual ? manualPrayer.trim() : prayedBy;
+    const finalPrayedBy = prayedBy.trim();
     try {
       await create.mutateAsync({
         data: {
@@ -105,7 +103,9 @@ export default function NewContactScreen() {
     );
   }
 
-  const activePrayedBy = showManual ? manualPrayer.trim() : prayedBy;
+  const suggestions = prayedBy.trim().length > 0
+    ? workers.filter(w => w.name.toLowerCase().includes(prayedBy.toLowerCase()))
+    : workers;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -174,86 +174,42 @@ export default function NewContactScreen() {
         })}
 
         {/* ── Who Prayed ── */}
-        <View style={[styles.prayedCard, { backgroundColor: "rgba(124,58,237,0.07)", borderColor: "rgba(124,58,237,0.25)" }]}>
-          <View style={styles.prayedHeader}>
-            <Ionicons name="hand-right-outline" size={16} color="rgba(167,139,250,0.7)" />
-            <Text style={styles.prayedTitle}>NAME OF ALTAR WORKER</Text>
-            {activePrayedBy ? (
-              <View style={styles.prayedBadge}>
-                <Text style={styles.prayedBadgeText}>{activePrayedBy}</Text>
-              </View>
-            ) : null}
-          </View>
-
-          {/* Roster picker */}
-          {!showManual && (
-            <>
-              {workersQ.isLoading ? (
-                <ActivityIndicator color="rgba(167,139,250,0.6)" size="small" style={{ marginVertical: 10 }} />
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-                  <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 2, paddingVertical: 4 }}>
-                    {workers.map(w => {
-                      const selected = prayedBy === w.name;
-                      return (
-                        <Pressable
-                          key={w.id}
-                          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setPrayedBy(selected ? "" : w.name); }}
-                          style={[styles.workerChip, {
-                            backgroundColor: selected ? "rgba(124,58,237,0.35)" : "rgba(255,255,255,0.05)",
-                            borderColor: selected ? "#a78bfa" : "rgba(255,255,255,0.1)",
-                          }]}
-                        >
-                          <LinearGradient
-                            colors={selected ? ["#4c1d95", "#7c3aed"] : ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.04)"]}
-                            style={styles.workerAvatar}
-                          >
-                            <Text style={[styles.workerInitial, { color: selected ? "#fff" : "rgba(255,255,255,0.5)" }]}>
-                              {w.name?.charAt(0).toUpperCase()}
-                            </Text>
-                          </LinearGradient>
-                          <Text style={[styles.workerName, { color: selected ? "#c4b5fd" : "rgba(255,255,255,0.6)" }]} numberOfLines={1}>
-                            {w.name}
-                          </Text>
-                          {selected && <Ionicons name="checkmark-circle" size={14} color="#a78bfa" />}
-                        </Pressable>
-                      );
-                    })}
-                    {workers.length === 0 && !workersQ.isLoading && (
-                      <Text style={styles.emptyWorkers}>No roster workers found</Text>
-                    )}
+        <SectionLabel>Name of Altar Worker</SectionLabel>
+        <View style={styles.autocompleteWrap}>
+          <TextInput
+            value={prayedBy}
+            onChangeText={t => { setPrayedBy(t); setShowSuggestions(true); }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            placeholder="Type a name…"
+            placeholderTextColor="rgba(255,255,255,0.2)"
+            style={styles.autocompleteInput}
+          />
+          {prayedBy.length > 0 && (
+            <Pressable onPress={() => { setPrayedBy(""); setShowSuggestions(false); }} style={styles.clearBtn}>
+              <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.3)" />
+            </Pressable>
+          )}
+          {showSuggestions && (workersQ.isLoading ? (
+            <View style={styles.suggestionBox}>
+              <ActivityIndicator color="rgba(167,139,250,0.6)" size="small" style={{ margin: 10 }} />
+            </View>
+          ) : suggestions.length > 0 ? (
+            <View style={styles.suggestionBox}>
+              {suggestions.slice(0, 6).map((w, i) => (
+                <Pressable
+                  key={w.id}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setPrayedBy(w.name); setShowSuggestions(false); }}
+                  style={[styles.suggestionRow, i > 0 && styles.suggestionDivider]}
+                >
+                  <View style={styles.suggestionAvatar}>
+                    <Text style={styles.suggestionInitial}>{w.name?.charAt(0).toUpperCase()}</Text>
                   </View>
-                </ScrollView>
-              )}
-            </>
-          )}
-
-          {/* Manual entry */}
-          {showManual && (
-            <TextInput
-              value={manualPrayer}
-              onChangeText={setManualPrayer}
-              placeholder="Enter name…"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              autoFocus
-              style={styles.manualInput}
-            />
-          )}
-
-          {/* Toggle manual/roster */}
-          <Pressable
-            onPress={() => {
-              setShowManual(v => !v);
-              setPrayedBy("");
-              setManualPrayer("");
-            }}
-            style={styles.manualToggle}
-          >
-            <Ionicons name={showManual ? "people-outline" : "pencil-outline"} size={13} color="rgba(167,139,250,0.6)" />
-            <Text style={styles.manualToggleText}>
-              {showManual ? "Pick from roster" : "Enter manually"}
-            </Text>
-          </Pressable>
+                  <Text style={styles.suggestionName}>{w.name}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null)}
         </View>
 
         {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
@@ -274,28 +230,25 @@ const styles = StyleSheet.create({
   notes: { padding: 14, borderRadius: 12, borderWidth: 1, fontSize: 14, fontFamily: "Georgia", minHeight: 100, textAlignVertical: "top", marginBottom: 8 },
   error: { fontSize: 12, fontFamily: "Georgia", marginBottom: 12 },
 
-  // Who Prayed card
-  prayedCard: { borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 24 },
-  prayedHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
-  prayedTitle: { fontSize: 10, letterSpacing: 3, fontFamily: "Georgia", color: "rgba(167,139,250,0.7)", flex: 1 },
-  prayedBadge: { backgroundColor: "rgba(124,58,237,0.3)", borderRadius: 12, paddingVertical: 3, paddingHorizontal: 10, borderWidth: 1, borderColor: "rgba(167,139,250,0.4)" },
-  prayedBadgeText: { fontFamily: "Georgia", fontSize: 11, color: "#c4b5fd" },
-
-  // Roster worker chips (horizontal)
-  workerChip: { flexDirection: "row", alignItems: "center", gap: 7, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, maxWidth: 150 },
-  workerAvatar: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  workerInitial: { fontFamily: "Georgia", fontSize: 12, fontWeight: "600" },
-  workerName: { fontFamily: "Georgia", fontSize: 12, flexShrink: 1 },
-  emptyWorkers: { fontFamily: "Georgia", fontSize: 12, color: "rgba(255,255,255,0.2)", alignSelf: "center", paddingVertical: 8 },
-
-  // Manual input
-  manualInput: {
-    backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 10, borderWidth: 1,
+  // Autocomplete
+  autocompleteWrap: { position: "relative", marginBottom: 24, zIndex: 10 },
+  autocompleteInput: {
+    backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 12, borderWidth: 1,
     borderColor: "rgba(167,139,250,0.3)", color: "#fff", fontFamily: "Georgia",
-    fontSize: 14, padding: 12, marginBottom: 10,
+    fontSize: 14, paddingVertical: 12, paddingHorizontal: 14, paddingRight: 38,
   },
-
-  // Toggle link
-  manualToggle: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start" },
-  manualToggleText: { fontFamily: "Georgia", fontSize: 11, color: "rgba(167,139,250,0.6)" },
+  clearBtn: { position: "absolute", right: 12, top: 0, bottom: 0, justifyContent: "center" },
+  suggestionBox: {
+    position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20,
+    backgroundColor: "#1a1228", borderWidth: 1, borderColor: "rgba(167,139,250,0.25)",
+    borderRadius: 12, marginTop: 4, overflow: "hidden",
+  },
+  suggestionRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, paddingHorizontal: 14 },
+  suggestionDivider: { borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" },
+  suggestionAvatar: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: "rgba(124,58,237,0.3)", alignItems: "center", justifyContent: "center",
+  },
+  suggestionInitial: { fontFamily: "Georgia", fontSize: 13, color: "#c4b5fd", fontWeight: "600" },
+  suggestionName: { fontFamily: "Georgia", fontSize: 13, color: "rgba(255,255,255,0.85)", flex: 1 },
 });

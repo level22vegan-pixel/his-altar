@@ -22,6 +22,7 @@ function formatPhone(raw: string): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 const GENDERS = ["Male", "Female"];
+const PRAYER_TYPES = ["Salvation", "Rededication", "Came Forward for Prayer"] as const;
 const SERVICES = ["8:00 AM", "10:00 AM", "12:00 PM", "7:00 PM"];
 
 function SectionLabel({ children }: { children: string }) {
@@ -43,6 +44,7 @@ export default function NewContactScreen() {
   const [phone, setPhone] = useState("");
   const [carrier, setCarrier] = useState("");
   const [gender, setGender] = useState("");
+  const [prayerType, setPrayerType] = useState("");
   const [serviceTime, setServiceTime] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -73,7 +75,7 @@ export default function NewContactScreen() {
           campus: "",
           serviceTime,
           notes: notes.trim(),
-          customData: finalPrayedBy ? { prayedBy: finalPrayedBy } : undefined,
+          customData: (finalPrayedBy || prayerType) ? { ...(prayerType ? { prayerType } : {}), ...(finalPrayedBy ? { prayedBy: finalPrayedBy } : {}) } : undefined,
         },
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -123,6 +125,9 @@ export default function NewContactScreen() {
 
         <SectionLabel>Gender</SectionLabel>
         <Chips items={GENDERS} value={gender} onChange={setGender} />
+
+        <SectionLabel>Came Forward For</SectionLabel>
+        <Chips items={PRAYER_TYPES} value={prayerType} onChange={setPrayerType} />
 
         <SectionLabel>Service Time</SectionLabel>
         <Chips items={SERVICES} value={serviceTime} onChange={setServiceTime} />

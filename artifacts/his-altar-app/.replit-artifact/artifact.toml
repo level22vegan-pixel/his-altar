@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/his-altar-app/"
+title = "His Altar – Mobile App"
+version = "1.0.0"
+id = "artifacts/his-altar-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/his-altar-app/" ]
+localPort = 23628
+
+[services.development]
+run = "pnpm --filter @workspace/his-altar-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/his-altar-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/his-altar-app", "run", "serve" ]
+
+[services.env]
+PORT = "23628"
+BASE_PATH = "/his-altar-app/"

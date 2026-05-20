@@ -69,6 +69,34 @@ router.put("/:id/reset-password", async (req, res) => {
   }
 });
 
+router.post("/verify-code", async (req, res) => {
+  try {
+    const { callerId, code } = req.body as Record<string, unknown>;
+    if (!callerId || !code) {
+      res.status(400).json({ success: false, message: "callerId and code are required" });
+      return;
+    }
+    const [caller] = await db
+      .select()
+      .from(pxpCallersTable)
+      .where(eq(pxpCallersTable.id, Number(callerId)))
+      .limit(1);
+    if (!caller) {
+      res.status(404).json({ success: false, message: "Caller not found" });
+      return;
+    }
+    const match = caller.password === String(code).trim();
+    if (!match) {
+      res.status(401).json({ success: false, message: "Incorrect code" });
+      return;
+    }
+    res.json({ success: true, caller: { id: caller.id, name: caller.name, campus: caller.campus } });
+  } catch (err) {
+    req.log.error({ err }, "Error verifying caller code");
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 router.delete("/:id", async (req, res) => {
   try {
     await db.delete(pxpCallersTable).where(eq(pxpCallersTable.id, parseInt(req.params.id)));

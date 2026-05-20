@@ -15,7 +15,6 @@ interface MenuItem {
   route?: string;
   action?: () => void;
   danger?: boolean;
-  dividerAbove?: boolean;
 }
 
 export default function HamburgerMenu() {
@@ -28,34 +27,23 @@ export default function HamburgerMenu() {
   if (!isAdmin) return null;
 
   function go(route: string) {
+    router.push(route as any);
     setOpen(false);
-    setTimeout(() => router.push(route as any), 150);
   }
 
   async function signOut() {
     setOpen(false);
     await logout();
-    setTimeout(() => router.replace("/"), 150);
+    router.replace("/");
   }
 
   const menuItems: MenuItem[] = [
-    // ── Account (mirrors web app) ────────────────────────────────────────────
-    { icon: "👤", label: "Profile", route: "/admin/profile" },
-    { icon: "🔑", label: "Access Codes", route: "/admin/access-codes" },
-    { icon: "📞", label: "PXP Callers", route: "/admin/pxp/callers" },
+    { icon: "👤", label: "Profile",                route: "/admin/profile" },
+    { icon: "🔑", label: "Access Codes",           route: "/admin/access-codes" },
+    { icon: "📞", label: "PXP Callers",            route: "/admin/pxp/callers" },
     { icon: "💳", label: "Billing & Subscription", route: "/org/billing" },
-    { icon: "✉️", label: "Contact Support", action: () => {
-      setOpen(false);
-      Linking.openURL("mailto:support@hisaltar.com");
-    }},
-    // ── Navigation (mobile-specific, no sidebar) ──────────────────────────────
-    { icon: "🙏", label: "Prayer Contacts", route: "/admin/dbanc", dividerAbove: true },
-    { icon: "🗓️", label: "Follow-Up Calls", route: "/admin/pxp" },
-    { icon: "👥", label: "Roster Manager", route: "/admin/roster" },
-    { icon: "📋", label: "Altar Report", route: "/admin/altar-report" },
-    { icon: "⚙️", label: "Admin Panel", route: "/admin" },
-    // ── Sign out ──────────────────────────────────────────────────────────────
-    { icon: "↩", label: "Sign Out", action: signOut, danger: true, dividerAbove: true },
+    { icon: "✉️", label: "Contact Support",        action: () => { setOpen(false); Linking.openURL("mailto:support@hisaltar.com"); } },
+    { icon: "↩",  label: "Sign Out",               action: signOut, danger: true },
   ];
 
   return (
@@ -72,20 +60,13 @@ export default function HamburgerMenu() {
       <Modal
         visible={open}
         transparent
-        animationType="fade"
+        animationType="none"
         onRequestClose={() => setOpen(false)}
       >
         <Pressable style={styles.overlay} onPress={() => setOpen(false)}>
           <Pressable
-            style={[
-              styles.drawer,
-              {
-                backgroundColor: "#0f0e1a",
-                borderColor: colors.border,
-                paddingBottom: insets.bottom + 16,
-              },
-            ]}
-            onPress={(e) => e.stopPropagation()}
+            style={[styles.drawer, { backgroundColor: "#0f0e1a", borderColor: colors.border, paddingBottom: insets.bottom + 16 }]}
+            onPress={e => e.stopPropagation()}
           >
             {/* Header */}
             <View style={[styles.drawerHeader, { borderBottomColor: colors.border }]}>
@@ -101,9 +82,9 @@ export default function HamburgerMenu() {
             </View>
 
             <ScrollView>
-              {menuItems.map((item) => (
+              {menuItems.map((item, i) => (
                 <View key={item.label}>
-                  {item.dividerAbove && (
+                  {item.danger && (
                     <View style={[styles.divider, { backgroundColor: colors.border }]} />
                   )}
                   <TouchableOpacity
@@ -141,42 +122,25 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   line: { width: 18, height: 1.5, backgroundColor: "rgba(255,255,255,0.6)", borderRadius: 2 },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "flex-end",
-  },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },
   drawer: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    maxHeight: "85%",
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderWidth: 1, borderBottomWidth: 0,
+    maxHeight: "75%",
   },
   drawerHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    marginBottom: 4,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 14,
+    borderBottomWidth: 1, marginBottom: 4,
   },
-  drawerTitle: {
-    fontFamily: "Georgia", fontSize: 16, color: "#fff", fontWeight: "400", marginRight: 36,
-  },
-  drawerSub: {
-    fontFamily: "Georgia", fontSize: 10, color: "rgba(255,255,255,0.3)",
-    letterSpacing: 2, textTransform: "uppercase", marginTop: 3,
-  },
+  drawerTitle: { fontFamily: "Georgia", fontSize: 16, color: "#fff", fontWeight: "400", marginRight: 36 },
+  drawerSub: { fontFamily: "Georgia", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginTop: 3 },
   closeBtn: { position: "absolute", top: 18, right: 16, padding: 4 },
   divider: { height: StyleSheet.hairlineWidth, marginHorizontal: 20, marginVertical: 4 },
   menuItem: {
     flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 20, paddingVertical: 15,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
+    paddingHorizontal: 20, paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth, gap: 12,
   },
-  menuIcon: { fontSize: 17, width: 26, textAlign: "center" },
-  menuLabel: {
-    fontFamily: "Georgia", fontSize: 14, color: "rgba(255,255,255,0.82)",
-  },
+  menuIcon: { fontSize: 18, width: 26, textAlign: "center" },
+  menuLabel: { fontFamily: "Georgia", fontSize: 14, color: "rgba(255,255,255,0.82)" },
 });

@@ -14,13 +14,17 @@ export default function RosterScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const [tab, setTab] = useState<"Master" | "Alt">("Master");
+  const [search, setSearch] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [adding, setAdding] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
   const workersQ = useListWorkers({ category: tab.toLowerCase() });
-  const workers = workersQ.data?.workers ?? [];
+  const allWorkers = workersQ.data?.workers ?? [];
+  const workers = search.trim()
+    ? allWorkers.filter(w => w.name.toLowerCase().includes(search.toLowerCase()))
+    : allWorkers;
   const create = useCreateWorker();
   const del = useDeleteWorker();
 
@@ -68,6 +72,24 @@ export default function RosterScreen() {
               <Text style={[styles.tabText, { color: tab === t ? colors.primary : colors.mutedForeground }]}>{t} Roster</Text>
             </Pressable>
           ))}
+        </View>
+
+        {/* Search bar */}
+        <View style={[styles.searchRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+          <Ionicons name="search-outline" size={16} color={colors.mutedForeground} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search workers…"
+            placeholderTextColor={colors.mutedForeground}
+            style={[styles.searchInput, { color: colors.foreground }]}
+            clearButtonMode="while-editing"
+          />
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch("")}>
+              <Ionicons name="close-circle" size={16} color={colors.mutedForeground} />
+            </Pressable>
+          )}
         </View>
 
         {showAdd && (
@@ -149,4 +171,6 @@ const styles = StyleSheet.create({
   delBtn: { padding: 8 },
   empty: { alignItems: "center", gap: 12, paddingTop: 60 },
   emptyText: { fontSize: 14, fontFamily: "Georgia" },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, marginBottom: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 9 },
+  searchInput: { flex: 1, fontFamily: "Georgia", fontSize: 14, padding: 0 },
 });

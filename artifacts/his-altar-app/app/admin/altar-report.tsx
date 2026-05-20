@@ -5,7 +5,7 @@ import { useListServiceReports, useUpsertServiceReport } from "@workspace/api-cl
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo, useState } from "react";
 import {
-  ActivityIndicator, Modal, Platform, Pressable, ScrollView, Share,
+  ActivityIndicator, Keyboard, Modal, Platform, Pressable, ScrollView, Share,
   StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,6 +19,7 @@ interface CounterProps {
   dotColor: string;
 }
 function Counter({ label, value, onChange, dotColor }: CounterProps) {
+  const [focused, setFocused] = useState(false);
   const n = parseInt(value) || 0;
   return (
     <View style={ctr.row}>
@@ -34,7 +35,8 @@ function Counter({ label, value, onChange, dotColor }: CounterProps) {
         <TextInput
           value={value}
           onChangeText={onChange}
-          onBlur={() => { const v = parseInt(value); onChange(isNaN(v) ? "0" : String(Math.max(0, v))); }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => { setFocused(false); const v = parseInt(value); onChange(isNaN(v) ? "0" : String(Math.max(0, v))); }}
           keyboardType="number-pad"
           selectTextOnFocus
           style={ctr.input}
@@ -45,6 +47,11 @@ function Counter({ label, value, onChange, dotColor }: CounterProps) {
         >
           <Text style={ctr.btnTxt}>+</Text>
         </Pressable>
+        {focused && (
+          <Pressable onPress={() => Keyboard.dismiss()} style={ctr.doneBtn}>
+            <Text style={ctr.doneTxt}>Done</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -69,6 +76,11 @@ const ctr = StyleSheet.create({
     color: "#fff", borderBottomWidth: 1, borderColor: "rgba(255,255,255,0.2)",
     paddingVertical: 2,
   },
+  doneBtn: {
+    backgroundColor: "rgba(124,58,237,0.35)", borderRadius: 8, borderWidth: 1,
+    borderColor: "rgba(167,139,250,0.4)", paddingHorizontal: 10, paddingVertical: 6,
+  },
+  doneTxt: { fontFamily: "Georgia", fontSize: 12, color: "#c4b5fd" },
 });
 
 // ─── Constants ────────────────────────────────────────────────────────────────

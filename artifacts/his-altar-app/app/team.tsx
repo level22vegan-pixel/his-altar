@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -8,67 +7,132 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 
-const TEAMS = [
-  { id: "altar", icon: "flame-outline", label: "ALTAR", desc: "Check-in & roster", route: "/home" },
-  { id: "pxp", icon: "call-outline", label: "FOLLOW-UP CALLS", desc: "PXP caller login", route: "/caller-login" },
-  { id: "admin", icon: "settings-outline", label: "ADMIN", desc: "Reports & management", route: "/admin" },
+const TILES = [
+  {
+    id: "altar",
+    emoji: "🙏",
+    gradient: ["#091828", "#0d2240", "#091828"] as const,
+    border: "rgba(56,130,200,0.4)",
+    shadow: "rgba(56,130,200,0.35)",
+    route: "/home",
+  },
+  {
+    id: "checkin",
+    emoji: "✅",
+    extraLabel: "-in",
+    gradient: ["#92651a", "#b8860b", "#7a4f10"] as const,
+    border: "rgba(184,134,11,0.4)",
+    shadow: "rgba(184,134,11,0.35)",
+    route: "/home",
+  },
+  {
+    id: "calls",
+    emoji: "📞",
+    gradient: ["#4c1d95", "#7c3aed", "#6d28d9"] as const,
+    border: "rgba(124,58,237,0.5)",
+    shadow: "rgba(124,58,237,0.4)",
+    route: "/caller-login",
+  },
+  {
+    id: "admin",
+    emoji: "⚙",
+    gradient: ["#111827", "#1f2937", "#111827"] as const,
+    border: "rgba(100,120,160,0.3)",
+    shadow: "rgba(100,120,160,0.2)",
+    route: "/admin",
+  },
 ] as const;
 
 export default function TeamScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { orgSession, logout } = useAppContext();
+  const { orgSession, campusSession, logout } = useAppContext();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const bottomPad = Platform.OS === "web" ? 0 : insets.bottom;
+
+  function handleTile(tile: typeof TILES[number]) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(tile.route as any);
+  }
 
   return (
-    <LinearGradient colors={["#0e0b08", "#1a1510"]} style={[styles.root, { paddingTop: topPad + 20 }]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.title, { color: colors.foreground }]}>SELECT TEAM</Text>
-          {orgSession && (
-            <Text style={[styles.orgName, { color: colors.primary }]}>{orgSession.orgName}</Text>
+    <LinearGradient
+      colors={["#06050f", "#0d0818", "#06050f"]}
+      locations={[0, 0.6, 1]}
+      style={{ flex: 1 }}
+    >
+      <View style={[styles.root, { paddingTop: topPad, paddingBottom: bottomPad }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.replace("/")} style={styles.backBtn}>
+            <Text style={styles.backText}>← Back</Text>
+          </Pressable>
+          {(orgSession || campusSession) && (
+            <Pressable onPress={async () => { await logout(); router.replace("/"); }}>
+              <Text style={[styles.backText, { color: colors.lavenderDim }]}>Sign Out</Text>
+            </Pressable>
           )}
         </View>
-        <Pressable onPress={async () => { await logout(); router.replace("/"); }} style={styles.logoutBtn}>
-          <Ionicons name="log-out-outline" size={22} color={colors.mutedForeground} />
-        </Pressable>
-      </View>
 
-      <View style={styles.cards}>
-        {TEAMS.map(team => (
-          <Pressable
-            key={team.id}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push(team.route as any); }}
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.75 : 1 },
-            ]}
-          >
-            <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
-              <Ionicons name={team.icon as any} size={28} color={colors.primary} />
-            </View>
-            <View style={styles.cardText}>
-              <Text style={[styles.cardLabel, { color: colors.foreground }]}>{team.label}</Text>
-              <Text style={[styles.cardDesc, { color: colors.mutedForeground }]}>{team.desc}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
-          </Pressable>
-        ))}
+        {/* Tiles */}
+        <View style={styles.tiles}>
+          {TILES.map((tile) => (
+            <Pressable
+              key={tile.id}
+              onPress={() => handleTile(tile)}
+              style={({ pressed }) => [styles.tileWrap, { opacity: pressed ? 0.88 : 1 }]}
+            >
+              <LinearGradient
+                colors={tile.gradient}
+                locations={[0, 0.4, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.tile, { borderColor: tile.border, shadowColor: tile.shadow }]}
+              >
+                {tile.id === "checkin" ? (
+                  <View style={styles.checkinRow}>
+                    <Text style={styles.tileEmoji}>✅</Text>
+                    <Text style={styles.checkinLabel}>-in</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.tileEmoji}>{tile.emoji}</Text>
+                )}
+              </LinearGradient>
+            </Pressable>
+          ))}
+        </View>
       </View>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, paddingHorizontal: 24, paddingBottom: 40 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 48 },
-  title: { fontSize: 20, fontFamily: "Georgia", letterSpacing: 5 },
-  orgName: { fontSize: 13, fontFamily: "Georgia", marginTop: 4 },
-  logoutBtn: { padding: 8 },
-  cards: { gap: 14 },
-  card: { flexDirection: "row", alignItems: "center", gap: 16, padding: 20, borderRadius: 14, borderWidth: 1 },
-  iconWrap: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" },
-  cardText: { flex: 1 },
-  cardLabel: { fontSize: 16, fontFamily: "Georgia", fontWeight: "600", letterSpacing: 1 },
-  cardDesc: { fontSize: 12, marginTop: 3, fontFamily: "Georgia" },
+  root: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.06)",
+  },
+  backBtn: {},
+  backText: { color: "rgba(255,255,255,0.35)", fontFamily: "Georgia", fontSize: 11, letterSpacing: 2 },
+  tiles: { flex: 1, padding: 16, gap: 12 },
+  tileWrap: { flex: 1 },
+  tile: {
+    flex: 1,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 36,
+    elevation: 12,
+  },
+  tileEmoji: { fontSize: 48 },
+  checkinRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  checkinLabel: { fontSize: 32, fontFamily: "Georgia", fontWeight: "700", color: "#fff", letterSpacing: -0.5 },
 });

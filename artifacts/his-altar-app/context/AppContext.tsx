@@ -14,9 +14,15 @@ export interface CallerSession {
   campus: string;
 }
 
+export interface CampusSession {
+  campus: string;
+  role: string;
+}
+
 interface AppContextValue {
   orgSession: OrgSession | null;
   callerSession: CallerSession | null;
+  campusSession: CampusSession | null;
   selectedCampus: string | null;
   selectedService: string | null;
   selectedDate: string | null;
@@ -26,6 +32,8 @@ interface AppContextValue {
   logout: () => Promise<void>;
   loginCaller: (callerId: number, callerName: string, campus: string) => void;
   logoutCaller: () => Promise<void>;
+  loginCampus: (campus: string, role: string) => void;
+  logoutCampus: () => Promise<void>;
   selectCampusService: (campus: string, service: string, date: string) => void;
 }
 
@@ -36,6 +44,7 @@ const BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orgSession, setOrgSession] = useState<OrgSession | null>(null);
   const [callerSession, setCallerSession] = useState<CallerSession | null>(null);
+  const [campusSession, setCampusSessionState] = useState<CampusSession | null>(null);
   const [selectedCampus, setSelectedCampus] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -53,6 +62,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (orgStr) setOrgSession(JSON.parse(orgStr));
         const callerStr = await AsyncStorage.getItem("callerSession");
         if (callerStr) setCallerSession(JSON.parse(callerStr));
+        const campusStr = await AsyncStorage.getItem("campusSession");
+        if (campusStr) setCampusSessionState(JSON.parse(campusStr));
       } catch {}
       setIsLoading(false);
     })();
@@ -93,7 +104,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     setOrgSession(null);
     setCallerSession(null);
-    await AsyncStorage.multiRemove(["orgSession", "callerSession"]);
+    setCampusSessionState(null);
+    await AsyncStorage.multiRemove(["orgSession", "callerSession", "campusSession"]);
   }, []);
 
   const loginCaller = useCallback((callerId: number, callerName: string, campus: string) => {
@@ -107,6 +119,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.removeItem("callerSession");
   }, []);
 
+  const loginCampus = useCallback((campus: string, role: string) => {
+    const session: CampusSession = { campus, role };
+    setCampusSessionState(session);
+    AsyncStorage.setItem("campusSession", JSON.stringify(session));
+  }, []);
+
+  const logoutCampus = useCallback(async () => {
+    setCampusSessionState(null);
+    await AsyncStorage.removeItem("campusSession");
+  }, []);
+
   const selectCampusService = useCallback((campus: string, service: string, date: string) => {
     setSelectedCampus(campus);
     setSelectedService(service);
@@ -115,8 +138,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      orgSession, callerSession, selectedCampus, selectedService, selectedDate,
-      isLoading, loginOrg, signupOrg, logout, loginCaller, logoutCaller, selectCampusService,
+      orgSession, callerSession, campusSession,
+      selectedCampus, selectedService, selectedDate,
+      isLoading, loginOrg, signupOrg, logout,
+      loginCaller, logoutCaller, loginCampus, logoutCampus,
+      selectCampusService,
     }}>
       {children}
     </AppContext.Provider>

@@ -10,6 +10,13 @@ import { DarkInput } from "@/components/DarkInput";
 import { GoldButton } from "@/components/GoldButton";
 
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Other"];
+
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
 const GENDERS = ["Male", "Female"];
 const SERVICES = ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"];
 
@@ -88,7 +95,7 @@ export default function EditContactScreen() {
 
         <DarkInput label="First Name" value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
         <DarkInput label="Last Name" value={lastName} onChangeText={setLastName} autoCapitalize="words" />
-        <DarkInput label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        <DarkInput label="Phone" value={phone} onChangeText={t => setPhone(formatPhone(t))} keyboardType="phone-pad" />
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Carrier</Text>
         <Chips items={CARRIERS} value={carrier} onChange={setCarrier} />

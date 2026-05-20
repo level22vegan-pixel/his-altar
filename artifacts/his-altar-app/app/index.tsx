@@ -63,15 +63,6 @@ export default function LandingScreen() {
         <Text style={styles.aboutText}>ABOUT US</Text>
       </View>
 
-      {/* App Store badges */}
-      <View style={[styles.appStores, { bottom: bottomPad + 28 }]}>
-        <View style={[styles.storeBadge, { borderColor: colors.border }]}>
-          <Text style={styles.storeText}> App Store</Text>
-        </View>
-        <View style={[styles.storeBadge, { borderColor: colors.border }]}>
-          <Text style={styles.storeText}> Google Play</Text>
-        </View>
-      </View>
     </LinearGradient>
   );
 }
@@ -121,7 +112,4 @@ const styles = StyleSheet.create({
   signupText: { fontFamily: "Georgia", fontSize: 12, letterSpacing: 1, color: "rgba(255,255,255,0.3)" },
   aboutWrap: { position: "absolute", right: 20 },
   aboutText: { color: "rgba(255,255,255,0.25)", fontFamily: "Georgia", fontSize: 10, letterSpacing: 4 },
-  appStores: { position: "absolute", flexDirection: "row", gap: 12 },
-  storeBadge: { flexDirection: "row", alignItems: "center", paddingVertical: 9, paddingHorizontal: 16, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderRadius: 10 },
-  storeText: { color: "rgba(255,255,255,0.7)", fontFamily: "Georgia", fontSize: 12 },
 });

@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 
 const TABS = ["Master", "Alt"] as const;
-import { CAMPUSES } from "@/constants/campuses";
 
 export default function RosterScreen() {
   const colors = useColors();
@@ -17,7 +16,6 @@ export default function RosterScreen() {
   const [tab, setTab] = useState<"Master" | "Alt">("Master");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
-  const [campus, setCampus] = useState<string>(CAMPUSES[0]);
   const [adding, setAdding] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
@@ -30,7 +28,7 @@ export default function RosterScreen() {
     if (!name.trim()) return;
     setAdding(true);
     try {
-      await create.mutateAsync({ data: { name: name.trim(), role: role.trim() || tab, category: tab.toLowerCase(), campus, photoUrl: "" } });
+      await create.mutateAsync({ data: { name: name.trim(), role: role.trim() || tab, category: tab.toLowerCase(), campus: "", photoUrl: "" } });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setName(""); setRole(""); setShowAdd(false);
       workersQ.refetch();
@@ -88,13 +86,6 @@ export default function RosterScreen() {
               placeholderTextColor={colors.mutedForeground}
               style={[styles.input, { backgroundColor: colors.muted, color: colors.foreground, borderRadius: 8 }]}
             />
-            <View style={styles.campusRow}>
-              {CAMPUSES.map(c => (
-                <Pressable key={c} onPress={() => setCampus(c)} style={[styles.campusChip, { backgroundColor: campus === c ? colors.primary : colors.muted }]}>
-                  <Text style={[styles.campusChipText, { color: campus === c ? colors.primaryForeground : colors.mutedForeground }]}>{c}</Text>
-                </Pressable>
-              ))}
-            </View>
             <Pressable
               onPress={handleAdd}
               disabled={adding || !name.trim()}
@@ -126,7 +117,7 @@ export default function RosterScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
-                  {item.campus && <Text style={[styles.role, { color: colors.mutedForeground }]}>{item.campus}</Text>}
+                  {item.role && <Text style={[styles.role, { color: colors.mutedForeground }]}>{item.role}</Text>}
                 </View>
                 <Pressable onPress={() => handleDelete(item)} style={styles.delBtn}>
                   <Ionicons name="trash-outline" size={18} color={colors.destructive} />
@@ -149,9 +140,6 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 12, fontFamily: "Georgia", letterSpacing: 1, textTransform: "uppercase" },
   addForm: { margin: 16, padding: 16, borderRadius: 12, borderWidth: 1, gap: 10 },
   input: { padding: 12, fontSize: 14, fontFamily: "Georgia" },
-  campusRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  campusChip: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 12 },
-  campusChipText: { fontSize: 11, fontFamily: "Georgia" },
   addBtn: { paddingVertical: 12, borderRadius: 8, alignItems: "center" },
   addBtnText: { fontSize: 13, fontFamily: "Georgia", letterSpacing: 1 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 12, borderWidth: 1 },

@@ -1,98 +1,77 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 
-import { CAMPUSES } from "@/constants/campuses";
-const SERVICES = ["8:00am", "10:00am", "12:00pm", "7:00pm"];
+const SERVICES = ["Sunday 8:00am", "Sunday 10:00am", "Sunday 12:00pm", "Wednesday 7:00pm"];
 
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { selectCampusService } = useAppContext();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const [campus, setCampus] = useState<string | null>(null);
-
-  function selectCampus(c: string) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setCampus(c);
-  }
 
   function selectService(s: string) {
-    if (!campus) return;
     const today = new Date().toISOString().split("T")[0];
-    selectCampusService(campus, s, today);
+    selectCampusService("", s, today);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push("/checkin");
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[styles.root, { paddingTop: topPad + 20 }]}>
+    <LinearGradient colors={["#0a0a0f", "#0f0a1a", "#0a0a0f"]} style={{ flex: 1 }}>
+      <View style={[styles.root, { paddingTop: topPad }]}>
         <Pressable onPress={() => router.back()} style={styles.back}>
-          <Ionicons name="chevron-back" size={24} color={colors.foreground} />
+          <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.5)" />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>SELECT CAMPUS</Text>
 
-        <View style={styles.grid}>
-          {CAMPUSES.map(c => (
-            <Pressable
-              key={c}
-              onPress={() => selectCampus(c)}
-              style={({ pressed }) => [
-                styles.campusCard,
-                {
-                  backgroundColor: campus === c ? colors.primary : colors.card,
-                  borderColor: campus === c ? colors.primary : colors.border,
-                  opacity: pressed ? 0.8 : 1,
-                },
-              ]}
-            >
-              <Text style={[styles.campusText, { color: campus === c ? colors.primaryForeground : colors.foreground }]}>
-                {c.toUpperCase()}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <View style={styles.content}>
+          <Text style={styles.title}>SELECT SERVICE</Text>
+          <Text style={styles.sub}>Which service are you working?</Text>
 
-        {campus && (
-          <View style={styles.serviceSection}>
-            <Text style={[styles.serviceTitle, { color: colors.mutedForeground }]}>SERVICE TIME — {campus.toUpperCase()}</Text>
-            <View style={styles.services}>
-              {SERVICES.map(s => (
-                <Pressable
-                  key={s}
-                  onPress={() => selectService(s)}
-                  style={({ pressed }) => [
-                    styles.serviceBtn,
-                    { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.75 : 1 },
-                  ]}
-                >
-                  <Text style={[styles.serviceText, { color: colors.foreground }]}>{s}</Text>
-                </Pressable>
-              ))}
-            </View>
+          <View style={styles.services}>
+            {SERVICES.map((s) => (
+              <Pressable
+                key={s}
+                onPress={() => selectService(s)}
+                style={({ pressed }) => [
+                  styles.serviceBtn,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: pressed ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)",
+                  },
+                ]}
+              >
+                <Text style={styles.serviceText}>{s}</Text>
+                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.2)" />
+              </Pressable>
+            ))}
           </View>
-        )}
+        </View>
       </View>
-    </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: 20, paddingBottom: 60 },
-  back: { alignSelf: "flex-start", padding: 8, marginBottom: 24 },
-  title: { fontSize: 20, fontFamily: "Georgia", letterSpacing: 5, marginBottom: 32 },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  campusCard: { width: "47%", paddingVertical: 24, alignItems: "center", borderRadius: 12, borderWidth: 1 },
-  campusText: { fontSize: 13, fontFamily: "Georgia", letterSpacing: 2, fontWeight: "600" },
-  serviceSection: { marginTop: 36 },
-  serviceTitle: { fontSize: 10, letterSpacing: 3, textTransform: "uppercase", fontFamily: "Georgia", marginBottom: 16 },
-  services: { gap: 10 },
-  serviceBtn: { padding: 18, borderRadius: 12, borderWidth: 1, alignItems: "center" },
-  serviceText: { fontSize: 16, fontFamily: "Georgia", letterSpacing: 1 },
+  root: { flex: 1 },
+  back: { padding: 16, alignSelf: "flex-start" },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
+  title: {
+    fontSize: 22, fontFamily: "Georgia", letterSpacing: 5, color: "#fff",
+    textShadowColor: "rgba(180,140,255,0.5)", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 16,
+    marginBottom: 8,
+  },
+  sub: { fontSize: 12, fontFamily: "Georgia", color: "rgba(255,255,255,0.3)", letterSpacing: 1, marginBottom: 36 },
+  services: { gap: 12 },
+  serviceBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    padding: 20, borderRadius: 16, borderWidth: 1,
+  },
+  serviceText: { fontFamily: "Georgia", fontSize: 16, color: "#fff", letterSpacing: 0.5 },
 });

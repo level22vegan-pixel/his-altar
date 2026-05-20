@@ -9,10 +9,9 @@ import { useColors } from "@/hooks/useColors";
 import { DarkInput } from "@/components/DarkInput";
 import { GoldButton } from "@/components/GoldButton";
 
-import { CAMPUSES } from "@/constants/campuses";
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Other"];
 const GENDERS = ["Male", "Female", "Other"];
-const SERVICES = ["8:00am", "10:00am", "12:00pm", "7:00pm"];
+const SERVICES = ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"];
 
 export default function EditContactScreen() {
   const colors = useColors();
@@ -28,7 +27,6 @@ export default function EditContactScreen() {
   const [phone, setPhone] = useState("");
   const [carrier, setCarrier] = useState("");
   const [gender, setGender] = useState("");
-  const [campus, setCampus] = useState("");
   const [serviceTime, setServiceTime] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -42,7 +40,6 @@ export default function EditContactScreen() {
       setPhone(c.phone ?? "");
       setCarrier(c.carrier ?? "");
       setGender(c.gender ?? "");
-      setCampus(c.campus ?? "");
       setServiceTime((c as any).serviceTime ?? "");
       setNotes(c.notes ?? "");
     }
@@ -52,7 +49,7 @@ export default function EditContactScreen() {
     if (!firstName.trim() || !lastName.trim()) { setError("Name required."); return; }
     setSaving(true); setError("");
     try {
-      await update.mutateAsync({ id: parseInt(id ?? "0"), data: { firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(), carrier, gender, campus, serviceTime, notes: notes.trim() } });
+      await update.mutateAsync({ id: parseInt(id ?? "0"), data: { firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(), carrier, gender, campus: "", serviceTime, notes: notes.trim() } });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (e: any) {
@@ -98,9 +95,6 @@ export default function EditContactScreen() {
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground, marginTop: 16 }]}>Gender</Text>
         <Chips items={GENDERS} value={gender} onChange={setGender} />
-
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground, marginTop: 16 }]}>Campus</Text>
-        <Chips items={CAMPUSES} value={campus} onChange={setCampus} />
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground, marginTop: 16 }]}>Service Time</Text>
         <Chips items={SERVICES} value={serviceTime} onChange={setServiceTime} />

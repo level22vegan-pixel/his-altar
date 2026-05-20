@@ -89,6 +89,10 @@ export default function HamburgerMenu() {
           )}
 
           {isOrgOrAdmin && (
+            <MenuButton icon="📞" label="PXP Callers" onClick={() => go("/admin/pxp/callers")} />
+          )}
+
+          {isOrgOrAdmin && (
             <MenuButton
               icon="💳"
               label="Billing & Subscription"
@@ -107,15 +111,6 @@ export default function HamburgerMenu() {
               window.location.href = "mailto:support@hisaltar.com";
             }}
           />
-
-          {orgSession && (
-            <MenuButton
-              icon="🗑️"
-              label="Delete Account"
-              danger
-              onClick={() => go("/admin/profile")}
-            />
-          )}
 
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
             <MenuButton icon="↩" label="Sign Out" danger onClick={signOut} />

@@ -269,6 +269,26 @@ export default function AccessCodesPage() {
           currentCode={currentCode("altar")}
           accentHue={200}
         />
+
+        <button
+          onClick={() => navigate("/admin/pxp/callers")}
+          style={{
+            width: "100%", marginTop: 8, padding: "12px 16px",
+            background: "hsl(270 20% 11%)", border: "1px solid hsl(270 25% 20%)",
+            borderRadius: 10, cursor: "pointer", display: "flex", alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ textAlign: "left" }}>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "hsl(270 55% 65%)", margin: 0 }}>
+              PXP Callers
+            </p>
+            <p style={{ fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(270 25% 40%)", letterSpacing: "0.06em", margin: "3px 0 0" }}>
+              Manage follow-up call team members
+            </p>
+          </div>
+          <span style={{ color: "hsl(270 35% 45%)", fontSize: 14, opacity: 0.6 }}>→</span>
+        </button>
       </div>
     </div>
   );

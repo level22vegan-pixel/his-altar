@@ -88,7 +88,7 @@ const S = {
 
 function DeleteAccountSection() {
   const [, navigate] = useLocation();
-  const [step, setStep] = useState<"idle" | "confirm" | "typing">("idle");
+  const [expanded, setExpanded] = useState(false);
   const [typed, setTyped] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState("");
@@ -106,43 +106,44 @@ function DeleteAccountSection() {
     } finally { setDeleting(false); }
   }
 
+  if (!expanded) {
+    return (
+      <div style={{ textAlign: "center", paddingTop: 32, paddingBottom: 8 }}>
+        <button
+          onClick={() => setExpanded(true)}
+          style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "Georgia, serif", fontSize: 10, color: "hsl(38 15% 28%)", letterSpacing: "0.1em", textDecoration: "underline", opacity: 0.6 }}
+        >
+          delete account
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ ...S.card, borderColor: "hsl(0 35% 22%)" }}>
-      <div style={{ ...S.cardHeader, color: "hsl(0 45% 45%)" }}>Danger Zone</div>
-      {step === "idle" && (
-        <div style={{ padding: "14px 16px" }}>
-          <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 30% 42%)", margin: "0 0 12px", lineHeight: 1.6 }}>
-            Permanently delete your church account, all contacts, rosters, call logs, and settings. This cannot be undone.
-          </p>
-          <button onClick={() => setStep("confirm")} style={S.btn(false, true)}>Delete Account</button>
-        </div>
-      )}
-      {step === "confirm" && (
-        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 55% 60%)", margin: 0, lineHeight: 1.6 }}>
-            This will permanently delete all your data — contacts, rosters, call logs, altar reports, and your account. There is no undo.
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setStep("idle")} style={{ ...S.btn(), flex: 1 }}>Cancel</button>
-            <button onClick={() => setStep("typing")} style={{ ...S.btn(false, true), flex: 1 }}>Continue</button>
-          </div>
-        </div>
-      )}
-      {step === "typing" && (
-        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 55% 60%)", margin: 0 }}>
-            Type <strong style={{ color: "hsl(0 65% 68%)" }}>DELETE</strong> to confirm.
-          </p>
-          <input value={typed} onChange={e => { setTyped(e.target.value); setErr(""); }} placeholder="DELETE" style={{ ...S.inp, textTransform: "uppercase", letterSpacing: "0.15em" }} />
-          {err && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(0 55% 58%)", margin: 0 }}>{err}</p>}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { setStep("idle"); setTyped(""); }} style={{ ...S.btn(), flex: 1 }}>Cancel</button>
-            <button onClick={handleDelete} disabled={deleting || typed !== "DELETE"} style={{ ...S.btn(false, true), flex: 1, opacity: typed !== "DELETE" || deleting ? 0.5 : 1, cursor: typed !== "DELETE" || deleting ? "not-allowed" : "pointer" }}>
-              {deleting ? "Deleting…" : "Delete All"}
-            </button>
-          </div>
-        </div>
-      )}
+    <div style={{ marginTop: 32, padding: "16px", borderRadius: 10, border: "1px solid hsl(0 28% 20%)", background: "hsl(0 20% 9%)" }}>
+      <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(0 50% 55%)", margin: "0 0 12px", lineHeight: 1.6 }}>
+        This permanently deletes all contacts, rosters, call logs, altar reports, and your account. There is no undo.
+      </p>
+      <p style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "hsl(38 25% 38%)", margin: "0 0 10px" }}>
+        Type <strong style={{ color: "hsl(0 55% 60%)" }}>DELETE</strong> to confirm.
+      </p>
+      <input
+        value={typed}
+        onChange={e => { setTyped(e.target.value); setErr(""); }}
+        placeholder="DELETE"
+        style={{ ...S.inp, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 10 }}
+      />
+      {err && <p style={{ fontFamily: "Georgia, serif", fontSize: 11, color: "hsl(0 55% 58%)", margin: "0 0 10px" }}>{err}</p>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => { setExpanded(false); setTyped(""); setErr(""); }} style={{ ...S.btn(), flex: 1 }}>Cancel</button>
+        <button
+          onClick={handleDelete}
+          disabled={deleting || typed !== "DELETE"}
+          style={{ ...S.btn(false, true), flex: 1, opacity: typed !== "DELETE" || deleting ? 0.45 : 1, cursor: typed !== "DELETE" || deleting ? "not-allowed" : "pointer" }}
+        >
+          {deleting ? "Deleting…" : "Delete All"}
+        </button>
+      </div>
     </div>
   );
 }

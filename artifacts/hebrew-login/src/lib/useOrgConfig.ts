@@ -27,5 +27,5 @@ export function getOrgServiceTimes(): Record<string, string[]> {
 }
 
 export function getOrgName(): string {
-  return getValidOrgSession()?.orgName ?? "The Way World Outreach";
+  return getValidOrgSession()?.orgName ?? "";
 }

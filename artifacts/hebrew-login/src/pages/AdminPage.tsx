@@ -198,24 +198,6 @@ export default function AdminPage() {
                     Service Times
                   </button>
                 )}
-                {(!isCampusUser || isLead) && (
-                  <button
-                    onClick={() => navigate("/admin/access-codes")}
-                    style={subBtn()}
-                    onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
-                    onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
-                  >
-                    Access Codes
-                  </button>
-                )}
-                <button
-                  onClick={() => navigate(attendanceRoute)}
-                  style={subBtn(false)}
-                  onMouseOver={e => { e.currentTarget.style.background = "hsl(38 30% 14%)"; e.currentTarget.style.color = "hsl(38 60% 65%)"; }}
-                  onMouseOut={e => { e.currentTarget.style.background = "hsl(38 20% 10%)"; e.currentTarget.style.color = "hsl(38 40% 50%)"; }}
-                >
-                  Attendance
-                </button>
               </div>
             </div>
 
@@ -237,16 +219,6 @@ export default function AdminPage() {
                     onMouseOut={e => { e.currentTarget.style.background = "hsl(215 35% 11%)"; e.currentTarget.style.color = "hsl(215 50% 55%)"; }}
                   >
                     Custom Fields
-                  </button>
-                )}
-                {(!isCampusUser || isLead) && (
-                  <button
-                    onClick={() => navigate("/admin/activity-log/dbanc")}
-                    style={{ flex: 1, padding: "7px 10px", background: "hsl(215 35% 11%)", border: "none", color: "hsl(215 50% 55%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
-                    onMouseOver={e => { e.currentTarget.style.background = "hsl(215 40% 15%)"; e.currentTarget.style.color = "hsl(215 65% 68%)"; }}
-                    onMouseOut={e => { e.currentTarget.style.background = "hsl(215 35% 11%)"; e.currentTarget.style.color = "hsl(215 50% 55%)"; }}
-                  >
-                    Log
                   </button>
                 )}
               </div>
@@ -288,16 +260,6 @@ export default function AdminPage() {
                 >
                   History
                 </button>
-                {(!isCampusUser || isLead) && (
-                  <button
-                    onClick={() => navigate("/admin/activity-log/pxp")}
-                    style={{ flex: 1, padding: "7px 10px", background: "hsl(270 10% 5%)", border: "none", color: "hsl(270 45% 58%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
-                    onMouseOver={e => { e.currentTarget.style.background = "hsl(270 40% 12%)"; e.currentTarget.style.color = "hsl(270 65% 72%)"; }}
-                    onMouseOut={e => { e.currentTarget.style.background = "hsl(270 10% 5%)"; e.currentTarget.style.color = "hsl(270 45% 58%)"; }}
-                  >
-                    Log
-                  </button>
-                )}
               </div>
             </div>
 

@@ -195,7 +195,9 @@ export default function PXPSimulationPage() {
   const [history, setHistory] = useState<string[]>(["warm-opening"]);
   const [activeSpineIndex, setActiveSpineIndex] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const [editText, setEditText] = useState("");
+  const [editResponses, setEditResponses] = useState<SimResponse[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -251,7 +253,9 @@ export default function PXPSimulationPage() {
 
   function startEdit(node: SimNode) {
     setEditingId(node.id);
+    setEditTitle(node.title);
     setEditText(node.text);
+    setEditResponses(node.responses.map(r => ({ ...r })));
     setSaved(false);
   }
 
@@ -262,7 +266,12 @@ export default function PXPSimulationPage() {
       ...tree,
       nodes: {
         ...tree.nodes,
-        [editingId]: { ...tree.nodes[editingId], text: editText },
+        [editingId]: {
+          ...tree.nodes[editingId],
+          title: editTitle.trim() || tree.nodes[editingId].title,
+          text: editText,
+          responses: editResponses,
+        },
       },
     };
     setTree(updated);
@@ -420,39 +429,92 @@ export default function PXPSimulationPage() {
 
           {/* Script text or editor */}
           {editingId === node.id ? (
-            <div>
-              <textarea
-                value={editText}
-                onChange={e => setEditText(e.target.value)}
-                autoFocus
-                style={{
-                  width: "100%", minHeight: 160, padding: "12px 14px", borderRadius: 8,
-                  border: "1px solid hsl(270 40% 30%)", background: "hsl(270 10% 4%)",
-                  color: "hsl(270 35% 88%)", fontFamily: "Georgia, serif", fontSize: 14,
-                  lineHeight: 1.7, resize: "vertical", outline: "none", boxSizing: "border-box",
-                }}
-              />
-              <p style={{ color: "hsl(270 20% 38%)", fontFamily: "Georgia, serif", fontSize: 10, margin: "6px 0 12px", letterSpacing: "0.05em" }}>
-                Use <code style={{ color: "hsl(270 55% 65%)" }}>{"{contact_name}"}</code>, <code style={{ color: "hsl(270 55% 65%)" }}>{"{caller_name}"}</code> as placeholders
-              </p>
-              <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {/* Title */}
+              <div>
+                <label style={{ display: "block", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "hsl(270 35% 48%)", marginBottom: 6 }}>
+                  Step Title <span style={{ color: "hsl(270 20% 36%)", fontWeight: "normal" }}>(shown in progress bar)</span>
+                </label>
+                <input
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  autoFocus
+                  style={{
+                    width: "100%", padding: "9px 12px", borderRadius: 8,
+                    border: "1px solid hsl(270 40% 30%)", background: "hsl(270 10% 4%)",
+                    color: "hsl(270 65% 80%)", fontFamily: "Georgia, serif", fontSize: 13,
+                    outline: "none", boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              {/* Script text */}
+              <div>
+                <label style={{ display: "block", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "hsl(270 35% 48%)", marginBottom: 6 }}>
+                  Script Text
+                </label>
+                <textarea
+                  value={editText}
+                  onChange={e => setEditText(e.target.value)}
+                  style={{
+                    width: "100%", minHeight: 140, padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid hsl(270 35% 26%)", background: "hsl(270 10% 4%)",
+                    color: "hsl(270 30% 84%)", fontFamily: "Georgia, serif", fontSize: 13,
+                    lineHeight: 1.7, resize: "vertical", outline: "none", boxSizing: "border-box",
+                  }}
+                />
+                <p style={{ color: "hsl(270 20% 36%)", fontFamily: "Georgia, serif", fontSize: 10, margin: "4px 0 0", letterSpacing: "0.04em" }}>
+                  Use <code style={{ color: "hsl(270 55% 62%)" }}>{"{contact_name}"}</code> · <code style={{ color: "hsl(270 55% 62%)" }}>{"{caller_name}"}</code>
+                </p>
+              </div>
+
+              {/* Response labels */}
+              {editResponses.length > 0 && (
+                <div>
+                  <label style={{ display: "block", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "hsl(270 35% 48%)", marginBottom: 8 }}>
+                    Response Buttons
+                  </label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {editResponses.map((r, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ color: "hsl(270 20% 38%)", fontFamily: "Georgia, serif", fontSize: 10, flexShrink: 0, width: 16, textAlign: "right" }}>{i + 1}.</span>
+                        <input
+                          value={r.label}
+                          onChange={e => setEditResponses(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                          style={{
+                            flex: 1, padding: "8px 12px", borderRadius: 7,
+                            border: "1px solid hsl(270 25% 22%)", background: "hsl(270 10% 4%)",
+                            color: "hsl(270 40% 78%)", fontFamily: "Georgia, serif", fontSize: 12,
+                            outline: "none", boxSizing: "border-box",
+                          }}
+                          placeholder={`Button ${i + 1} label…`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Save / Cancel */}
+              <div style={{ display: "flex", gap: 8, paddingTop: 4 }}>
                 <button
                   onClick={saveEdit}
                   disabled={saving}
                   style={{
-                    flex: 1, padding: "10px 0", borderRadius: 8,
+                    flex: 1, padding: "11px 0", borderRadius: 8,
                     background: "linear-gradient(135deg, hsl(270 60% 42%), hsl(270 55% 30%))",
                     border: "1px solid hsl(270 55% 46%)",
                     color: "hsl(270 20% 95%)", fontFamily: "Georgia, serif", fontSize: 11,
                     letterSpacing: "0.18em", textTransform: "uppercase", cursor: saving ? "not-allowed" : "pointer",
                   }}
                 >
-                  {saving ? "Saving…" : "Save"}
+                  {saving ? "Saving…" : "Save Changes"}
                 </button>
                 <button
                   onClick={() => setEditingId(null)}
                   style={{
-                    padding: "10px 18px", borderRadius: 8,
+                    padding: "11px 18px", borderRadius: 8,
                     background: "transparent", border: "1px solid hsl(270 20% 18%)",
                     color: "hsl(270 25% 44%)", fontFamily: "Georgia, serif", fontSize: 11,
                     letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer",

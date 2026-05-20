@@ -248,7 +248,6 @@ export default function PXPPage() {
                       value={selectedCallerId === "manual" ? "manual" : (selectedCallerId ?? "")}
                       onChange={e => {
                         const v = e.target.value;
-                        setBiometricError("");
                         if (v === "manual") setSelectedCallerId("manual");
                         else if (v === "") setSelectedCallerId(null);
                         else setSelectedCallerId(parseInt(v));
@@ -434,10 +433,10 @@ export default function PXPPage() {
             Call History
           </button>
           <button
-            onClick={() => navigate("/admin/pxp/script")}
+            onClick={() => navigate("/admin/pxp/simulation")}
             style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "hsl(270 12% 7%)", color: "hsl(270 35% 58%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", border: "1px solid hsl(270 20% 16%)", cursor: "pointer" }}
           >
-            Edit Script
+            Run Simulation
           </button>
         </div>
       </div>

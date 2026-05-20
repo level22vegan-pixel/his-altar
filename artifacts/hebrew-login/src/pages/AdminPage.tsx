@@ -236,12 +236,12 @@ export default function AdminPage() {
               <div style={{ display: "flex", borderTop: "1px solid hsl(270 20% 14%)" }}>
                 {(!isCampusUser || isLead) && (
                   <button
-                    onClick={() => navigate("/admin/pxp/script")}
+                    onClick={() => navigate("/admin/pxp/simulation")}
                     style={{ flex: 1, padding: "7px 10px", background: "hsl(270 10% 5%)", border: "none", borderRight: "1px solid hsl(270 20% 14%)", color: "hsl(270 45% 58%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer" }}
                     onMouseOver={e => { e.currentTarget.style.background = "hsl(270 40% 12%)"; e.currentTarget.style.color = "hsl(270 65% 72%)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = "hsl(270 10% 5%)"; e.currentTarget.style.color = "hsl(270 45% 58%)"; }}
                   >
-                    Script
+                    Run Simulation
                   </button>
                 )}
                 <button

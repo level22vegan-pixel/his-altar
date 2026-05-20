@@ -19,7 +19,7 @@ import DbancFieldsPage from "@/pages/DbancFieldsPage";
 import PXPPage from "@/pages/PXPPage";
 import PXPCallPage from "@/pages/PXPCallPage";
 import PXPLogsPage from "@/pages/PXPLogsPage";
-import PXPScriptPage from "@/pages/PXPScriptPage";
+import PXPSimulationPage from "@/pages/PXPSimulationPage";
 import PXPCallersPage from "@/pages/PXPCallersPage";
 import PXPContactProfilePage from "@/pages/PXPContactProfilePage";
 import CallerLoginPage from "@/pages/CallerLoginPage";
@@ -147,7 +147,8 @@ function Router() {
         <Route path="/admin/pxp" component={PXPPage} />
         <Route path="/admin/pxp/call" component={PXPCallPage} />
         <Route path="/admin/pxp/logs" component={PXPLogsPage} />
-        <Route path="/admin/pxp/script" component={PXPScriptPage} />
+        <Route path="/admin/pxp/simulation" component={PXPSimulationPage} />
+        <Route path="/admin/pxp/script">{() => { window.location.replace("/admin/pxp/simulation"); return null; }}</Route>
         <Route path="/admin/pxp/callers" component={PXPCallersPage} />
         <Route path="/org/setup" component={OrgSetupPage} />
         <Route path="/admin/pxp/contacts/:id" component={PXPContactProfilePage} />

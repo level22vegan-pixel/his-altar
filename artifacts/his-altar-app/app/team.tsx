@@ -6,20 +6,23 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 const TILES = [
   {
     id: "altar",
     emoji: "🙏",
+    label: "Altar",
     gradient: ["#091828", "#0d2240", "#091828"] as const,
     border: "rgba(56,130,200,0.4)",
     shadow: "rgba(56,130,200,0.35)",
-    route: "/home",
+    route: "/admin/dbanc/new",
   },
   {
     id: "checkin",
     emoji: "✅",
     extraLabel: "-in",
+    label: "Check-in",
     gradient: ["#92651a", "#b8860b", "#7a4f10"] as const,
     border: "rgba(184,134,11,0.4)",
     shadow: "rgba(184,134,11,0.35)",
@@ -28,6 +31,7 @@ const TILES = [
   {
     id: "calls",
     emoji: "📞",
+    label: "Calls",
     gradient: ["#4c1d95", "#7c3aed", "#6d28d9"] as const,
     border: "rgba(124,58,237,0.5)",
     shadow: "rgba(124,58,237,0.4)",
@@ -36,6 +40,7 @@ const TILES = [
   {
     id: "admin",
     emoji: "⚙",
+    label: "Admin",
     gradient: ["#111827", "#1f2937", "#111827"] as const,
     border: "rgba(100,120,160,0.3)",
     shadow: "rgba(100,120,160,0.2)",
@@ -46,13 +51,13 @@ const TILES = [
 export default function TeamScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { orgSession, campusSession, logout } = useAppContext();
+  const { orgSession, campusSession } = useAppContext();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 0 : insets.bottom;
 
-  function handleTile(tile: typeof TILES[number]) {
+  function handleTile(route: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push(tile.route as any);
+    router.push(route as any);
   }
 
   return (
@@ -67,19 +72,26 @@ export default function TeamScreen() {
           <Pressable onPress={() => router.replace("/")} style={styles.backBtn}>
             <Text style={styles.backText}>← Back</Text>
           </Pressable>
-          {(orgSession || campusSession) && (
-            <Pressable onPress={async () => { await logout(); router.replace("/"); }}>
-              <Text style={[styles.backText, { color: colors.lavenderDim }]}>Sign Out</Text>
-            </Pressable>
-          )}
+
+          <View style={styles.headerRight}>
+            {/* Hamburger only shows for admin/org sessions */}
+            <HamburgerMenu />
+          </View>
         </View>
+
+        {/* Welcome label */}
+        {(orgSession || campusSession) && (
+          <Text style={styles.welcomeText}>
+            {orgSession ? orgSession.orgName : campusSession?.campus ? campusSession.campus.toUpperCase() : "WELCOME"}
+          </Text>
+        )}
 
         {/* Tiles */}
         <View style={styles.tiles}>
           {TILES.map((tile) => (
             <Pressable
               key={tile.id}
-              onPress={() => handleTile(tile)}
+              onPress={() => handleTile(tile.route)}
               style={({ pressed }) => [styles.tileWrap, { opacity: pressed ? 0.88 : 1 }]}
             >
               <LinearGradient
@@ -114,11 +126,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(255,255,255,0.06)",
   },
   backBtn: {},
   backText: { color: "rgba(255,255,255,0.35)", fontFamily: "Georgia", fontSize: 11, letterSpacing: 2 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  welcomeText: {
+    fontFamily: "Georgia", fontSize: 10, letterSpacing: 4,
+    color: "rgba(255,255,255,0.2)", textAlign: "center",
+    paddingVertical: 8,
+  },
   tiles: { flex: 1, padding: 16, gap: 12 },
   tileWrap: { flex: 1 },
   tile: {

@@ -134,7 +134,7 @@ router.delete("/login-codes/:id", async (req, res) => {
       res.status(400).json({ message: "Invalid id" });
       return;
     }
-    const { adminPassword } = req.body as { adminPassword?: string };
+    const adminPassword = (req.body as { adminPassword?: string } | undefined)?.adminPassword;
     if (!req.orgId && adminPassword !== ADMIN_PASSWORD) {
       res.status(403).json({ message: "Invalid admin password" });
       return;

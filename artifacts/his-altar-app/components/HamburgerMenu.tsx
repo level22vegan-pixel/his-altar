@@ -37,14 +37,10 @@ export default function HamburgerMenu() {
     router.replace("/");
   }
 
-  const isOrgAdmin = !!orgSession;
-
   const menuItems: MenuItem[] = [
     { icon: "👤", label: "Profile",                route: "/admin/profile" },
-    ...(isOrgAdmin ? [
-      { icon: "🔑", label: "Access Codes",           route: "/admin/access-codes" },
-      { icon: "💳", label: "Billing & Subscription", route: "/org/billing" },
-    ] : []),
+    { icon: "🔑", label: "Access Codes",           route: "/admin/access-codes" },
+    { icon: "💳", label: "Billing & Subscription", route: "/org/billing" },
     { icon: "✉️", label: "Contact Support",        action: () => { setOpen(false); Linking.openURL("mailto:support@hisaltar.com"); } },
     { icon: "↩",  label: "Sign Out",               action: signOut, danger: true },
   ];

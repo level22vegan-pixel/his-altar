@@ -26,16 +26,30 @@ const DOMAIN = process.env.EXPO_PUBLIC_DOMAIN;
 const BASE = DOMAIN ? `https://${DOMAIN}` : "";
 
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const str = await AsyncStorage.getItem("orgSession");
-  const token: string | null = str ? (JSON.parse(str).token ?? null) : null;
+  const orgStr = await AsyncStorage.getItem("orgSession");
+  const token: string | null = orgStr ? (JSON.parse(orgStr).token ?? null) : null;
+  const campusStr = await AsyncStorage.getItem("campusSession");
+  const adminCode: string | null = campusStr ? (JSON.parse(campusStr).adminCode ?? null) : null;
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-  const res = await fetch(`${BASE}${path}`, { ...init, headers: { ...headers, ...(init.headers as Record<string, string> ?? {}) } });
+
+  // For mutating requests without an org token, inject the admin code as adminPassword
+  let body = init.body;
+  const method = (init.method ?? "GET").toUpperCase();
+  if (!token && adminCode && (method === "POST" || method === "DELETE" || method === "PUT")) {
+    try {
+      const parsed = body ? JSON.parse(body as string) : {};
+      body = JSON.stringify({ ...parsed, adminPassword: adminCode });
+    } catch {}
+  }
+
+  const res = await fetch(`${BASE}${path}`, { ...init, body, headers: { ...headers, ...((init.headers as Record<string, string>) ?? {}) } });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as any).message ?? `HTTP ${res.status}`);
+    const bodyRes = await res.json().catch(() => ({}));
+    throw new Error((bodyRes as any).message ?? `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }

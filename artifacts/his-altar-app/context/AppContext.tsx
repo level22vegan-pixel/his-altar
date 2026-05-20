@@ -17,6 +17,7 @@ export interface CallerSession {
 export interface CampusSession {
   campus: string;
   role: string;
+  adminCode?: string;
 }
 
 interface AppContextValue {
@@ -32,7 +33,7 @@ interface AppContextValue {
   logout: () => Promise<void>;
   loginCaller: (callerId: number, callerName: string, campus: string) => void;
   logoutCaller: () => Promise<void>;
-  loginCampus: (campus: string, role: string) => void;
+  loginCampus: (campus: string, role: string, adminCode?: string) => void;
   logoutCampus: () => Promise<void>;
   selectCampusService: (campus: string, service: string, date: string) => void;
 }
@@ -134,8 +135,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.removeItem("callerSession");
   }, []);
 
-  const loginCampus = useCallback((campus: string, role: string) => {
-    const session: CampusSession = { campus, role };
+  const loginCampus = useCallback((campus: string, role: string, adminCode?: string) => {
+    const session: CampusSession = { campus, role, ...(adminCode ? { adminCode } : {}) };
     setCampusSessionState(session);
     AsyncStorage.setItem("campusSession", JSON.stringify(session));
   }, []);

@@ -71,7 +71,7 @@ export default function PinScreen() {
       const adminData = await adminRes.json().catch(() => ({}));
       if (adminData.valid) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        loginCampus("ADMIN", "admin");
+        loginCampus("ADMIN", "admin", code);
         router.replace("/team");
         return;
       }

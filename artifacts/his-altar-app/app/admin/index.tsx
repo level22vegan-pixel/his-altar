@@ -11,6 +11,7 @@ const MENU = [
   { icon: "flame-outline", label: "Altar Report", desc: "Log service responses", route: "/admin/altar-report" },
   { icon: "people-outline", label: "Roster Manager", desc: "Add or remove workers", route: "/admin/roster" },
   { icon: "book-outline", label: "Dbanc", desc: "Prayer contact database", route: "/admin/dbanc" },
+  { icon: "list-outline", label: "Contact Form Fields", desc: "Add or remove custom fields", route: "/admin/dbanc/fields" },
   { icon: "call-outline", label: "PXP Follow-Up", desc: "Call system & logs", route: "/admin/pxp" },
 ] as const;
 

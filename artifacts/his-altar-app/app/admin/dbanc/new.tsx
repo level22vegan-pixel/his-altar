@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { useCreateDbancContact, useListWorkers } from "@workspace/api-client-react";
+import { useCreateDbancContact, useListDbancCustomFields, useListWorkers } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
@@ -55,8 +55,12 @@ export default function NewContactScreen() {
   const [manualPrayer, setManualPrayer] = useState("");
   const [showManual, setShowManual] = useState(false);
 
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+
   const workersQ = useListWorkers({ category: "master" });
   const workers = workersQ.data?.workers ?? [];
+  const customFieldsQ = useListDbancCustomFields();
+  const customFields = customFieldsQ.data?.fields ?? [];
 
   const create = useCreateDbancContact();
 
@@ -75,7 +79,7 @@ export default function NewContactScreen() {
           campus: "",
           serviceTime,
           notes: notes.trim(),
-          customData: (finalPrayedBy || prayerType) ? { ...(prayerType ? { prayerType } : {}), ...(finalPrayedBy ? { prayedBy: finalPrayedBy } : {}) } : undefined,
+          customData: { ...(prayerType ? { prayerType } : {}), ...(finalPrayedBy ? { prayedBy: finalPrayedBy } : {}), ...customValues },
         },
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -142,6 +146,32 @@ export default function NewContactScreen() {
           numberOfLines={4}
           style={[styles.notes, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
         />
+
+        {/* ── Admin-defined custom fields ── */}
+        {customFields.map(field => {
+          const val = customValues[field.label] ?? "";
+          const setVal = (v: string) => setCustomValues(prev => ({ ...prev, [field.label]: v }));
+          if (field.fieldType === "boolean") {
+            return (
+              <View key={field.id}>
+                <SectionLabel>{field.label}</SectionLabel>
+                <Chips items={["Yes", "No"]} value={val} onChange={setVal} />
+              </View>
+            );
+          }
+          if (field.fieldType === "select") {
+            const opts = (field.options ?? []) as string[];
+            return (
+              <View key={field.id}>
+                <SectionLabel>{field.label}</SectionLabel>
+                <Chips items={opts} value={val} onChange={setVal} />
+              </View>
+            );
+          }
+          return (
+            <DarkInput key={field.id} label={field.label} value={val} onChangeText={setVal} />
+          );
+        })}
 
         {/* ── Who Prayed ── */}
         <View style={[styles.prayedCard, { backgroundColor: "rgba(124,58,237,0.07)", borderColor: "rgba(124,58,237,0.25)" }]}>

@@ -275,14 +275,33 @@ export default function PXPCallersPage() {
                     {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 )}
-                <input
-                  style={inputStyle}
-                  placeholder="Assign a code (e.g. 4-digit number) *"
-                  value={newCallerCode}
-                  onChange={e => setNewCallerCode(e.target.value)}
-                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    style={{ ...inputStyle, flex: 1 }}
+                    placeholder="Assign a code *"
+                    value={newCallerCode}
+                    onChange={e => setNewCallerCode(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+                      let code = "";
+                      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+                      setNewCallerCode(code);
+                    }}
+                    style={{
+                      flexShrink: 0, padding: "0 12px", borderRadius: 8,
+                      background: "hsl(270 20% 10%)", border: "1px solid hsl(270 25% 22%)",
+                      color: "hsl(270 40% 60%)", fontFamily: "Georgia, serif", fontSize: 10,
+                      letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer",
+                    }}
+                  >
+                    Auto
+                  </button>
+                </div>
                 <p style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", margin: 0 }}>
-                  The caller will use this code to sign in. They can set up Face ID after their first login.
+                  Type a code or tap Auto to generate one. The caller uses this to sign in and can set up Face ID after their first login.
                 </p>
                 {addError && (
                   <p style={{ color: "hsl(0 55% 58%)", fontFamily: "Georgia, serif", fontSize: 11, margin: 0 }}>{addError}</p>

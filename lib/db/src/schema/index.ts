@@ -39,3 +39,4 @@ export * from "./systemConfig";
 export * from "./couponCodes";
 export * from "./saAuditLog";
 export * from "./webauthnCredentials";
+export * from "./callerWebauthnCredentials";

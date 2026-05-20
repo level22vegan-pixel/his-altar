@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   useListPxpCallers,
@@ -6,7 +6,8 @@ import {
   useDeletePxpCaller,
   useResetPxpCallerPassword,
 } from "@workspace/api-client-react";
-import { getValidCampusSession, getValidAdminSession, getValidOrgSession } from "@/lib/session";
+import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
+import { getValidCampusSession, getValidAdminSession, getValidOrgSession, getOrgToken } from "@/lib/session";
 import { getOrgCampuses } from "@/lib/useOrgConfig";
 
 const inputStyle = {
@@ -22,12 +23,26 @@ const inputStyle = {
   boxSizing: "border-box" as const,
 };
 
+function apiFetch(path: string, opts?: RequestInit) {
+  const token = getOrgToken();
+  return fetch(`/api${path}`, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opts?.headers ?? {}),
+    },
+  });
+}
+
 export default function PXPCallersPage() {
   const [, navigate] = useLocation();
   const CAMPUSES = getOrgCampuses();
+  const webAuthnSupported = browserSupportsWebAuthn();
 
   const campusSession = getValidCampusSession();
   const isMasterAdmin = getValidAdminSession();
+  const orgSession = getValidOrgSession();
   const lockedCampus  = campusSession?.campus ?? null;
 
   const [filterCampus, setFilterCampus] = useState(() => lockedCampus ?? CAMPUSES[0] ?? "HALLMARK");
@@ -38,6 +53,11 @@ export default function PXPCallersPage() {
   const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
+  // Face ID state
+  const [biometricCallerIds, setBiometricCallerIds] = useState<Set<number>>(new Set());
+  const [faceIdLoading, setFaceIdLoading] = useState<number | null>(null);
+  const [faceIdMsg, setFaceIdMsg] = useState<{ id: number; ok: boolean; text: string } | null>(null);
+
   const { data, isLoading, refetch } = useListPxpCallers(
     filterCampus ? { campus: filterCampus } : undefined
   );
@@ -46,6 +66,16 @@ export default function PXPCallersPage() {
   const resetPassword = useResetPxpCallerPassword();
 
   const callers = data?.callers ?? [];
+  const isAdmin = !!(isMasterAdmin || orgSession);
+
+  useEffect(() => {
+    fetch("/api/pxp/callers/webauthn/status", {
+      headers: getOrgToken() ? { Authorization: `Bearer ${getOrgToken()}` } : {},
+    })
+      .then(r => r.json())
+      .then(d => setBiometricCallerIds(new Set(d.callerIds ?? [])))
+      .catch(() => {});
+  }, []);
 
   function handleAdd() {
     if (!name.trim() || !campus) return;
@@ -86,6 +116,66 @@ export default function PXPCallersPage() {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 1800);
     });
+  }
+
+  async function handleSetupFaceId(callerId: number, callerName: string) {
+    setFaceIdLoading(callerId);
+    setFaceIdMsg(null);
+    try {
+      const optRes = await apiFetch("/pxp/callers/webauthn/register-options", {
+        method: "POST",
+        body: JSON.stringify({ callerId }),
+      });
+      if (!optRes.ok) {
+        const d = await optRes.json();
+        setFaceIdMsg({ id: callerId, ok: false, text: d.error ?? "Could not start Face ID setup." });
+        return;
+      }
+      const { callerId: _cid, ...options } = await optRes.json();
+
+      let credential;
+      try {
+        credential = await startRegistration({ optionsJSON: options });
+      } catch (err: any) {
+        if (err.name === "NotAllowedError") {
+          setFaceIdMsg({ id: callerId, ok: false, text: "Face ID was cancelled." });
+        } else {
+          setFaceIdMsg({ id: callerId, ok: false, text: "Face ID setup failed. Try again." });
+        }
+        return;
+      }
+
+      const verRes = await apiFetch("/pxp/callers/webauthn/register", {
+        method: "POST",
+        body: JSON.stringify({ callerId, credential }),
+      });
+      if (!verRes.ok) {
+        setFaceIdMsg({ id: callerId, ok: false, text: "Registration failed. Try again." });
+        return;
+      }
+
+      setBiometricCallerIds(prev => new Set(prev).add(callerId));
+      setFaceIdMsg({ id: callerId, ok: true, text: `Face ID enabled for ${callerName}.` });
+      setTimeout(() => setFaceIdMsg(null), 3000);
+    } catch {
+      setFaceIdMsg({ id: callerId, ok: false, text: "Something went wrong." });
+    } finally {
+      setFaceIdLoading(null);
+    }
+  }
+
+  async function handleRemoveFaceId(callerId: number) {
+    if (!confirm("Remove Face ID for this caller?")) return;
+    try {
+      await apiFetch(`/pxp/callers/webauthn/${callerId}`, { method: "DELETE" });
+      setBiometricCallerIds(prev => {
+        const next = new Set(prev);
+        next.delete(callerId);
+        return next;
+      });
+    } catch {
+      alert("Failed to remove Face ID. Try again.");
+    }
   }
 
   return (
@@ -152,46 +242,48 @@ export default function PXPCallersPage() {
           </div>
         )}
 
-        <div style={{ background: "hsl(270 12% 7%)", border: "1px solid hsl(270 25% 18%)", borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
-          <button
-            onClick={() => setAdding(v => !v)}
-            style={{ width: "100%", padding: "12px 18px", background: "none", border: "none", color: "hsl(270 65% 72%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer", textAlign: "left" }}
-          >
-            {adding ? "▲  Cancel" : "+ Add Caller"}
-          </button>
-          {adding && (
-            <div style={{ padding: "0 18px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
-              <input style={inputStyle} placeholder="Full name *" value={name} onChange={e => setName(e.target.value)} />
-              <input style={inputStyle} placeholder="Phone (optional)" value={phone} onChange={e => setPhone(e.target.value)} />
-              {lockedCampus ? (
-                <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
-                  <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
-                  <span style={{ color: "hsl(270 20% 44%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
-                </div>
-              ) : (
-                <select style={{ ...inputStyle, appearance: "none" as const }} value={campus} onChange={e => setCampus(e.target.value)}>
-                  {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              )}
-              <p style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", margin: 0 }}>
-                A password will be auto-generated and shown after saving.
-              </p>
-              <button
-                onClick={handleAdd}
-                disabled={!name.trim() || createCaller.isPending}
-                style={{
-                  padding: "10px 0", borderRadius: 8,
-                  background: name.trim() ? "linear-gradient(135deg, hsl(270 60% 42%), hsl(270 55% 30%))" : "hsl(270 12% 7%)",
-                  color: name.trim() ? "hsl(270 20% 95%)" : "hsl(270 20% 34%)",
-                  border: "none", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase",
-                  cursor: name.trim() ? "pointer" : "not-allowed",
-                }}
-              >
-                {createCaller.isPending ? "Saving…" : "Save Caller"}
-              </button>
-            </div>
-          )}
-        </div>
+        {isAdmin && (
+          <div style={{ background: "hsl(270 12% 7%)", border: "1px solid hsl(270 25% 18%)", borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
+            <button
+              onClick={() => setAdding(v => !v)}
+              style={{ width: "100%", padding: "12px 18px", background: "none", border: "none", color: "hsl(270 65% 72%)", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer", textAlign: "left" }}
+            >
+              {adding ? "▲  Cancel" : "+ Add Caller"}
+            </button>
+            {adding && (
+              <div style={{ padding: "0 18px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
+                <input style={inputStyle} placeholder="Full name *" value={name} onChange={e => setName(e.target.value)} />
+                <input style={inputStyle} placeholder="Phone (optional)" value={phone} onChange={e => setPhone(e.target.value)} />
+                {lockedCampus ? (
+                  <div style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", opacity: 0.75 }}>
+                    <span style={{ color: "hsl(270 60% 72%)" }}>{lockedCampus}</span>
+                    <span style={{ color: "hsl(270 20% 44%)", fontSize: 10, letterSpacing: "0.1em" }}>CAMPUS LOCKED</span>
+                  </div>
+                ) : (
+                  <select style={{ ...inputStyle, appearance: "none" as const }} value={campus} onChange={e => setCampus(e.target.value)}>
+                    {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                )}
+                <p style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", margin: 0 }}>
+                  A password will be auto-generated and shown after saving.
+                </p>
+                <button
+                  onClick={handleAdd}
+                  disabled={!name.trim() || createCaller.isPending}
+                  style={{
+                    padding: "10px 0", borderRadius: 8,
+                    background: name.trim() ? "linear-gradient(135deg, hsl(270 60% 42%), hsl(270 55% 30%))" : "hsl(270 12% 7%)",
+                    color: name.trim() ? "hsl(270 20% 95%)" : "hsl(270 20% 34%)",
+                    border: "none", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase",
+                    cursor: name.trim() ? "pointer" : "not-allowed",
+                  }}
+                >
+                  {createCaller.isPending ? "Saving…" : "Save Caller"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ borderRadius: 10, border: "1px solid hsl(270 20% 12%)", background: "hsl(270 12% 5% / 0.8)", overflow: "hidden" }}>
           {isLoading ? (
@@ -204,6 +296,10 @@ export default function PXPCallersPage() {
             callers.map((c, i) => {
               const isRevealed = revealedIds.has(c.id);
               const isCopied   = copiedId === c.id;
+              const hasFaceId  = biometricCallerIds.has(c.id);
+              const isSettingUp = faceIdLoading === c.id;
+              const msg = faceIdMsg?.id === c.id ? faceIdMsg : null;
+
               return (
                 <div key={c.id} style={{ padding: "14px 18px", borderBottom: i < callers.length - 1 ? "1px solid hsl(270 15% 9%)" : "none", background: i % 2 === 0 ? "transparent" : "hsl(270 10% 5% / 0.5)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
@@ -216,41 +312,79 @@ export default function PXPCallersPage() {
                       {c.name.trim()[0]?.toUpperCase()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: "hsl(270 30% 85%)", fontFamily: "Georgia, serif", fontSize: 14, fontWeight: "bold" }}>{c.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ color: "hsl(270 30% 85%)", fontFamily: "Georgia, serif", fontSize: 14, fontWeight: "bold" }}>{c.name}</span>
+                        {hasFaceId && (
+                          <span style={{ background: "hsl(145 40% 10%)", border: "1px solid hsl(145 40% 20%)", color: "hsl(145 55% 55%)", borderRadius: 4, padding: "1px 7px", fontFamily: "Georgia, serif", fontSize: 9, letterSpacing: "0.12em" }}>
+                            Face ID ✓
+                          </span>
+                        )}
+                      </div>
                       <div style={{ color: "hsl(270 20% 48%)", fontFamily: "Georgia, serif", fontSize: 11, marginTop: 1 }}>
                         {c.campus}{c.phone ? ` · ${c.phone}` : ""}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDelete(c.id, c.name)}
-                      style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 45% 12%)", border: "1px solid hsl(0 38% 22%)", color: "hsl(0 60% 58%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer", flexShrink: 0 }}
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "hsl(270 10% 4%)", border: "1px solid hsl(270 20% 14%)", borderRadius: 8, padding: "8px 12px" }}>
-                    <span style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", flexShrink: 0 }}>Pass</span>
-                    <span style={{
-                      flex: 1, fontFamily: "monospace", fontSize: 14,
-                      letterSpacing: isRevealed ? "0.25em" : "0.1em",
-                      color: isRevealed ? "hsl(270 65% 78%)" : "hsl(270 20% 28%)",
-                      userSelect: isRevealed ? "text" : "none",
-                    }}>
-                      {isRevealed ? c.password : "••••••"}
-                    </span>
-                    <button onClick={() => toggleReveal(c.id)} style={{ padding: "3px 8px", borderRadius: 5, background: "hsl(270 12% 8%)", border: "1px solid hsl(270 20% 18%)", color: "hsl(270 35% 55%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
-                      {isRevealed ? "Hide" : "Show"}
-                    </button>
-                    {isRevealed && (
-                      <button onClick={() => copyPassword(c.id, c.password)} style={{ padding: "3px 8px", borderRadius: 5, background: isCopied ? "hsl(145 40% 12%)" : "hsl(270 12% 8%)", border: `1px solid ${isCopied ? "hsl(145 40% 22%)" : "hsl(270 20% 18%)"}`, color: isCopied ? "hsl(145 55% 58%)" : "hsl(270 35% 55%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
-                        {isCopied ? "Copied!" : "Copy"}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDelete(c.id, c.name)}
+                        style={{ padding: "5px 10px", borderRadius: 6, background: "hsl(0 45% 12%)", border: "1px solid hsl(0 38% 22%)", color: "hsl(0 60% 58%)", fontFamily: "Georgia, serif", fontSize: 11, cursor: "pointer", flexShrink: 0 }}
+                      >
+                        ✕
                       </button>
                     )}
-                    <button onClick={() => handleResetPassword(c.id)} style={{ padding: "3px 8px", borderRadius: 5, background: "hsl(35 25% 9%)", border: "1px solid hsl(35 24% 17%)", color: "hsl(38 52% 50%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
-                      Reset
-                    </button>
                   </div>
+
+                  {isAdmin && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, background: "hsl(270 10% 4%)", border: "1px solid hsl(270 20% 14%)", borderRadius: 8, padding: "8px 12px", marginBottom: 8 }}>
+                      <span style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", flexShrink: 0 }}>Pass</span>
+                      <span style={{
+                        flex: 1, fontFamily: "monospace", fontSize: 14,
+                        letterSpacing: isRevealed ? "0.25em" : "0.1em",
+                        color: isRevealed ? "hsl(270 65% 78%)" : "hsl(270 20% 28%)",
+                        userSelect: isRevealed ? "text" : "none",
+                      }}>
+                        {isRevealed ? c.password : "••••••"}
+                      </span>
+                      <button onClick={() => toggleReveal(c.id)} style={{ padding: "3px 8px", borderRadius: 5, background: "hsl(270 12% 8%)", border: "1px solid hsl(270 20% 18%)", color: "hsl(270 35% 55%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+                        {isRevealed ? "Hide" : "Show"}
+                      </button>
+                      {isRevealed && (
+                        <button onClick={() => copyPassword(c.id, c.password)} style={{ padding: "3px 8px", borderRadius: 5, background: isCopied ? "hsl(145 40% 12%)" : "hsl(270 12% 8%)", border: `1px solid ${isCopied ? "hsl(145 40% 22%)" : "hsl(270 20% 18%)"}`, color: isCopied ? "hsl(145 55% 58%)" : "hsl(270 35% 55%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+                          {isCopied ? "Copied!" : "Copy"}
+                        </button>
+                      )}
+                      <button onClick={() => handleResetPassword(c.id)} style={{ padding: "3px 8px", borderRadius: 5, background: "hsl(35 25% 9%)", border: "1px solid hsl(35 24% 17%)", color: "hsl(38 52% 50%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+                        Reset
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Face ID row */}
+                  {webAuthnSupported && isAdmin && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {hasFaceId ? (
+                        <button
+                          onClick={() => handleRemoveFaceId(c.id)}
+                          style={{ padding: "5px 12px", borderRadius: 6, background: "hsl(145 25% 8%)", border: "1px solid hsl(145 30% 16%)", color: "hsl(145 40% 42%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}
+                        >
+                          Remove Face ID
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleSetupFaceId(c.id, c.name)}
+                          disabled={isSettingUp}
+                          style={{ padding: "5px 12px", borderRadius: 6, background: isSettingUp ? "hsl(270 12% 7%)" : "hsl(270 35% 14%)", border: "1px solid hsl(270 35% 22%)", color: isSettingUp ? "hsl(270 20% 38%)" : "hsl(270 60% 68%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", cursor: isSettingUp ? "not-allowed" : "pointer" }}
+                        >
+                          {isSettingUp ? "Scanning…" : "Setup Face ID"}
+                        </button>
+                      )}
+                      {msg && (
+                        <span style={{ fontFamily: "Georgia, serif", fontSize: 11, color: msg.ok ? "hsl(145 55% 52%)" : "hsl(0 55% 58%)" }}>
+                          {msg.text}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })

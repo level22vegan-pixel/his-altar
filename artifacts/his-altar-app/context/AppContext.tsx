@@ -63,7 +63,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const callerStr = await AsyncStorage.getItem("callerSession");
         if (callerStr) setCallerSession(JSON.parse(callerStr));
         const campusStr = await AsyncStorage.getItem("campusSession");
-        if (campusStr) setCampusSessionState(JSON.parse(campusStr));
+        if (campusStr) {
+          setCampusSessionState(JSON.parse(campusStr));
+        } else if (orgStr) {
+          // Org admin always gets campus admin session, even on fresh app load
+          const adminCampus: CampusSession = { campus: "main", role: "admin" };
+          setCampusSessionState(adminCampus);
+          await AsyncStorage.setItem("campusSession", JSON.stringify(adminCampus));
+        }
       } catch {}
       setIsLoading(false);
     })();
@@ -83,6 +90,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const session: OrgSession = { orgId: data.orgId, orgName: data.orgName, token: data.token };
     setOrgSession(session);
     await AsyncStorage.setItem("orgSession", JSON.stringify(session));
+    // Org admin automatically gets full campus admin access
+    const adminCampus: CampusSession = { campus: "main", role: "admin" };
+    setCampusSessionState(adminCampus);
+    await AsyncStorage.setItem("campusSession", JSON.stringify(adminCampus));
   }, []);
 
   const signupOrg = useCallback(async (orgName: string, contactName: string, email: string, password: string) => {
@@ -99,6 +110,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const session: OrgSession = { orgId: data.orgId, orgName: data.orgName, token: data.token };
     setOrgSession(session);
     await AsyncStorage.setItem("orgSession", JSON.stringify(session));
+    // Org admin automatically gets full campus admin access
+    const adminCampus: CampusSession = { campus: "main", role: "admin" };
+    setCampusSessionState(adminCampus);
+    await AsyncStorage.setItem("campusSession", JSON.stringify(adminCampus));
   }, []);
 
   const logout = useCallback(async () => {

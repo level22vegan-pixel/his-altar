@@ -10,7 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useState, useMemo } from "react";
 import {
   ActivityIndicator, Dimensions, FlatList, Image, Modal, Platform,
-  Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
@@ -172,6 +172,7 @@ export default function CheckInScreen() {
   const [tab, setTab] = useState<Tab>("Roster");
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [settingActive, setSettingActive] = useState(false);
+  const [search, setSearch] = useState("");
 
   const campus = "main";
   const service = selectedService ?? "";
@@ -234,10 +235,16 @@ export default function CheckInScreen() {
   }
 
   const displayWorkers = useMemo(() => {
-    if (tab === "Active") return [...masterWorkers, ...altWorkers].filter(w => checkedInIds.has(w.id));
-    if (tab === "Alt") return altWorkers;
-    return masterWorkers;
-  }, [tab, masterWorkers, altWorkers, checkedInIds]);
+    let list: Worker[];
+    if (tab === "Active") list = [...masterWorkers, ...altWorkers].filter(w => checkedInIds.has(w.id));
+    else if (tab === "Alt") list = altWorkers;
+    else list = masterWorkers;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(w => w.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [tab, masterWorkers, altWorkers, checkedInIds, search]);
 
   const allRosterWorkers = [...masterWorkers, ...altWorkers];
   const isLoading = (tab === "Alt" ? altQ : masterQ).isLoading || checkInsQ.isLoading;
@@ -294,6 +301,20 @@ export default function CheckInScreen() {
               : <Ionicons name="flash-outline" size={15} color="#4ade80" />}
             <Text style={[styles.actionBtnText, { color: "#4ade80" }]}>Set Active</Text>
           </Pressable>
+        </View>
+
+        {/* Search bar */}
+        <View style={styles.searchWrap}>
+          <Ionicons name="search-outline" size={15} color="rgba(255,255,255,0.3)" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search workers…"
+            placeholderTextColor="rgba(255,255,255,0.2)"
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
         </View>
 
         {/* Grid */}
@@ -365,6 +386,10 @@ const styles = StyleSheet.create({
   checkBadge: { position: "absolute", top: 10, right: 10 },
   cardName: { fontFamily: "Georgia", fontSize: 13, textAlign: "center", letterSpacing: 0.3, lineHeight: 18, marginTop: 8 },
   cardRole: { fontFamily: "Georgia", fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "center", marginTop: 3, letterSpacing: 0.5 },
+
+  searchWrap: { flexDirection: "row", alignItems: "center", marginHorizontal: 16, marginBottom: 8, backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 12 },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, fontFamily: "Georgia", fontSize: 13, color: "#fff", paddingVertical: 10 },
 
   empty: { alignItems: "center", gap: 14, paddingTop: 80 },
   emptyText: { fontFamily: "Georgia", fontSize: 14, color: "rgba(255,255,255,0.2)", textAlign: "center" },

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { Linking } from "react-native";
 import React, { useState } from "react";
 import {
   Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View,
@@ -14,6 +15,7 @@ interface MenuItem {
   route?: string;
   action?: () => void;
   danger?: boolean;
+  dividerAbove?: boolean;
 }
 
 export default function HamburgerMenu() {
@@ -37,13 +39,23 @@ export default function HamburgerMenu() {
   }
 
   const menuItems: MenuItem[] = [
-    { icon: "🙏", label: "Prayer Contacts (Dbanc)", route: "/admin/dbanc" },
-    { icon: "📞", label: "Follow-Up Calls (PXP)", route: "/admin/pxp" },
-    { icon: "👥", label: "Roster Manager", route: "/admin/roster" },
+    // ── Account (mirrors web app) ────────────────────────────────────────────
+    { icon: "👤", label: "Profile", route: "/admin/profile" },
     { icon: "🔑", label: "Access Codes", route: "/admin/access-codes" },
+    { icon: "📞", label: "PXP Callers", route: "/admin/pxp/callers" },
+    { icon: "💳", label: "Billing & Subscription", route: "/org/billing" },
+    { icon: "✉️", label: "Contact Support", action: () => {
+      setOpen(false);
+      Linking.openURL("mailto:support@hisaltar.com");
+    }},
+    // ── Navigation (mobile-specific, no sidebar) ──────────────────────────────
+    { icon: "🙏", label: "Prayer Contacts", route: "/admin/dbanc", dividerAbove: true },
+    { icon: "🗓️", label: "Follow-Up Calls", route: "/admin/pxp" },
+    { icon: "👥", label: "Roster Manager", route: "/admin/roster" },
     { icon: "📋", label: "Altar Report", route: "/admin/altar-report" },
     { icon: "⚙️", label: "Admin Panel", route: "/admin" },
-    { icon: "↩", label: "Sign Out", action: signOut, danger: true },
+    // ── Sign out ──────────────────────────────────────────────────────────────
+    { icon: "↩", label: "Sign Out", action: signOut, danger: true, dividerAbove: true },
   ];
 
   return (
@@ -90,23 +102,27 @@ export default function HamburgerMenu() {
 
             <ScrollView>
               {menuItems.map((item) => (
-                <TouchableOpacity
-                  key={item.label}
-                  onPress={() => {
-                    if (item.action) item.action();
-                    else if (item.route) go(item.route);
-                  }}
-                  style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                  activeOpacity={0.6}
-                >
-                  <Text style={styles.menuIcon}>{item.icon}</Text>
-                  <Text style={[styles.menuLabel, item.danger && { color: "rgba(255,80,80,0.85)" }]}>
-                    {item.label}
-                  </Text>
-                  {!item.danger && (
-                    <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
+                <View key={item.label}>
+                  {item.dividerAbove && (
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
                   )}
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (item.action) item.action();
+                      else if (item.route) go(item.route);
+                    }}
+                    style={[styles.menuItem, { borderBottomColor: colors.border }]}
+                    activeOpacity={0.6}
+                  >
+                    <Text style={styles.menuIcon}>{item.icon}</Text>
+                    <Text style={[styles.menuLabel, item.danger && { color: "rgba(255,80,80,0.85)" }]}>
+                      {item.label}
+                    </Text>
+                    {!item.danger && (
+                      <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               ))}
             </ScrollView>
           </Pressable>
@@ -135,7 +151,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     borderWidth: 1,
     borderBottomWidth: 0,
-    maxHeight: "80%",
+    maxHeight: "85%",
   },
   drawerHeader: {
     paddingHorizontal: 20,
@@ -152,13 +168,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2, textTransform: "uppercase", marginTop: 3,
   },
   closeBtn: { position: "absolute", top: 18, right: 16, padding: 4 },
+  divider: { height: StyleSheet.hairlineWidth, marginHorizontal: 20, marginVertical: 4 },
   menuItem: {
     flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 20, paddingVertical: 16,
+    paddingHorizontal: 20, paddingVertical: 15,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 12,
   },
-  menuIcon: { fontSize: 18, width: 26, textAlign: "center" },
+  menuIcon: { fontSize: 17, width: 26, textAlign: "center" },
   menuLabel: {
     fontFamily: "Georgia", fontSize: 14, color: "rgba(255,255,255,0.82)",
   },

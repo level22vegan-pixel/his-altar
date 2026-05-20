@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 
 const TABS = ["Master", "Alt"] as const;
-const CAMPUSES = ["Hallmark", "Arizona", "Arrowhead", "Pomona", "Riverside", "LA"];
+import { CAMPUSES } from "@/constants/campuses";
 
 export default function RosterScreen() {
   const colors = useColors();
@@ -17,7 +17,7 @@ export default function RosterScreen() {
   const [tab, setTab] = useState<"Master" | "Alt">("Master");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
-  const [campus, setCampus] = useState(CAMPUSES[0]);
+  const [campus, setCampus] = useState<string>(CAMPUSES[0]);
   const [adding, setAdding] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 

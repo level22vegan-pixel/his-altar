@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 
-const CAMPUSES = ["Hallmark", "Arizona", "Arrowhead", "Pomona", "Riverside", "LA"];
+import { CAMPUSES } from "@/constants/campuses";
 const SERVICES = ["8:00am", "10:00am", "12:00pm", "7:00pm"];
 
 export default function HomeScreen() {

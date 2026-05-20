@@ -9,7 +9,7 @@ import { useColors } from "@/hooks/useColors";
 import { DarkInput } from "@/components/DarkInput";
 import { GoldButton } from "@/components/GoldButton";
 
-const CAMPUSES = ["Hallmark", "Arizona", "Arrowhead", "Pomona", "Riverside", "LA"];
+import { CAMPUSES } from "@/constants/campuses";
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Other"];
 const GENDERS = ["Male", "Female", "Other"];
 const SERVICES = ["8:00am", "10:00am", "12:00pm", "7:00pm"];
@@ -44,7 +44,7 @@ export default function NewContactScreen() {
     } finally { setSaving(false); }
   }
 
-  function Chips({ items, value, onChange }: { items: string[]; value: string; onChange: (v: string) => void }) {
+  function Chips({ items, value, onChange }: { items: readonly string[]; value: string; onChange: (v: string) => void }) {
     return (
       <View style={styles.chips}>
         {items.map(item => (

@@ -72,7 +72,7 @@ const ctr = StyleSheet.create({
 });
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const SERVICES = ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"];
+const SERVICES = ["8:00 AM", "10:00 AM", "12:00 PM", "7:00 PM"];
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -162,6 +162,8 @@ export default function AltarReportScreen() {
   const [exportVisible, setExportVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedService, setSelectedService] = useState(SERVICES[0]);
+  const [isCustomTime, setIsCustomTime] = useState(false);
+  const [customTime, setCustomTime] = useState("");
   const [servants, setServants] = useState("0");
   const [salvations, setSalvations] = useState("0");
   const [rededications, setRededications] = useState("0");
@@ -221,15 +223,27 @@ export default function AltarReportScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const dateStr = toDateStr(year, month, day);
     setSelectedDate(dateStr);
+    setIsCustomTime(false);
+    setCustomTime("");
     setSelectedService(SERVICES[0]);
     fillForm(dateStr, SERVICES[0]);
     setModalVisible(true);
   }
 
   function handleServiceChange(s: string) {
+    setIsCustomTime(false);
     setSelectedService(s);
     fillForm(selectedDate, s);
   }
+
+  function handleSelectCustom() {
+    setIsCustomTime(true);
+    setSelectedService("");
+    setServants("0"); setSalvations("0"); setRededications("0"); setPrayers("0"); setNotes("");
+  }
+
+  // effective service value used when saving/exporting
+  const effectiveService = isCustomTime ? customTime.trim() : selectedService;
 
   async function handleSave() {
     setSaving(true);
@@ -241,7 +255,7 @@ export default function AltarReportScreen() {
       await upsert.mutateAsync({
         data: {
           campus: "",
-          service: selectedService,
+          service: effectiveService,
           serviceDate: selectedDate,
           servants: sv,
           salvations: sa,
@@ -261,7 +275,7 @@ export default function AltarReportScreen() {
 
   async function exportDay() {
     const text = buildDayExport(
-      selectedDate, selectedService,
+      selectedDate, effectiveService,
       parseInt(servants) || 0, parseInt(salvations) || 0,
       parseInt(rededications) || 0, parseInt(prayers) || 0,
       notes,
@@ -375,20 +389,40 @@ export default function AltarReportScreen() {
               </Pressable>
             </View>
 
-            {/* Service tabs */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+            {/* Service time tabs */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: isCustomTime ? 8 : 20 }}>
               <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 2 }}>
                 {SERVICES.map(s => (
                   <Pressable key={s} onPress={() => handleServiceChange(s)}
                     style={[modal.serviceTab, {
-                      backgroundColor: selectedService === s ? "#7c3aed" : "rgba(255,255,255,0.06)",
-                      borderColor: selectedService === s ? "#7c3aed" : "rgba(255,255,255,0.1)",
+                      backgroundColor: !isCustomTime && selectedService === s ? "#7c3aed" : "rgba(255,255,255,0.06)",
+                      borderColor: !isCustomTime && selectedService === s ? "#7c3aed" : "rgba(255,255,255,0.1)",
                     }]}>
-                    <Text style={[modal.serviceTabText, { color: selectedService === s ? "#fff" : "rgba(255,255,255,0.5)" }]}>{s}</Text>
+                    <Text style={[modal.serviceTabText, { color: !isCustomTime && selectedService === s ? "#fff" : "rgba(255,255,255,0.5)" }]}>{s}</Text>
                   </Pressable>
                 ))}
+                {/* Custom time tab */}
+                <Pressable onPress={handleSelectCustom}
+                  style={[modal.serviceTab, {
+                    backgroundColor: isCustomTime ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.06)",
+                    borderColor: isCustomTime ? "#34d399" : "rgba(255,255,255,0.1)",
+                  }]}>
+                  <Text style={[modal.serviceTabText, { color: isCustomTime ? "#34d399" : "rgba(255,255,255,0.4)" }]}>+ Custom</Text>
+                </Pressable>
               </View>
             </ScrollView>
+
+            {/* Custom time input */}
+            {isCustomTime && (
+              <TextInput
+                value={customTime}
+                onChangeText={setCustomTime}
+                placeholder="e.g. 6:00 PM, Friday 9am…"
+                placeholderTextColor="rgba(255,255,255,0.2)"
+                autoFocus
+                style={[modal.notesInput, { minHeight: 0, marginBottom: 20, paddingVertical: 12 }]}
+              />
+            )}
 
             <Counter label="Altar Workers" value={servants} onChange={setServants} dotColor="#60a5fa" />
             <Counter label="Salvations" value={salvations} onChange={setSalvations} dotColor="#34d399" />
@@ -468,7 +502,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.03)",
     alignItems: "center", justifyContent: "center", paddingVertical: 4,
   },
-  todayCell: { borderColor: "rgba(124,58,237,0.6)", backgroundColor: "rgba(124,58,237,0.08)" },
+  todayCell: { borderColor: "#7c3aed", backgroundColor: "rgba(124,58,237,0.28)", borderWidth: 2 },
   hasDataCell: { borderColor: "rgba(124,58,237,0.25)" },
   dayNum: { fontFamily: "Georgia", fontSize: 14, color: "#fff" },
   dotsRow: { flexDirection: "row", gap: 2, marginTop: 2 },

@@ -10,7 +10,7 @@ import { DarkInput } from "@/components/DarkInput";
 import { GoldButton } from "@/components/GoldButton";
 
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Other"];
-const GENDERS = ["Male", "Female", "Other"];
+const GENDERS = ["Male", "Female"];
 const SERVICES = ["Sunday 8am", "Sunday 10am", "Sunday 12pm", "Wednesday 7pm"];
 
 export default function EditContactScreen() {

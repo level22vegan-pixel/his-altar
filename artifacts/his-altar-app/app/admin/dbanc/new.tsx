@@ -14,7 +14,7 @@ import { DarkInput } from "@/components/DarkInput";
 import { GoldButton } from "@/components/GoldButton";
 
 const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "Other"];
-const GENDERS = ["Male", "Female", "Other"];
+const GENDERS = ["Male", "Female"];
 const SERVICES = ["8:00 AM", "10:00 AM", "12:00 PM", "7:00 PM"];
 
 function SectionLabel({ children }: { children: string }) {
@@ -135,7 +135,7 @@ export default function NewContactScreen() {
         <View style={[styles.prayedCard, { backgroundColor: "rgba(124,58,237,0.07)", borderColor: "rgba(124,58,237,0.25)" }]}>
           <View style={styles.prayedHeader}>
             <Ionicons name="hand-right-outline" size={16} color="rgba(167,139,250,0.7)" />
-            <Text style={styles.prayedTitle}>WHO PRAYED</Text>
+            <Text style={styles.prayedTitle}>NAME OF ALTAR WORKER</Text>
             {activePrayedBy ? (
               <View style={styles.prayedBadge}>
                 <Text style={styles.prayedBadgeText}>{activePrayedBy}</Text>

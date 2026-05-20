@@ -40,7 +40,6 @@ export default function HamburgerMenu() {
   const menuItems: MenuItem[] = [
     { icon: "👤", label: "Profile",                route: "/admin/profile" },
     { icon: "🔑", label: "Access Codes",           route: "/admin/access-codes" },
-    { icon: "📞", label: "PXP Callers",            route: "/admin/pxp/callers" },
     { icon: "💳", label: "Billing & Subscription", route: "/org/billing" },
     { icon: "✉️", label: "Contact Support",        action: () => { setOpen(false); Linking.openURL("mailto:support@hisaltar.com"); } },
     { icon: "↩",  label: "Sign Out",               action: signOut, danger: true },

@@ -71,23 +71,19 @@ router.put("/:id/reset-password", async (req, res) => {
 
 router.post("/verify-code", async (req, res) => {
   try {
-    const { callerId, code } = req.body as Record<string, unknown>;
-    if (!callerId || !code) {
-      res.status(400).json({ success: false, message: "callerId and code are required" });
+    const { code } = req.body as Record<string, unknown>;
+    if (!code) {
+      res.status(400).json({ success: false, message: "code is required" });
       return;
     }
+    const orgId = req.orgId ?? 1;
     const [caller] = await db
       .select()
       .from(pxpCallersTable)
-      .where(eq(pxpCallersTable.id, Number(callerId)))
+      .where(and(eq(pxpCallersTable.orgId, orgId), eq(pxpCallersTable.password, String(code).trim())))
       .limit(1);
     if (!caller) {
-      res.status(404).json({ success: false, message: "Caller not found" });
-      return;
-    }
-    const match = caller.password === String(code).trim();
-    if (!match) {
-      res.status(401).json({ success: false, message: "Incorrect code" });
+      res.status(401).json({ success: false, message: "Invalid code" });
       return;
     }
     res.json({ success: true, caller: { id: caller.id, name: caller.name, campus: caller.campus } });

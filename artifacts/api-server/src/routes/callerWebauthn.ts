@@ -217,6 +217,124 @@ router.post("/authenticate", async (req: any, res) => {
   }
 });
 
+// GET /check?callerId=X — public, returns whether a specific caller has Face ID enrolled
+router.get("/check", async (req: any, res) => {
+  try {
+    const callerId = parseInt(String(req.query.callerId));
+    if (!callerId) { res.status(400).json({ error: "callerId required" }); return; }
+    const creds = await db
+      .select({ id: callerWebauthnCredentialsTable.id })
+      .from(callerWebauthnCredentialsTable)
+      .where(eq(callerWebauthnCredentialsTable.callerId, callerId))
+      .limit(1);
+    res.json({ hasFaceId: creds.length > 0 });
+  } catch (err: any) {
+    req.log.error({ err }, "caller webauthn check error");
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /self-enroll-options — public, caller authenticates with their own code
+router.post("/self-enroll-options", async (req: any, res) => {
+  try {
+    const { callerId, callerCode } = req.body as { callerId: number; callerCode: string };
+    if (!callerId || !callerCode) { res.status(400).json({ error: "callerId and callerCode required" }); return; }
+
+    const [caller] = await db
+      .select()
+      .from(pxpCallersTable)
+      .where(eq(pxpCallersTable.id, callerId))
+      .limit(1);
+    if (!caller) { res.status(404).json({ error: "Caller not found" }); return; }
+    if (callerCode.trim().toUpperCase() !== caller.password.toUpperCase()) {
+      res.status(401).json({ error: "Invalid code" }); return;
+    }
+
+    const existingCreds = await db
+      .select({ id: callerWebauthnCredentialsTable.id, transports: callerWebauthnCredentialsTable.transports })
+      .from(callerWebauthnCredentialsTable)
+      .where(eq(callerWebauthnCredentialsTable.callerId, callerId));
+
+    const options = await generateRegistrationOptions({
+      rpName: RP_NAME,
+      rpID: getRpId(req),
+      userName: caller.name,
+      userDisplayName: caller.name,
+      userID: new TextEncoder().encode(`caller-${callerId}`),
+      attestationType: "none",
+      excludeCredentials: existingCreds.map(c => ({
+        id: c.id,
+        transports: c.transports ? (JSON.parse(c.transports) as AuthenticatorTransportFuture[]) : [],
+      })),
+      authenticatorSelection: {
+        residentKey: "required",
+        userVerification: "preferred",
+      },
+    });
+
+    callerRegChallenges.set(callerId, options.challenge);
+    res.json({ ...options, callerId });
+  } catch (err: any) {
+    req.log.error({ err }, "caller webauthn self-enroll-options error");
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /self-enroll — public, caller authenticates with their own code then saves credential
+router.post("/self-enroll", async (req: any, res) => {
+  try {
+    const { callerId, callerCode, credential } = req.body as { callerId: number; callerCode: string; credential: any };
+    if (!callerId || !callerCode || !credential) { res.status(400).json({ error: "callerId, callerCode, and credential required" }); return; }
+
+    const [caller] = await db
+      .select()
+      .from(pxpCallersTable)
+      .where(eq(pxpCallersTable.id, callerId))
+      .limit(1);
+    if (!caller) { res.status(404).json({ error: "Caller not found" }); return; }
+    if (callerCode.trim().toUpperCase() !== caller.password.toUpperCase()) {
+      res.status(401).json({ error: "Invalid code" }); return;
+    }
+
+    const expectedChallenge = callerRegChallenges.get(callerId);
+    if (!expectedChallenge) { res.status(400).json({ error: "No pending challenge. Start enrollment again." }); return; }
+
+    const verification = await verifyRegistrationResponse({
+      response: credential,
+      expectedChallenge,
+      expectedOrigin: getOrigin(req),
+      expectedRPID: getRpId(req),
+    });
+
+    if (!verification.verified || !verification.registrationInfo) {
+      res.status(400).json({ error: "Verification failed" }); return;
+    }
+
+    callerRegChallenges.delete(callerId);
+    const { credential: cred } = verification.registrationInfo;
+
+    await db.insert(callerWebauthnCredentialsTable).values({
+      id: cred.id,
+      callerId,
+      orgId: caller.orgId,
+      publicKey: Buffer.from(cred.publicKey).toString("base64url"),
+      counter: cred.counter,
+      transports: credential.response?.transports ? JSON.stringify(credential.response.transports) : null,
+    }).onConflictDoUpdate({
+      target: callerWebauthnCredentialsTable.id,
+      set: {
+        publicKey: Buffer.from(cred.publicKey).toString("base64url"),
+        counter: cred.counter,
+      },
+    });
+
+    res.json({ verified: true });
+  } catch (err: any) {
+    req.log.error({ err }, "caller webauthn self-enroll error");
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /:callerId — requires org auth, removes Face ID for a caller
 router.delete("/:callerId", async (req: any, res) => {
   const orgId = req.orgId;

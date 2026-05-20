@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useListDbancContacts, useListPxpCallers, useCreateActivityLog, useListPxpCallLogs } from "@workspace/api-client-react";
-import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
-import { getSessionUserName, getValidCampusSession, getValidCallerSession, getValidOrgSession, clearAllSessions, setCallerSession } from "@/lib/session";
+import { getSessionUserName, getValidCampusSession, getValidCallerSession, getValidOrgSession, clearAllSessions } from "@/lib/session";
 import HamburgerMenu from "@/components/HamburgerMenu";
 
 import { getOrgCampuses, getOrgServiceTimes } from "@/lib/useOrgConfig";
@@ -42,9 +41,6 @@ export default function PXPPage() {
   const [callerCampus, setCallerCampus] = useState(() => lockedCampus ?? localStorage.getItem("pxp_campus") ?? CAMPUSES[0] ?? "HALLMARK");
   const [selectedCallerId, setSelectedCallerId] = useState<number | "manual" | null>(null);
   const [manualName, setManualName] = useState("");
-  const [biometricLoading, setBiometricLoading] = useState(false);
-  const [biometricError, setBiometricError] = useState("");
-  const webAuthnSupported = browserSupportsWebAuthn();
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [contactFilter, setContactFilter] = useState<"all" | "called">("all");
@@ -142,43 +138,6 @@ export default function PXPPage() {
   function handleSignOut() {
     clearAllSessions();
     navigate("/");
-  }
-
-  async function handleFaceIdLogin() {
-    setBiometricLoading(true);
-    setBiometricError("");
-    try {
-      const optRes = await fetch("/api/pxp/callers/webauthn/auth-options");
-      if (!optRes.ok) { setBiometricError("Could not start Face ID. Try again."); return; }
-      const { sessionKey, ...options } = await optRes.json();
-
-      let credential;
-      try {
-        credential = await startAuthentication({ optionsJSON: options });
-      } catch (err: any) {
-        if (err.name === "NotAllowedError") {
-          setBiometricError("Face ID was cancelled or not recognized.");
-        } else {
-          setBiometricError("Face ID failed. Try selecting your name manually.");
-        }
-        return;
-      }
-
-      const verRes = await fetch("/api/pxp/callers/webauthn/authenticate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionKey, credential }),
-      });
-      const data = await verRes.json();
-      if (!verRes.ok) { setBiometricError(data.error ?? "Face ID verification failed."); return; }
-
-      setCallerSession(data.callerId, data.callerName, data.campus);
-      navigate("/admin/pxp");
-    } catch {
-      setBiometricError("Something went wrong. Select your name manually.");
-    } finally {
-      setBiometricLoading(false);
-    }
   }
 
   const canStart = !!callerName && !!selectedId && !!activeCampus;
@@ -312,38 +271,6 @@ export default function PXPPage() {
                   />
                 )}
 
-                {/* Face ID sign-in */}
-                {webAuthnSupported && (
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "4px 0" }}>
-                      <div style={{ flex: 1, height: 1, background: "hsl(270 20% 14%)" }} />
-                      <span style={{ color: "hsl(270 20% 36%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em" }}>or</span>
-                      <div style={{ flex: 1, height: 1, background: "hsl(270 20% 14%)" }} />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleFaceIdLogin}
-                      disabled={biometricLoading}
-                      style={{
-                        width: "100%", padding: "10px 0", borderRadius: 8,
-                        background: biometricLoading ? "hsl(270 12% 7%)" : "hsl(270 28% 12%)",
-                        border: "1px solid hsl(270 35% 22%)",
-                        color: biometricLoading ? "hsl(270 20% 36%)" : "hsl(270 60% 72%)",
-                        fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase",
-                        cursor: biometricLoading ? "not-allowed" : "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                      }}
-                    >
-                      <span style={{ fontSize: 16 }}>🔐</span>
-                      {biometricLoading ? "Verifying…" : "Sign in with Face ID"}
-                    </button>
-                    {biometricError && (
-                      <p style={{ color: "hsl(0 55% 58%)", fontFamily: "Georgia, serif", fontSize: 11, margin: "6px 0 0", textAlign: "center" }}>
-                        {biometricError}
-                      </p>
-                    )}
-                  </div>
-                )}
               </>
             )}
           </div>

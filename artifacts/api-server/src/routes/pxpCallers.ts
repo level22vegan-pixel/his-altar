@@ -31,16 +31,19 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, campus, phone = "" } = req.body as Record<string, unknown>;
+    const { name, campus, phone = "", code } = req.body as Record<string, unknown>;
     if (!name || !campus) {
       res.status(400).json({ message: "name and campus are required" });
       return;
     }
+    if (!code || !String(code).trim()) {
+      res.status(400).json({ message: "code is required" });
+      return;
+    }
     const orgId = req.orgId ?? 1;
-    const password = generatePassword();
     const [caller] = await db
       .insert(pxpCallersTable)
-      .values({ name: String(name), campus: String(campus), phone: String(phone), password, orgId })
+      .values({ name: String(name), campus: String(campus), phone: String(phone), password: String(code).trim(), orgId })
       .returning();
     res.status(201).json(caller);
   } catch (err) {

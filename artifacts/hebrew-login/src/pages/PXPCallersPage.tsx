@@ -49,6 +49,7 @@ export default function PXPCallersPage() {
   const [name, setName] = useState("");
   const [campus, setCampus] = useState(() => lockedCampus ?? CAMPUSES[0] ?? "HALLMARK");
   const [phone, setPhone] = useState("");
+  const [newCallerCode, setNewCallerCode] = useState("");
   const [adding, setAdding] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -77,18 +78,28 @@ export default function PXPCallersPage() {
       .catch(() => {});
   }, []);
 
-  function handleAdd() {
-    if (!name.trim() || !campus) return;
-    createCaller.mutate(
-      { data: { name: name.trim(), campus, phone: phone.trim() } },
-      {
-        onSuccess: (newCaller) => {
-          setName(""); setPhone(""); setAdding(false);
-          setRevealedIds(prev => new Set(prev).add(newCaller.id));
-          refetch();
-        },
-      }
-    );
+  const [addPending, setAddPending] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  async function handleAdd() {
+    if (!name.trim() || !campus || !newCallerCode.trim()) return;
+    setAddPending(true);
+    setAddError("");
+    try {
+      const res = await apiFetch("/pxp/callers", {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim(), campus, phone: phone.trim(), code: newCallerCode.trim() }),
+      });
+      const newCaller = await res.json();
+      if (!res.ok) { setAddError(newCaller.message ?? "Failed to add caller."); return; }
+      setName(""); setPhone(""); setNewCallerCode(""); setAdding(false);
+      setRevealedIds(prev => new Set(prev).add(newCaller.id));
+      refetch();
+    } catch {
+      setAddError("Something went wrong. Try again.");
+    } finally {
+      setAddPending(false);
+    }
   }
 
   function handleDelete(id: number, callerName: string) {
@@ -264,21 +275,30 @@ export default function PXPCallersPage() {
                     {CAMPUSES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 )}
+                <input
+                  style={inputStyle}
+                  placeholder="Assign a code (e.g. 4-digit number) *"
+                  value={newCallerCode}
+                  onChange={e => setNewCallerCode(e.target.value)}
+                />
                 <p style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 11, letterSpacing: "0.08em", margin: 0 }}>
-                  A password will be auto-generated and shown after saving.
+                  The caller will use this code to sign in. They can set up Face ID after their first login.
                 </p>
+                {addError && (
+                  <p style={{ color: "hsl(0 55% 58%)", fontFamily: "Georgia, serif", fontSize: 11, margin: 0 }}>{addError}</p>
+                )}
                 <button
                   onClick={handleAdd}
-                  disabled={!name.trim() || createCaller.isPending}
+                  disabled={!name.trim() || !newCallerCode.trim() || addPending}
                   style={{
                     padding: "10px 0", borderRadius: 8,
-                    background: name.trim() ? "linear-gradient(135deg, hsl(270 60% 42%), hsl(270 55% 30%))" : "hsl(270 12% 7%)",
-                    color: name.trim() ? "hsl(270 20% 95%)" : "hsl(270 20% 34%)",
+                    background: (name.trim() && newCallerCode.trim()) ? "linear-gradient(135deg, hsl(270 60% 42%), hsl(270 55% 30%))" : "hsl(270 12% 7%)",
+                    color: (name.trim() && newCallerCode.trim()) ? "hsl(270 20% 95%)" : "hsl(270 20% 34%)",
                     border: "none", fontFamily: "Georgia, serif", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase",
-                    cursor: name.trim() ? "pointer" : "not-allowed",
+                    cursor: (name.trim() && newCallerCode.trim()) ? "pointer" : "not-allowed",
                   }}
                 >
-                  {createCaller.isPending ? "Saving…" : "Save Caller"}
+                  {addPending ? "Saving…" : "Save Caller"}
                 </button>
               </div>
             )}
@@ -336,7 +356,7 @@ export default function PXPCallersPage() {
 
                   {isAdmin && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, background: "hsl(270 10% 4%)", border: "1px solid hsl(270 20% 14%)", borderRadius: 8, padding: "8px 12px", marginBottom: 8 }}>
-                      <span style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", flexShrink: 0 }}>Pass</span>
+                      <span style={{ color: "hsl(270 20% 44%)", fontFamily: "Georgia, serif", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", flexShrink: 0 }}>Code</span>
                       <span style={{
                         flex: 1, fontFamily: "monospace", fontSize: 14,
                         letterSpacing: isRevealed ? "0.25em" : "0.1em",
@@ -354,7 +374,7 @@ export default function PXPCallersPage() {
                         </button>
                       )}
                       <button onClick={() => handleResetPassword(c.id)} style={{ padding: "3px 8px", borderRadius: 5, background: "hsl(35 25% 9%)", border: "1px solid hsl(35 24% 17%)", color: "hsl(38 52% 50%)", fontFamily: "Georgia, serif", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
-                        Reset
+                        Reset Code
                       </button>
                     </div>
                   )}

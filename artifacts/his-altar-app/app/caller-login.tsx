@@ -3,45 +3,37 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import * as LocalAuthentication from "expo-local-authentication";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator, Platform, Pressable, ScrollView,
-  StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Platform, Pressable,
+  ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 
 const BASE_URL = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
 
-type Mode = "choose" | "faceid" | "name-code" | "code";
-
-interface Caller {
-  id: number;
-  name: string;
-  campus: string;
-}
+interface Caller { id: number; name: string; campus: string; }
 
 export default function CallerLoginScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
   const { loginCaller } = useAppContext();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const inputRef = useRef<TextInput>(null);
 
-  const [mode, setMode] = useState<Mode>("choose");
-  const [callers, setCallers] = useState<Caller[]>([]);
-  const [selectedCaller, setSelectedCaller] = useState<Caller | null>(null);
-  const [digits, setDigits] = useState<string[]>([]);
-  const [codeInput, setCodeInput] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  // Name picker after biometric success
+  const [showNamePicker, setShowNamePicker] = useState(false);
+  const [callers, setCallers] = useState<Caller[]>([]);
 
   useEffect(() => {
     LocalAuthentication.hasHardwareAsync().then((has) => {
       if (has) LocalAuthentication.isEnrolledAsync().then(setBiometricAvailable);
     });
-    fetchCallers();
   }, []);
 
   async function fetchCallers() {
@@ -54,42 +46,35 @@ export default function CallerLoginScreen() {
     } catch {}
   }
 
-  async function verifyByCode(code: string, fallbackCallerId?: number): Promise<boolean> {
+  async function submit() {
+    const trimmed = code.trim();
+    if (!trimmed) return;
     setLoading(true);
     setError("");
     try {
       const res = await fetch(`${BASE_URL}/api/pxp/callers/verify-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code: trimmed }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         loginCaller(data.caller.id, data.caller.name, data.caller.campus ?? "");
         router.replace("/admin/pxp" as any);
-        return true;
-      }
-      // If we already have a selected caller (name-code mode), verify against that caller
-      if (fallbackCallerId && data.caller) {
-        loginCaller(data.caller.id, data.caller.name, data.caller.campus ?? "");
-        router.replace("/admin/pxp" as any);
-        return true;
+        return;
       }
       setError("Invalid code. Please try again.");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return false;
+      setCode("");
     } catch {
       setError("Connection error. Try again.");
-      return false;
     } finally {
       setLoading(false);
     }
   }
 
-  // --- FACE ID ---
   async function tryFaceId() {
-    setMode("faceid");
     setError("");
     try {
       const result = await LocalAuthentication.authenticateAsync({
@@ -99,255 +84,185 @@ export default function CallerLoginScreen() {
       });
       if (result.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        // Biometric passed — let them pick their name
-        setMode("name-code");
-        setSelectedCaller(null);
+        await fetchCallers();
+        setShowNamePicker(true);
       } else {
-        setError("Biometric not confirmed. Try another method.");
-        setMode("choose");
+        setError("Biometric not confirmed.");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } catch {
-      setError("Face ID not available. Try another method.");
-      setMode("choose");
+      setError("Face ID not available.");
     }
   }
 
-  // --- NAME PICKER + CODE ---
-  function selectCaller(caller: Caller) {
+  function selectCaller(c: Caller) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedCaller(caller);
-    setDigits([]);
-    setError("");
+    loginCaller(c.id, c.name, c.campus ?? "");
+    router.replace("/admin/pxp" as any);
   }
 
-  async function submitNameCode() {
-    if (!selectedCaller || digits.length === 0) return;
-    const code = digits.join("");
-    await verifyByCode(code, selectedCaller.id);
-  }
-
-  // --- CODE KEYPAD ---
-  function press(k: string) {
-    if (digits.length >= 10) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setError("");
-    setDigits(prev => [...prev, k]);
-  }
-
-  function del() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setDigits(prev => prev.slice(0, -1));
-    setError("");
-  }
-
-  async function submitCode() {
-    if (digits.length === 0) return;
-    await verifyByCode(digits.join(""));
-    setDigits([]);
-  }
-
-  // --- KEY PAD COMPONENT ---
-  function NumPad({ onPress, onDel, onSubmit }: { onPress: (k: string) => void; onDel: () => void; onSubmit: () => void }) {
-    const keys = [["1","2","3"],["4","5","6"],["7","8","9"],[null,"0","del"]];
-    return (
-      <View style={pad.pad}>
-        {keys.map((row, ri) => (
-          <View key={ri} style={pad.row}>
-            {row.map((k, ki) => {
-              if (k === null) return (
-                <Pressable key={ki} onPress={onSubmit}
-                  style={({ pressed }) => [pad.key, { backgroundColor: pressed ? colors.primary : "rgba(124,58,237,0.2)", borderRadius: 12 }]}>
-                  <Ionicons name="checkmark" size={22} color="#fff" />
-                </Pressable>
-              );
-              if (k === "del") return (
-                <Pressable key={ki} onPress={onDel} style={({ pressed }) => [pad.key, { opacity: pressed ? 0.5 : 1 }]}>
-                  <Ionicons name="backspace-outline" size={22} color={colors.foreground} />
-                </Pressable>
-              );
-              return (
-                <Pressable key={ki} onPress={() => onPress(k)}
-                  style={({ pressed }) => [pad.key, { backgroundColor: pressed ? colors.muted : "transparent" }]}>
-                  <Text style={[pad.keyText, { color: colors.foreground }]}>{k}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-    );
-  }
-
-  function Dots({ count, filled }: { count: number; filled: number }) {
-    return (
-      <View style={styles.dots}>
-        {Array.from({ length: Math.max(count, 6) }).map((_, i) => (
-          <View key={i} style={[styles.dot, { backgroundColor: i < filled ? colors.primary : colors.muted, borderColor: colors.border }]} />
-        ))}
-      </View>
-    );
-  }
-
-  // =================== CHOOSE MODE ===================
-  if (mode === "choose") {
+  // ── Name picker (post biometric) ──
+  if (showNamePicker) {
     return (
       <LinearGradient colors={["#0a0a0f", "#0f0a1a", "#0a0a0f"]} style={{ flex: 1 }}>
         <View style={[styles.root, { paddingTop: topPad }]}>
-          <Pressable onPress={() => router.back()} style={styles.back}>
+          <Pressable onPress={() => setShowNamePicker(false)} style={styles.back}>
             <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.5)" />
           </Pressable>
-
-          <Text style={styles.title}>CALLER ACCESS</Text>
-          <Text style={styles.sub}>Choose how to sign in</Text>
-
-          {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
-
-          <View style={styles.optionList}>
-            {biometricAvailable && (
-              <Pressable onPress={tryFaceId} style={({ pressed }) => [styles.option, { borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
-                <Text style={styles.optionIcon}>🪪</Text>
-                <View style={styles.optionText}>
-                  <Text style={styles.optionLabel}>Face ID / Biometrics</Text>
-                  <Text style={styles.optionDesc}>Use your device biometrics then pick your name</Text>
+          <Text style={styles.title}>SELECT YOUR NAME</Text>
+          <ScrollView style={{ width: "100%", flex: 1 }} contentContainerStyle={{ gap: 8, paddingTop: 24, paddingBottom: 40 }}>
+            {callers.length === 0 ? (
+              <Text style={styles.hint}>No callers found. Ask admin to add you.</Text>
+            ) : null}
+            {callers.map((c) => (
+              <Pressable key={c.id} onPress={() => selectCaller(c)}
+                style={({ pressed }) => [styles.callerRow, { opacity: pressed ? 0.75 : 1 }]}>
+                <View style={styles.callerAvatar}>
+                  <Text style={styles.callerInitial}>{c.name.charAt(0).toUpperCase()}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.25)" />
+                <Text style={styles.callerName}>{c.name}</Text>
+                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.2)" />
               </Pressable>
-            )}
-
-            <Pressable onPress={() => { setMode("name-code"); setError(""); }}
-              style={({ pressed }) => [styles.option, { borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
-              <Text style={styles.optionIcon}>👤</Text>
-              <View style={styles.optionText}>
-                <Text style={styles.optionLabel}>Select Name + Code</Text>
-                <Text style={styles.optionDesc}>Pick your name from the list, then enter your passcode</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.25)" />
-            </Pressable>
-
-            <Pressable onPress={() => { setMode("code"); setError(""); setDigits([]); }}
-              style={({ pressed }) => [styles.option, { borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
-              <Text style={styles.optionIcon}>🔢</Text>
-              <View style={styles.optionText}>
-                <Text style={styles.optionLabel}>Enter Code</Text>
-                <Text style={styles.optionDesc}>Type your unique caller code directly</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.25)" />
-            </Pressable>
-          </View>
+            ))}
+          </ScrollView>
         </View>
       </LinearGradient>
     );
   }
 
-  // =================== FACE ID (loading state) ===================
-  if (mode === "faceid") {
-    return (
-      <LinearGradient colors={["#0a0a0f", "#0f0a1a", "#0a0a0f"]} style={{ flex: 1 }}>
-        <View style={[styles.root, { paddingTop: topPad, justifyContent: "center" }]}>
-          <Text style={[styles.title, { marginBottom: 24 }]}>AUTHENTICATING</Text>
-          <ActivityIndicator color="rgba(180,140,255,0.7)" size="large" />
-          <Text style={styles.sub}>Waiting for Face ID…</Text>
-        </View>
-      </LinearGradient>
-    );
-  }
-
-  // =================== NAME + CODE ===================
-  if (mode === "name-code") {
-    return (
-      <LinearGradient colors={["#0a0a0f", "#0f0a1a", "#0a0a0f"]} style={{ flex: 1 }}>
-        <View style={[styles.root, { paddingTop: topPad }]}>
-          <Pressable onPress={() => { setMode("choose"); setSelectedCaller(null); setDigits([]); setError(""); }} style={styles.back}>
-            <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.5)" />
-          </Pressable>
-
-          <Text style={styles.title}>SELECT CALLER</Text>
-          <Text style={styles.sub}>{selectedCaller ? `${selectedCaller.name} — enter your code` : "Tap your name"}</Text>
-
-          {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
-
-          {!selectedCaller ? (
-            <ScrollView style={styles.callerList} contentContainerStyle={{ gap: 8, paddingBottom: 40 }}>
-              {callers.length === 0 && (
-                <Text style={styles.sub}>No callers found. Ask admin to add you.</Text>
-              )}
-              {callers.map((c) => (
-                <Pressable key={c.id} onPress={() => selectCaller(c)}
-                  style={({ pressed }) => [styles.callerRow, { borderColor: colors.border, backgroundColor: pressed ? colors.muted : colors.card }]}>
-                  <Text style={styles.callerName}>{c.name}</Text>
-                  <Text style={styles.callerCampus}>{c.campus}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          ) : (
-            <>
-              <Dots count={6} filled={digits.length} />
-              <NumPad onPress={press} onDel={del} onSubmit={submitNameCode} />
-              <Pressable onPress={() => { setSelectedCaller(null); setDigits([]); setError(""); }} style={{ marginTop: 20 }}>
-                <Text style={[styles.sub, { color: "rgba(180,140,255,0.5)" }]}>← Pick a different name</Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-      </LinearGradient>
-    );
-  }
-
-  // =================== CODE ONLY ===================
+  // ── Main sign-in screen ──
   return (
     <LinearGradient colors={["#0a0a0f", "#0f0a1a", "#0a0a0f"]} style={{ flex: 1 }}>
       <View style={[styles.root, { paddingTop: topPad }]}>
-        <Pressable onPress={() => { setMode("choose"); setDigits([]); setError(""); }} style={styles.back}>
+
+        {/* Back */}
+        <Pressable onPress={() => router.back()} style={styles.back}>
           <Ionicons name="chevron-back" size={24} color="rgba(255,255,255,0.5)" />
         </Pressable>
 
-        <Text style={styles.title}>CALLER CODE</Text>
-        <Text style={styles.sub}>Enter your unique code</Text>
+        {/* Centered content */}
+        <View style={styles.center}>
+          <Text style={styles.title}>CALLER ACCESS</Text>
 
-        {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
+          {/* Code input + Face ID row */}
+          <View style={styles.inputRow}>
+            <Pressable style={styles.inputWrap} onPress={() => inputRef.current?.focus()}>
+              <TextInput
+                ref={inputRef}
+                value={code}
+                onChangeText={(v) => { setCode(v); setError(""); }}
+                onSubmitEditing={submit}
+                placeholder="Enter code"
+                placeholderTextColor="rgba(255,255,255,0.2)"
+                keyboardType="number-pad"
+                secureTextEntry
+                returnKeyType="go"
+                style={styles.input}
+                autoFocus
+              />
+            </Pressable>
 
-        <Dots count={6} filled={digits.length} />
-        <NumPad onPress={press} onDel={del} onSubmit={submitCode} />
-
-        {loading && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16 }}>
-            <ActivityIndicator color="rgba(180,140,255,0.7)" size="small" />
-            <Text style={styles.sub}>Verifying…</Text>
+            {biometricAvailable && (
+              <Pressable onPress={tryFaceId} style={({ pressed }) => [styles.faceBtn, { opacity: pressed ? 0.6 : 1 }]}>
+                <LinearGradient
+                  colors={["rgba(124,58,237,0.3)", "rgba(124,58,237,0.15)"]}
+                  style={styles.faceBtnInner}
+                >
+                  <Ionicons name="scan-outline" size={26} color="#a78bfa" />
+                </LinearGradient>
+              </Pressable>
+            )}
           </View>
-        )}
+
+          {/* Error */}
+          {error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : null}
+
+          {/* Sign In button */}
+          <Pressable
+            onPress={submit}
+            disabled={loading || !code.trim()}
+            style={({ pressed }) => [styles.signInBtn, { opacity: pressed || loading || !code.trim() ? 0.5 : 1 }]}
+          >
+            {loading
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={styles.signInText}>SIGN IN</Text>}
+          </Pressable>
+        </View>
+
       </View>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, alignItems: "center", paddingHorizontal: 24 },
-  back: { alignSelf: "flex-start", padding: 8, marginBottom: 20 },
-  title: { fontSize: 22, fontFamily: "Georgia", letterSpacing: 6, color: "#fff", marginBottom: 8,
-    textShadowColor: "rgba(180,140,255,0.6)", textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 16 },
-  sub: { fontSize: 12, fontFamily: "Georgia", letterSpacing: 1, color: "rgba(255,255,255,0.3)", marginBottom: 32, textAlign: "center" },
-  error: { fontSize: 12, fontFamily: "Georgia", marginBottom: 12, textAlign: "center" },
-  dots: { flexDirection: "row", gap: 10, marginBottom: 24, flexWrap: "wrap", justifyContent: "center" },
-  dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1 },
-  optionList: { width: "100%", gap: 12, marginTop: 8 },
-  option: {
+  root: { flex: 1, alignItems: "center", paddingHorizontal: 32 },
+  back: { alignSelf: "flex-start", padding: 8 },
+
+  // Centered block
+  center: {
+    flex: 1, alignItems: "center", justifyContent: "center",
+    width: "100%", gap: 0,
+    // slight upward bias so title feels anchored above center
+    marginTop: -60,
+  },
+  title: {
+    fontSize: 20, fontFamily: "Georgia", letterSpacing: 6, color: "#fff",
+    marginBottom: 40,
+    textShadowColor: "rgba(167,139,250,0.5)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+  },
+
+  // Input row
+  inputRow: { flexDirection: "row", alignItems: "center", gap: 12, width: "100%", marginBottom: 16 },
+  inputWrap: {
+    flex: 1, borderRadius: 14, borderWidth: 1,
+    borderColor: "rgba(124,58,237,0.4)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    overflow: "hidden",
+  },
+  input: {
+    fontFamily: "Georgia", fontSize: 18, color: "#fff",
+    paddingHorizontal: 18, paddingVertical: 16,
+    letterSpacing: 4,
+  },
+  faceBtn: { borderRadius: 14 },
+  faceBtnInner: {
+    width: 58, height: 58, borderRadius: 14,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: "rgba(124,58,237,0.35)",
+  },
+
+  error: {
+    fontFamily: "Georgia", fontSize: 12, color: "#f87171",
+    textAlign: "center", marginBottom: 12,
+  },
+
+  // Sign-in button
+  signInBtn: {
+    marginTop: 8, width: "100%",
+    backgroundColor: "#7c3aed", borderRadius: 14,
+    paddingVertical: 16, alignItems: "center",
+  },
+  signInText: {
+    fontFamily: "Georgia", fontSize: 13, color: "#fff", letterSpacing: 4,
+  },
+
+  // Name picker
+  hint: { fontFamily: "Georgia", fontSize: 13, color: "rgba(255,255,255,0.3)", textAlign: "center", marginTop: 20 },
+  callerRow: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    padding: 18, borderRadius: 16, borderWidth: 1,
+    padding: 16, borderRadius: 14, borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
     backgroundColor: "rgba(255,255,255,0.04)",
   },
-  optionIcon: { fontSize: 26 },
-  optionText: { flex: 1 },
-  optionLabel: { fontFamily: "Georgia", fontSize: 15, color: "#fff", marginBottom: 3 },
-  optionDesc: { fontFamily: "Georgia", fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: 0.3 },
-  callerList: { width: "100%", flex: 1 },
-  callerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderRadius: 12, borderWidth: 1 },
-  callerName: { fontFamily: "Georgia", fontSize: 15, color: "#fff" },
-  callerCampus: { fontFamily: "Georgia", fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: 1 },
-});
-
-const pad = StyleSheet.create({
-  pad: { width: "100%", maxWidth: 280, gap: 8 },
-  row: { flexDirection: "row", justifyContent: "space-between" },
-  key: { width: 80, height: 64, alignItems: "center", justifyContent: "center", borderRadius: 12 },
-  keyText: { fontSize: 24, fontFamily: "Georgia" },
+  callerAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: "rgba(124,58,237,0.25)",
+    alignItems: "center", justifyContent: "center",
+  },
+  callerInitial: { fontFamily: "Georgia", fontSize: 16, color: "#a78bfa" },
+  callerName: { flex: 1, fontFamily: "Georgia", fontSize: 15, color: "#fff" },
 });

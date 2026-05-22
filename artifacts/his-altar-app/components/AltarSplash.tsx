@@ -92,21 +92,20 @@ export default function AltarSplash({ onDone }: Props) {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.root, wrapStyle]}>
-      {/* Centered altar image — smaller, with space around it */}
-      <Animated.View style={[styles.imgWrap, imgStyle]}>
-        <Image
-          source={require("@/assets/images/altar-splash.png")}
-          style={styles.img}
-          resizeMode="contain"
-        />
-        {/* Smoke wisps overlaid on top of image */}
-        <Animated.View style={styles.smokeLayer}>
-          <SmokeWisp x={0}   delay={0}    duration={2400} amplitude={14} />
-          <SmokeWisp x={-14} delay={550}  duration={2800} amplitude={-18} />
-          <SmokeWisp x={14}  delay={950}  duration={2100} amplitude={11} />
-          <SmokeWisp x={-6}  delay={1450} duration={2600} amplitude={-9} />
-          <SmokeWisp x={8}   delay={320}  duration={2900} amplitude={15} />
-        </Animated.View>
+      {/* Full-screen image — background color from the image fills the screen */}
+      <Animated.Image
+        source={require("@/assets/images/altar-splash.png")}
+        style={[StyleSheet.absoluteFill, styles.img, imgStyle]}
+        resizeMode="cover"
+      />
+
+      {/* Smoke wisps over the altar */}
+      <Animated.View style={styles.smokeLayer}>
+        <SmokeWisp x={0}   delay={0}    duration={2400} amplitude={14} />
+        <SmokeWisp x={-14} delay={550}  duration={2800} amplitude={-18} />
+        <SmokeWisp x={14}  delay={950}  duration={2100} amplitude={11} />
+        <SmokeWisp x={-6}  delay={1450} duration={2600} amplitude={-9} />
+        <SmokeWisp x={8}   delay={320}  duration={2900} amplitude={15} />
       </Animated.View>
 
       {/* Title */}
@@ -117,16 +116,10 @@ export default function AltarSplash({ onDone }: Props) {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: "#000",
+    backgroundColor: "#0c0a1a",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 999,
-  },
-  imgWrap: {
-    width: width * 0.72,
-    height: width * 0.72 * (4 / 3),
-    alignItems: "center",
-    justifyContent: "center",
   },
   img: {
     width: "100%",
@@ -134,7 +127,7 @@ const styles = StyleSheet.create({
   },
   smokeLayer: {
     position: "absolute",
-    bottom: "32%",
+    bottom: "30%",
     left: 0,
     right: 0,
     height: 200,
@@ -150,7 +143,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(230,215,200,0.35)",
   },
   title: {
-    marginTop: 32,
+    position: "absolute",
+    bottom: height * 0.1,
     fontFamily: "Georgia",
     fontSize: 30,
     color: "#fff",

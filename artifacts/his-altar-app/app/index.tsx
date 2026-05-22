@@ -55,7 +55,7 @@ export default function LandingScreen() {
         onPress={() => router.push("/pin")}
         style={({ pressed }) => [styles.enterBtn, { opacity: pressed ? 0.8 : 1 }]}
       >
-        <Text style={styles.enterBtnText}>Enter Site</Text>
+        <Text style={styles.enterBtnText}>ENTER</Text>
       </Pressable>
 
       {/* Sign up subtext */}

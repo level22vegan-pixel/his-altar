@@ -46,7 +46,20 @@ export default function LogsScreen() {
     return true;
   });
 
-  const uniqueContacts = new Set(filteredLogs.map((l) => l.contactId)).size;
+  // Group calls by contact — one profile card per contact
+  const grouped = (() => {
+    const map: Record<number, { contactId: number; calls: typeof filteredLogs }> = {};
+    for (const log of filteredLogs) {
+      if (!map[log.contactId]) map[log.contactId] = { contactId: log.contactId, calls: [] };
+      map[log.contactId].calls.push(log);
+    }
+    return Object.values(map).map((g) => ({
+      ...g,
+      calls: [...g.calls].sort((a, b) => new Date(b.calledAt).getTime() - new Date(a.calledAt).getTime()),
+    })).sort((a, b) => new Date(b.calls[0].calledAt).getTime() - new Date(a.calls[0].calledAt).getTime());
+  })();
+
+  const uniqueContacts = grouped.length;
   const uniqueCallers = new Set(filteredLogs.map((l) => l.callerName)).size;
 
   const outcomeCounts: Record<string, number> = {};
@@ -95,8 +108,8 @@ export default function LogsScreen() {
       </View>
 
       <FlatList
-        data={filteredLogs}
-        keyExtractor={(item) => String(item.id)}
+        data={grouped}
+        keyExtractor={(item) => String(item.contactId)}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -240,6 +253,11 @@ export default function LogsScreen() {
           const name = contact
             ? `${contact.firstName} ${contact.lastName}`
             : `Contact #${item.contactId}`;
+          const lastCall = item.calls[0];
+          const callCount = item.calls.length;
+          const initials = contact
+            ? `${contact.firstName[0]}${contact.lastName[0]}`
+            : "#";
           return (
             <Pressable
               onPress={() =>
@@ -250,29 +268,33 @@ export default function LogsScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.8 : 1 },
               ]}
             >
-              <View style={[styles.logAvatar, { backgroundColor: colors.muted }]}>
-                <Text style={[styles.avatarText, { color: colors.primary }]}>
-                  {contact ? `${contact.firstName[0]}${contact.lastName[0]}` : "#"}
-                </Text>
+              {/* Avatar with call-count badge */}
+              <View style={{ position: "relative" }}>
+                <View style={[styles.logAvatar, { backgroundColor: colors.muted }]}>
+                  <Text style={[styles.avatarText, { color: colors.primary }]}>{initials}</Text>
+                </View>
+                {callCount > 0 && (
+                  <View style={[styles.callBadge, { backgroundColor: colors.primary }]}>
+                    <Text style={[styles.callBadgeText, { color: colors.primaryForeground }]}>{callCount}</Text>
+                  </View>
+                )}
               </View>
-              <View style={{ flex: 1, gap: 5 }}>
+
+              <View style={{ flex: 1, gap: 4 }}>
                 <Text style={[styles.logName, { color: colors.foreground }]}>{name}</Text>
                 <View style={styles.badgeRow}>
-                  <View style={[styles.badge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                    <Text style={[styles.badgeText, { color: colors.primary }]}>{item.callerName}</Text>
-                  </View>
-                  {item.campus && (
+                  {lastCall.callerName && (
                     <View style={[styles.badge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                      <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>{item.campus}</Text>
+                      <Text style={[styles.badgeText, { color: colors.primary }]}>{lastCall.callerName}</Text>
                     </View>
                   )}
-                  {item.outcome && (
+                  {lastCall.outcome && (
                     <View style={[styles.badge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                      <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>{item.outcome}</Text>
+                      <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>{lastCall.outcome}</Text>
                     </View>
                   )}
                 </View>
-                <Text style={[styles.logDate, { color: colors.mutedForeground }]}>{formatDate(item.calledAt)}</Text>
+                <Text style={[styles.logDate, { color: colors.mutedForeground }]}>{formatDate(lastCall.calledAt)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
             </Pressable>
@@ -311,6 +333,8 @@ const styles = StyleSheet.create({
   contactRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderBottomWidth: 1 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   logAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  callBadge: { position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 },
+  callBadgeText: { fontFamily: "Georgia", fontSize: 9, fontWeight: "bold" },
   avatarText: { fontFamily: "Georgia", fontSize: 13, fontWeight: "bold" },
   contactName: { fontFamily: "Georgia", fontSize: 14 },
   contactMeta: { fontFamily: "Georgia", fontSize: 11, marginTop: 2 },

@@ -3,7 +3,10 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useGetPxpConfig, useCreatePxpCallLog } from "@workspace/api-client-react";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator, Platform, Pressable, ScrollView,
+  StyleSheet, Text, TextInput, View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
@@ -17,7 +20,9 @@ interface SimNode {
 interface SimTree { nodes: Record<string, SimNode>; startId: string; spine: string[]; }
 
 function fillPlaceholders(text: string, contactName: string, callerName: string) {
-  return text.replace(/\{contact_name\}/g, contactName || "them").replace(/\{caller_name\}/g, callerName || "you");
+  return text
+    .replace(/\{contact_name\}/g, contactName || "them")
+    .replace(/\{caller_name\}/g, callerName || "you");
 }
 
 export default function CallScreen() {
@@ -31,6 +36,13 @@ export default function CallScreen() {
   const [history, setHistory] = useState<string[]>([]);
   const [outcome, setOutcome] = useState("");
   const [done, setDone] = useState(false);
+
+  // completion fields
+  const [servicesOffered, setServicesOffered] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [flagged, setFlagged] = useState(false);
+  const [flagNote, setFlagNote] = useState("");
+  const [logged, setLogged] = useState(false);
 
   const config = useGetPxpConfig();
   const logCall = useCreatePxpCallLog();
@@ -46,23 +58,26 @@ export default function CallScreen() {
 
   const currentId = history[history.length - 1];
   const node = tree?.nodes[currentId];
+  const depth = history.length - 1;
 
   function next(nextId: string, responseLabel: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setOutcome(prev => prev ? `${prev} → ${responseLabel}` : responseLabel);
+    setOutcome((prev) => (prev ? `${prev} → ${responseLabel}` : responseLabel));
     if (nextId === "__terminal__" || !tree?.nodes[nextId]) {
       setDone(true);
     } else {
-      setHistory(h => [...h, nextId]);
+      setHistory((h) => [...h, nextId]);
     }
   }
 
   function goBack() {
     if (history.length <= 1) return;
-    setHistory(h => h.slice(0, -1));
+    setHistory((h) => h.slice(0, -1));
+    setDone(false);
   }
 
-  async function finishCall() {
+  async function handleLogAndFinish() {
+    if (logged || logCall.isPending) return;
     if (!params.contactId) { router.back(); return; }
     try {
       await logCall.mutateAsync({
@@ -72,85 +87,191 @@ export default function CallScreen() {
           campus: callerSession?.campus ?? "",
           outcome: outcome || "Completed",
           notes: "",
+          servicesOffered,
+          feedback,
+          flagged,
+          flagNote,
         },
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setLogged(true);
     } catch { }
-    router.back();
   }
 
   if (config.isLoading || !tree) {
-    return <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
-      <ActivityIndicator color={colors.primary} />
-    </View>;
-  }
-
-  const contactName = params.contactName ?? "them";
-  const callerName = callerSession?.callerName ?? "you";
-
-  if (done || node?.isTerminal) {
     return (
-      <View style={[styles.root, { backgroundColor: colors.background, paddingTop: topPad + 20 }]}>
-        <View style={[styles.terminalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Ionicons name="checkmark-circle" size={48} color={colors.primary} />
-          <Text style={[styles.terminalTitle, { color: colors.foreground }]}>Call Complete</Text>
-          {node?.text ? (
-            <Text style={[styles.terminalText, { color: colors.mutedForeground }]}>
-              {fillPlaceholders(node.text, contactName, callerName)}
-            </Text>
-          ) : null}
-        </View>
-        <Pressable
-          onPress={finishCall}
-          disabled={logCall.isPending}
-          style={[styles.doneBtn, { backgroundColor: colors.primary }]}
-        >
-          <Text style={[styles.doneBtnText, { color: colors.primaryForeground }]}>
-            {logCall.isPending ? "Saving…" : params.contactId ? "Save & Finish" : "Finish"}
-          </Text>
-        </Pressable>
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
-  if (!node) return null;
+  const contactName = params.contactName ?? "them";
+  const callerName = callerSession?.callerName ?? "you";
+  const stepLabel = done ? "Closing" : depth === 0 ? "Opening" : `Step ${depth + 1}`;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingTop: topPad }]}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </Pressable>
         <View style={{ flex: 1, alignItems: "center" }}>
-          <Text style={[styles.headerTitle, { color: colors.foreground }]}>{params.contactName ?? "CALL SCRIPT"}</Text>
+          <Text style={[styles.headerTitle, { color: colors.foreground }]}>
+            {params.contactName ? `Calling ${params.contactName}` : "CALL SCRIPT"}
+          </Text>
           <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>
-            {node.isSpine ? `Step ${(node.spineIndex ?? 0) + 1}` : "Branch"} · {node.title}
+            {callerName}
           </Text>
         </View>
-        {history.length > 1 ? (
-          <Pressable onPress={goBack}><Ionicons name="arrow-undo-outline" size={22} color={colors.mutedForeground} /></Pressable>
-        ) : <View style={{ width: 32 }} />}
+        {/* Step dots */}
+        <View style={styles.dots}>
+          {[...Array(Math.max(1, depth + 1))].map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                { backgroundColor: i === depth ? colors.primary : colors.muted },
+              ]}
+            />
+          ))}
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.scriptCard, { backgroundColor: colors.card, borderColor: node.isSpine ? colors.primary : colors.border }]}>
-          <Text style={[styles.scriptText, { color: colors.foreground }]}>
-            {fillPlaceholders(node.text, contactName, callerName)}
-          </Text>
-        </View>
+        {/* Script card */}
+        {node && !done && (
+          <>
+            <View style={[styles.scriptCard, { backgroundColor: colors.card, borderColor: node.isSpine ? colors.primary : colors.border }]}>
+              <View style={[styles.stepBadge, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.stepBadgeText, { color: colors.primaryForeground }]}>{stepLabel}</Text>
+              </View>
+              <Text style={[styles.scriptText, { color: colors.foreground }]}>
+                {fillPlaceholders(node.text, contactName, callerName)}
+              </Text>
+            </View>
 
-        <View style={styles.responses}>
-          {node.responses.map((r, i) => (
-            <Pressable
-              key={i}
-              onPress={() => next(r.nextId, r.label)}
-              style={({ pressed }) => [styles.responseBtn, { backgroundColor: colors.muted, borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
-            >
-              <Text style={[styles.responseBtnText, { color: colors.foreground }]}>{r.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
-            </Pressable>
-          ))}
-        </View>
+            <Text style={[styles.responseLabel, { color: colors.mutedForeground }]}>Their response:</Text>
+
+            <View style={styles.responses}>
+              {node.responses.map((r, i) => (
+                <Pressable
+                  key={i}
+                  onPress={() => next(r.nextId, r.label)}
+                  style={({ pressed }) => [
+                    styles.responseBtn,
+                    { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
+                  ]}
+                >
+                  <Text style={[styles.responseBtnText, { color: colors.foreground }]}>{r.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={styles.bottomActions}>
+              {depth > 0 && (
+                <Pressable onPress={goBack} style={[styles.backBtn, { borderColor: colors.border }]}>
+                  <Text style={[styles.backBtnText, { color: colors.mutedForeground }]}>← Back</Text>
+                </Pressable>
+              )}
+              <Pressable
+                onPress={() => { setOutcome("Ended early"); setDone(true); }}
+                style={[styles.endBtn, { borderColor: "rgba(239,68,68,0.4)" }]}
+              >
+                <Text style={styles.endBtnText}>End Call</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+
+        {/* Completion screen */}
+        {done && (
+          <>
+            <View style={[styles.completionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Ionicons name="checkmark-circle" size={40} color={colors.primary} />
+              <Text style={[styles.completionTitle, { color: colors.foreground }]}>Call Complete</Text>
+              <Text style={[styles.completionOutcome, { color: colors.mutedForeground }]}>
+                Outcome: {outcome || "Completed"}
+              </Text>
+            </View>
+
+            {!logged && (
+              <>
+                <TextInput
+                  style={[styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+                  placeholder="Services offered (prayer, counseling, food, referral…)"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={servicesOffered}
+                  onChangeText={setServicesOffered}
+                  multiline
+                />
+                <TextInput
+                  style={[styles.textArea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+                  placeholder="Contact's feedback or response…"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={feedback}
+                  onChangeText={setFeedback}
+                  multiline
+                />
+
+                {/* Flag toggle */}
+                <Pressable
+                  onPress={() => setFlagged((f) => !f)}
+                  style={[
+                    styles.flagBtn,
+                    {
+                      backgroundColor: flagged ? "rgba(239,68,68,0.1)" : colors.card,
+                      borderColor: flagged ? "rgba(239,68,68,0.5)" : colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={{ fontSize: 16 }}>{flagged ? "🚩" : "⚑"}</Text>
+                  <Text style={[styles.flagBtnText, { color: flagged ? "#f87171" : colors.mutedForeground }]}>
+                    {flagged ? "Flagged for admin review" : "Flag for admin review"}
+                  </Text>
+                </Pressable>
+
+                {flagged && (
+                  <TextInput
+                    style={[styles.textArea, { backgroundColor: colors.card, borderColor: "rgba(239,68,68,0.4)", color: colors.foreground, minHeight: 72 }]}
+                    placeholder="What should admin know about this contact? (optional)"
+                    placeholderTextColor={colors.mutedForeground}
+                    value={flagNote}
+                    onChangeText={setFlagNote}
+                    multiline
+                  />
+                )}
+
+                <Pressable
+                  onPress={handleLogAndFinish}
+                  disabled={logCall.isPending}
+                  style={[styles.logBtn, { backgroundColor: colors.primary, opacity: logCall.isPending ? 0.6 : 1 }]}
+                >
+                  <Text style={[styles.logBtnText, { color: colors.primaryForeground }]}>
+                    {logCall.isPending ? "Logging…" : "Log Call & Return"}
+                  </Text>
+                </Pressable>
+
+                {depth > 0 && (
+                  <Pressable onPress={goBack} style={[styles.backBtn, { borderColor: colors.border }]}>
+                    <Text style={[styles.backBtnText, { color: colors.mutedForeground }]}>← Go Back</Text>
+                  </Pressable>
+                )}
+              </>
+            )}
+
+            {logged && (
+              <Pressable
+                onPress={() => router.back()}
+                style={[styles.logBtn, { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border }]}
+              >
+                <Text style={[styles.logBtnText, { color: colors.primary }]}>✓ Logged — Back</Text>
+              </Pressable>
+            )}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -159,17 +280,30 @@ export default function CallScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { fontSize: 14, fontFamily: "Georgia", letterSpacing: 2 },
+  headerTitle: { fontSize: 14, fontFamily: "Georgia", letterSpacing: 1.5 },
   headerSub: { fontSize: 11, fontFamily: "Georgia", marginTop: 2 },
-  content: { padding: 16, gap: 14 },
-  scriptCard: { padding: 20, borderRadius: 14, borderWidth: 1 },
+  dots: { flexDirection: "row", gap: 5, alignItems: "center" },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  content: { padding: 16, gap: 14, paddingBottom: 48 },
+  scriptCard: { padding: 22, borderRadius: 14, borderWidth: 1, position: "relative", paddingTop: 30 },
+  stepBadge: { position: "absolute", top: -11, left: 18, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 20 },
+  stepBadgeText: { fontFamily: "Georgia", fontSize: 9, letterSpacing: 2, textTransform: "uppercase" },
   scriptText: { fontSize: 16, fontFamily: "Georgia", lineHeight: 26 },
+  responseLabel: { fontFamily: "Georgia", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", textAlign: "center" },
   responses: { gap: 10 },
   responseBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderRadius: 12, borderWidth: 1 },
   responseBtnText: { flex: 1, fontSize: 14, fontFamily: "Georgia" },
-  terminalCard: { margin: 24, padding: 32, borderRadius: 16, borderWidth: 1, alignItems: "center", gap: 12 },
-  terminalTitle: { fontSize: 20, fontFamily: "Georgia", letterSpacing: 2 },
-  terminalText: { fontSize: 14, fontFamily: "Georgia", textAlign: "center", lineHeight: 22 },
-  doneBtn: { marginHorizontal: 24, paddingVertical: 16, borderRadius: 12, alignItems: "center" },
-  doneBtnText: { fontSize: 14, fontFamily: "Georgia", letterSpacing: 3 },
+  bottomActions: { flexDirection: "row", gap: 10, marginTop: 4 },
+  backBtn: { flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" },
+  backBtnText: { fontFamily: "Georgia", fontSize: 12, letterSpacing: 1 },
+  endBtn: { flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" },
+  endBtnText: { fontFamily: "Georgia", fontSize: 12, color: "#f87171", letterSpacing: 1 },
+  completionCard: { padding: 28, borderRadius: 16, borderWidth: 1, alignItems: "center", gap: 10 },
+  completionTitle: { fontSize: 20, fontFamily: "Georgia", letterSpacing: 2 },
+  completionOutcome: { fontSize: 13, fontFamily: "Georgia" },
+  textArea: { borderRadius: 10, borderWidth: 1, padding: 14, fontFamily: "Georgia", fontSize: 13, minHeight: 88, textAlignVertical: "top" },
+  flagBtn: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 10, borderWidth: 1 },
+  flagBtnText: { fontFamily: "Georgia", fontSize: 13 },
+  logBtn: { padding: 16, borderRadius: 12, alignItems: "center" },
+  logBtnText: { fontFamily: "Georgia", fontSize: 14, letterSpacing: 2 },
 });

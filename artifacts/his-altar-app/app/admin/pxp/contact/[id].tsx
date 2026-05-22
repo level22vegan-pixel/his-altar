@@ -256,6 +256,17 @@ export default function ContactProfileScreen() {
                 </View>
               ))}
             </View>
+            {logs.length > 0 && (() => {
+              const callers = [...new Set(logs.map(l => l.callerName).filter(Boolean))];
+              return (
+                <View style={[styles.notesBox, { backgroundColor: colors.muted }]}>
+                  <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Prayed for by</Text>
+                  {callers.map((name, i) => (
+                    <Text key={i} style={[styles.infoVal, { color: colors.foreground, lineHeight: 22 }]}>· {name}</Text>
+                  ))}
+                </View>
+              );
+            })()}
             {contact.notes && (
               <View style={[styles.notesBox, { backgroundColor: colors.muted }]}>
                 <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Prayer Notes</Text>

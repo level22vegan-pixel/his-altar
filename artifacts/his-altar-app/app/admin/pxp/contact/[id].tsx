@@ -365,7 +365,7 @@ export default function ContactProfileScreen() {
               <View style={[styles.keypadBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 {segs ? (
                   <>
-                    <Text style={[styles.keypadSeg, { color: colors.mutedForeground }]}>{segs[0]}</Text>
+                    <Text style={[styles.keypadSeg, { color: colors.mutedForeground }]}>({segs[0]})</Text>
                     <Text style={[styles.keypadSeg, { color: colors.foreground }]}>{segs[1]}</Text>
                     <Text style={[styles.keypadSeg, { color: colors.foreground }]}>{segs[2]}</Text>
                   </>

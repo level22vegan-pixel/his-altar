@@ -204,7 +204,7 @@ router.get("/me", async (req: any, res) => {
   if (!token) { res.status(401).json({ message: "Unauthorized" }); return; }
   try {
     const [org] = await db
-      .select({ name: organizationsTable.name, email: organizationsTable.email, contactName: organizationsTable.contactName })
+      .select({ name: organizationsTable.name, email: organizationsTable.email, contactName: organizationsTable.contactName, createdAt: organizationsTable.createdAt })
       .from(organizationsTable)
       .where(eq(organizationsTable.token, token))
       .limit(1);
@@ -231,6 +231,38 @@ router.patch("/me", async (req: any, res) => {
     res.json({ success: true });
   } catch (err) {
     req.log.error({ err }, "Error updating org profile");
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// PATCH /api/orgs/me/password — change own password
+router.patch("/me/password", async (req: any, res) => {
+  const token = (req.headers.authorization ?? "").replace("Bearer ", "").trim();
+  if (!token) { res.status(401).json({ message: "Unauthorized" }); return; }
+  try {
+    const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string };
+    if (!currentPassword?.trim() || !newPassword?.trim()) {
+      res.status(400).json({ message: "currentPassword and newPassword are required" });
+      return;
+    }
+    if (newPassword.trim().length < 6) {
+      res.status(400).json({ message: "New password must be at least 6 characters" });
+      return;
+    }
+    const [org] = await db
+      .select({ id: organizationsTable.id, passwordHash: organizationsTable.passwordHash })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.token, token))
+      .limit(1);
+    if (!org) { res.status(404).json({ message: "Not found" }); return; }
+    if (org.passwordHash !== hashPassword(currentPassword)) {
+      res.status(401).json({ message: "Current password is incorrect" });
+      return;
+    }
+    await db.update(organizationsTable).set({ passwordHash: hashPassword(newPassword) }).where(eq(organizationsTable.id, org.id));
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error changing password");
     res.status(500).json({ message: "Server error" });
   }
 });

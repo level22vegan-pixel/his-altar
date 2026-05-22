@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, Image, StyleSheet, Text } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -61,51 +61,15 @@ function SmokeWisp({ x, delay, duration, amplitude }: {
   return <Animated.View style={[styles.wisp, style]} />;
 }
 
-function StonePile() {
-  return (
-    <View style={styles.pileWrap}>
-      {/* Bottom row — widest stones */}
-      <View style={styles.row}>
-        <View style={[styles.stone, { width: 38, height: 16, borderRadius: 7, backgroundColor: "#2e2e2e", marginTop: 2 }]} />
-        <View style={[styles.stone, { width: 30, height: 18, borderRadius: 8, backgroundColor: "#5a1824", marginTop: 0 }]} />
-        <View style={[styles.stone, { width: 34, height: 15, borderRadius: 6, backgroundColor: "#242424", marginTop: 3 }]} />
-        <View style={[styles.stone, { width: 26, height: 17, borderRadius: 7, backgroundColor: "#4a1220", marginTop: 1 }]} />
-      </View>
-
-      {/* Middle row */}
-      <View style={[styles.row, { marginTop: -4 }]}>
-        <View style={[styles.stone, { width: 28, height: 14, borderRadius: 6, backgroundColor: "#4d1522", marginTop: 0 }]} />
-        <View style={[styles.stone, { width: 36, height: 16, borderRadius: 7, backgroundColor: "#303030", marginTop: -1 }]} />
-        <View style={[styles.stone, { width: 24, height: 13, borderRadius: 6, backgroundColor: "#5c1928", marginTop: 2 }]} />
-      </View>
-
-      {/* Top row — narrow peak */}
-      <View style={[styles.row, { marginTop: -4 }]}>
-        <View style={[styles.stone, { width: 20, height: 12, borderRadius: 5, backgroundColor: "#3a3a3a", marginTop: 1 }]} />
-        <View style={[styles.stone, { width: 24, height: 13, borderRadius: 6, backgroundColor: "#4a1220", marginTop: 0 }]} />
-        <View style={[styles.stone, { width: 16, height: 11, borderRadius: 5, backgroundColor: "#282828", marginTop: 2 }]} />
-      </View>
-
-      {/* Cap stone */}
-      <View style={[styles.row, { marginTop: -4 }]}>
-        <View style={[styles.stone, { width: 18, height: 10, borderRadius: 5, backgroundColor: "#551626", marginTop: 0 }]} />
-      </View>
-
-      {/* Ember glow under smoke */}
-      <View style={styles.ember} />
-    </View>
-  );
-}
-
 export default function AltarSplash({ onDone }: Props) {
   const screenOpacity = useSharedValue(0);
-  const pileScale = useSharedValue(0.92);
+  const imgScale = useSharedValue(0.94);
   const exitOpacity = useSharedValue(1);
   const titleOpacity = useSharedValue(0);
 
   useEffect(() => {
     screenOpacity.value = withTiming(1, { duration: 800 });
-    pileScale.value = withTiming(1, { duration: 1200, easing: Easing.out(Easing.quad) });
+    imgScale.value = withTiming(1, { duration: 1200, easing: Easing.out(Easing.quad) });
     titleOpacity.value = withDelay(600, withTiming(1, { duration: 900 }));
 
     const timer = setTimeout(() => {
@@ -119,8 +83,8 @@ export default function AltarSplash({ onDone }: Props) {
   const wrapStyle = useAnimatedStyle(() => ({
     opacity: screenOpacity.value * exitOpacity.value,
   }));
-  const pileStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pileScale.value }],
+  const imgStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: imgScale.value }],
   }));
   const titleStyle = useAnimatedStyle(() => ({
     opacity: titleOpacity.value,
@@ -128,12 +92,14 @@ export default function AltarSplash({ onDone }: Props) {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.root, wrapStyle]}>
-      {/* Stone pile altar */}
-      <Animated.View style={pileStyle}>
-        <StonePile />
-      </Animated.View>
+      {/* Full-screen image — background color from the image fills the screen */}
+      <Animated.Image
+        source={require("@/assets/images/altar-splash.png")}
+        style={[StyleSheet.absoluteFill, styles.img, imgStyle]}
+        resizeMode="cover"
+      />
 
-      {/* Smoke wisps rising from the pile */}
+      {/* Smoke wisps over the altar */}
       <Animated.View style={styles.smokeLayer}>
         <SmokeWisp x={0}   delay={0}    duration={2400} amplitude={14} />
         <SmokeWisp x={-14} delay={550}  duration={2800} amplitude={-18} />
@@ -155,38 +121,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 999,
   },
-  pileWrap: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 3,
-  },
-  stone: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  ember: {
-    width: 14,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "rgba(180, 60, 20, 0.55)",
-    alignSelf: "center",
-    marginTop: 1,
-    shadowColor: "#cc4411",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
+  img: {
+    width: "100%",
+    height: "100%",
   },
   smokeLayer: {
     position: "absolute",
-    bottom: "50%",
-    marginBottom: -10,
+    bottom: "30%",
     left: 0,
     right: 0,
     height: 200,

@@ -9,6 +9,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function formatDate(d: string | null | undefined) {
   if (!d) return "";
@@ -24,7 +25,7 @@ export default function LogsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const { callerSession } = useAppContext();
+  const { callerSession, logoutCaller } = useAppContext();
 
   const logsQ = useListPxpCallLogs({});
   const contactsQ = useListDbancContacts();
@@ -66,11 +67,31 @@ export default function LogsScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background, paddingTop: topPad }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={async () => {
+          await logoutCaller();
+          await AsyncStorage.removeItem("callerBiometricBinding");
+          router.back();
+        }}>
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>CALL HISTORY</Text>
-        <View style={{ width: 32 }} />
+        <View style={{ alignItems: "center" }}>
+          <Text style={[styles.title, { color: colors.foreground }]}>CALL HISTORY</Text>
+          {callerSession?.callerName ? (
+            <Text style={[styles.callerTag, { color: colors.mutedForeground }]}>
+              {callerSession.callerName}
+            </Text>
+          ) : null}
+        </View>
+        <Pressable
+          onPress={async () => {
+            await logoutCaller();
+            await AsyncStorage.removeItem("callerBiometricBinding");
+            router.replace("/caller-login" as any);
+          }}
+          style={{ padding: 4 }}
+        >
+          <Ionicons name="log-out-outline" size={22} color={colors.mutedForeground} />
+        </Pressable>
       </View>
 
       <FlatList
@@ -266,6 +287,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 12 },
   title: { fontSize: 18, fontFamily: "Georgia", letterSpacing: 4 },
+  callerTag: { fontSize: 10, fontFamily: "Georgia", letterSpacing: 1.5, marginTop: 1 },
   statsCard: { borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 12 },
   statsRow: { flexDirection: "row", justifyContent: "space-around" },
   statItem: { alignItems: "center", gap: 3 },

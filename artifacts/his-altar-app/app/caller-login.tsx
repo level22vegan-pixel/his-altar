@@ -61,7 +61,7 @@ export default function CallerLoginScreen() {
       if (res.ok && data.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         loginCaller(data.caller.id, data.caller.name, data.caller.campus ?? "");
-        router.replace("/admin/pxp" as any);
+        router.replace("/admin/pxp/logs" as any);
         return;
       }
       setError("Invalid code. Please try again.");

@@ -1,12 +1,14 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming, withSequence } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
+import AltarSplash from "@/components/AltarSplash";
 
 export default function LandingScreen() {
+  const [splashDone, setSplashDone] = useState(false);
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -27,6 +29,10 @@ export default function LandingScreen() {
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
   }));
+
+  if (!splashDone) {
+    return <AltarSplash onDone={() => setSplashDone(true)} />;
+  }
 
   return (
     <LinearGradient

@@ -20,6 +20,13 @@ function formatPhone(p: string) {
   return p;
 }
 
+function phoneSegments(p: string): [string, string, string] | null {
+  const d = p.replace(/\D/g, "");
+  if (d.length === 10) return [d.slice(0, 3), d.slice(3, 6), d.slice(6)];
+  if (d.length === 11 && d[0] === "1") return [d.slice(1, 4), d.slice(4, 7), d.slice(7)];
+  return null;
+}
+
 function formatDate(iso: string) {
   const d = new Date(iso);
   return (
@@ -332,7 +339,7 @@ export default function ContactProfileScreen() {
         )}
 
         {/* Call button */}
-        <View style={{ marginTop: 8 }}>
+        <View style={{ marginTop: 8, gap: 0 }}>
           {doNotContact ? (
             <View style={[styles.dncBlock, { backgroundColor: colors.card, borderColor: "rgba(245,158,11,0.4)" }]}>
               <Text style={[styles.dncBlockText, { color: "#f59e0b" }]}>
@@ -350,6 +357,24 @@ export default function ContactProfileScreen() {
               </Text>
             </Pressable>
           )}
+
+          {/* Big keypad phone display */}
+          {contact.phone ? (() => {
+            const segs = phoneSegments(contact.phone);
+            return (
+              <View style={[styles.keypadBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                {segs ? (
+                  <>
+                    <Text style={[styles.keypadSeg, { color: colors.mutedForeground }]}>{segs[0]}</Text>
+                    <Text style={[styles.keypadSeg, { color: colors.foreground }]}>{segs[1]}</Text>
+                    <Text style={[styles.keypadSeg, { color: colors.foreground }]}>{segs[2]}</Text>
+                  </>
+                ) : (
+                  <Text style={[styles.keypadSeg, { color: colors.foreground }]}>{contact.phone}</Text>
+                )}
+              </View>
+            );
+          })() : null}
         </View>
       </ScrollView>
     </View>
@@ -429,4 +454,6 @@ const styles = StyleSheet.create({
   dncBlockText: { fontFamily: "Georgia", fontSize: 13, letterSpacing: 0.5 },
   callBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, padding: 17, borderRadius: 14 },
   callBtnText: { fontFamily: "Georgia", fontSize: 15, letterSpacing: 2 },
+  keypadBox: { alignItems: "center", justifyContent: "center", paddingVertical: 28, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, marginTop: 10, gap: 4 },
+  keypadSeg: { fontFamily: "Georgia", fontSize: 52, letterSpacing: 8, lineHeight: 62, textAlign: "center" },
 });

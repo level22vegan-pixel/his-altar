@@ -19,6 +19,39 @@ interface SimNode {
 }
 interface SimTree { nodes: Record<string, SimNode>; startId: string; spine: string[]; }
 
+function convertLegacyTree(legacy: any): SimTree {
+  const nodes: Record<string, SimNode> = {};
+  function flatten(node: any) {
+    if (!node?.id || nodes[node.id]) return;
+    const responses: SimResponse[] = (node.responses || []).map((child: any) => ({
+      label: child.label || "Continue",
+      nextId: child.id,
+    }));
+    nodes[node.id] = {
+      id: node.id,
+      title: node.label || (node.id === "root" ? "Opening" : node.id),
+      text: node.text || "",
+      responses,
+      isTerminal: node.isTerminal ?? responses.length === 0,
+    };
+    for (const child of (node.responses || [])) flatten(child);
+  }
+  flatten(legacy);
+  const spine: string[] = [];
+  let cur = legacy.id;
+  const seen = new Set<string>();
+  while (cur && nodes[cur] && !seen.has(cur)) {
+    seen.add(cur); spine.push(cur);
+    const first = nodes[cur].responses[0];
+    if (!first || nodes[cur].isTerminal) break;
+    cur = first.nextId;
+  }
+  spine.forEach((id, idx) => {
+    if (nodes[id]) { nodes[id].isSpine = true; nodes[id].spineIndex = idx; }
+  });
+  return { nodes, startId: legacy.id, spine };
+}
+
 function fillPlaceholders(text: string, contactName: string, callerName: string) {
   return text
     .replace(/\{contact_name\}/g, contactName || "them")
@@ -53,6 +86,10 @@ export default function CallScreen() {
     if (raw?.nodes && raw?.startId) {
       setTree(raw as SimTree);
       setHistory([raw.startId]);
+    } else if (raw?.id && raw?.responses) {
+      const converted = convertLegacyTree(raw);
+      setTree(converted);
+      setHistory([converted.startId]);
     }
   }, [config.data]);
 

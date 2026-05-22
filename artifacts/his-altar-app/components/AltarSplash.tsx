@@ -132,7 +132,7 @@ function Ember({ x, delay, duration }: { x: number; delay: number; duration: num
       );
       translateY.value = withDelay(
         delay,
-        withTiming(-(60 + Math.random() * 40), { duration, easing: Easing.out(Easing.quad) }),
+        withTiming(-(180 + Math.random() * 120), { duration, easing: Easing.out(Easing.quad) }),
       );
       translateX.value = withDelay(
         delay,
@@ -197,32 +197,32 @@ export default function AltarSplash({ onDone }: Props) {
 
         {/* Flame layers — back to front, tallest first */}
         {/* Deep red back flames */}
-        <FlameTongue x={-10} baseWidth={28} baseHeight={70} color="#8B0000" delay={0}   duration={1200} swayAmp={6} />
-        <FlameTongue x={8}   baseWidth={24} baseHeight={60} color="#9B1010" delay={300} duration={1100} swayAmp={-5} />
+        <FlameTongue x={-30} baseWidth={84} baseHeight={210} color="#8B0000" delay={0}   duration={1200} swayAmp={18} />
+        <FlameTongue x={24}  baseWidth={72} baseHeight={180} color="#9B1010" delay={300} duration={1100} swayAmp={-15} />
 
         {/* Orange mid flames */}
-        <FlameTongue x={-6}  baseWidth={22} baseHeight={56} color="#CC4400" delay={100} duration={1000} swayAmp={-7} />
-        <FlameTongue x={10}  baseWidth={20} baseHeight={50} color="#DD5500" delay={500} duration={950}  swayAmp={5} />
-        <FlameTongue x={0}   baseWidth={26} baseHeight={64} color="#E06000" delay={200} duration={1100} swayAmp={4} />
+        <FlameTongue x={-18} baseWidth={66} baseHeight={168} color="#CC4400" delay={100} duration={1000} swayAmp={-21} />
+        <FlameTongue x={30}  baseWidth={60} baseHeight={150} color="#DD5500" delay={500} duration={950}  swayAmp={15} />
+        <FlameTongue x={0}   baseWidth={78} baseHeight={192} color="#E06000" delay={200} duration={1100} swayAmp={12} />
 
         {/* Bright orange-yellow inner flames */}
-        <FlameTongue x={-4}  baseWidth={18} baseHeight={46} color="#FF7700" delay={50}  duration={900}  swayAmp={-4} />
-        <FlameTongue x={6}   baseWidth={16} baseHeight={40} color="#FF8800" delay={400} duration={850}  swayAmp={6} />
+        <FlameTongue x={-12} baseWidth={54} baseHeight={138} color="#FF7700" delay={50}  duration={900}  swayAmp={-12} />
+        <FlameTongue x={18}  baseWidth={48} baseHeight={120} color="#FF8800" delay={400} duration={850}  swayAmp={18} />
 
         {/* Yellow core */}
-        <FlameTongue x={0}   baseWidth={14} baseHeight={34} color="#FFAA00" delay={150} duration={800}  swayAmp={3} />
-        <FlameTongue x={-3}  baseWidth={10} baseHeight={26} color="#FFD000" delay={250} duration={700}  swayAmp={-3} />
+        <FlameTongue x={0}   baseWidth={42} baseHeight={102} color="#FFAA00" delay={150} duration={800}  swayAmp={9} />
+        <FlameTongue x={-9}  baseWidth={30} baseHeight={78}  color="#FFD000" delay={250} duration={700}  swayAmp={-9} />
 
         {/* Hot white tip */}
-        <FlameTongue x={1}   baseWidth={8}  baseHeight={18} color="#FFF5CC" delay={300} duration={600}  swayAmp={2} />
+        <FlameTongue x={3}   baseWidth={24} baseHeight={54}  color="#FFF5CC" delay={300} duration={600}  swayAmp={6} />
 
         {/* Floating embers */}
-        <Ember x={-14} delay={0}    duration={1400} />
-        <Ember x={12}  delay={350}  duration={1200} />
-        <Ember x={-4}  delay={700}  duration={1500} />
-        <Ember x={18}  delay={200}  duration={1300} />
-        <Ember x={-20} delay={900}  duration={1100} />
-        <Ember x={5}   delay={550}  duration={1600} />
+        <Ember x={-42} delay={0}    duration={1400} />
+        <Ember x={36}  delay={350}  duration={1200} />
+        <Ember x={-12} delay={700}  duration={1500} />
+        <Ember x={54}  delay={200}  duration={1300} />
+        <Ember x={-60} delay={900}  duration={1100} />
+        <Ember x={15}  delay={550}  duration={1600} />
       </Animated.View>
 
       {/* Title below the fire */}
@@ -240,35 +240,35 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   fireWrap: {
-    width: 80,
-    height: 90,
+    width: 240,
+    height: 270,
     alignItems: "center",
     justifyContent: "flex-end",
     marginBottom: 32,
   },
   baseGlow: {
     position: "absolute",
-    bottom: -10,
-    width: 80,
-    height: 30,
-    borderRadius: 40,
+    bottom: -30,
+    width: 240,
+    height: 90,
+    borderRadius: 120,
     backgroundColor: "rgba(220, 80, 0, 0.45)",
     shadowColor: "#ff4400",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 20,
+    shadowRadius: 60,
   },
   ember: {
     position: "absolute",
-    bottom: 10,
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+    bottom: 30,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: "#FF9900",
     shadowColor: "#FF6600",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 4,
+    shadowRadius: 8,
   },
   title: {
     fontFamily: "Georgia",

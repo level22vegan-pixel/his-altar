@@ -92,20 +92,20 @@ export default function AltarSplash({ onDone }: Props) {
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.root, wrapStyle]}>
-      {/* Photorealistic altar image */}
+      {/* Centered altar image — smaller, with space around it */}
       <Animated.View style={[styles.imgWrap, imgStyle]}>
         <Image
           source={require("@/assets/images/altar-splash.png")}
           style={styles.img}
-          resizeMode="cover"
+          resizeMode="contain"
         />
         {/* Smoke wisps overlaid on top of image */}
         <Animated.View style={styles.smokeLayer}>
           <SmokeWisp x={0}   delay={0}    duration={2400} amplitude={14} />
-          <SmokeWisp x={-18} delay={550}  duration={2800} amplitude={-20} />
-          <SmokeWisp x={18}  delay={950}  duration={2100} amplitude={11} />
-          <SmokeWisp x={-8}  delay={1450} duration={2600} amplitude={-10} />
-          <SmokeWisp x={10}  delay={320}  duration={2900} amplitude={16} />
+          <SmokeWisp x={-14} delay={550}  duration={2800} amplitude={-18} />
+          <SmokeWisp x={14}  delay={950}  duration={2100} amplitude={11} />
+          <SmokeWisp x={-6}  delay={1450} duration={2600} amplitude={-9} />
+          <SmokeWisp x={8}   delay={320}  duration={2900} amplitude={15} />
         </Animated.View>
       </Animated.View>
 
@@ -123,9 +123,10 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   imgWrap: {
-    width: width,
-    height: height * 0.78,
-    overflow: "hidden",
+    width: width * 0.72,
+    height: width * 0.72 * (4 / 3),
+    alignItems: "center",
+    justifyContent: "center",
   },
   img: {
     width: "100%",
@@ -133,26 +134,25 @@ const styles = StyleSheet.create({
   },
   smokeLayer: {
     position: "absolute",
-    bottom: "28%",
+    bottom: "32%",
     left: 0,
     right: 0,
-    height: 280,
+    height: 200,
     alignItems: "center",
     justifyContent: "flex-end",
   },
   wisp: {
     position: "absolute",
     bottom: 0,
-    width: 20,
-    height: 60,
-    borderRadius: 14,
-    backgroundColor: "rgba(230,215,200,0.4)",
+    width: 16,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: "rgba(230,215,200,0.35)",
   },
   title: {
-    position: "absolute",
-    bottom: height * 0.08,
+    marginTop: 32,
     fontFamily: "Georgia",
-    fontSize: 32,
+    fontSize: 30,
     color: "#fff",
     letterSpacing: 3,
     textShadowColor: "rgba(200,150,40,0.6)",

@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withRepeat,
   withSequence,
   withTiming,
   runOnJS,
@@ -16,119 +17,216 @@ interface Props {
   onDone: () => void;
 }
 
-function SmokeWisp({ x, delay, duration, amplitude }: {
-  x: number; delay: number; duration: number; amplitude: number;
+// A single animated flame tongue
+function FlameTongue({
+  x,
+  baseWidth,
+  baseHeight,
+  color,
+  delay,
+  duration,
+  swayAmp,
+}: {
+  x: number;
+  baseWidth: number;
+  baseHeight: number;
+  color: string;
+  delay: number;
+  duration: number;
+  swayAmp: number;
 }) {
-  const translateY = useSharedValue(0);
+  const scaleY = useSharedValue(0.3);
+  const scaleX = useSharedValue(1);
   const opacity = useSharedValue(0);
-  const translateX = useSharedValue(0);
-  const scaleX = useSharedValue(0.5);
+  const sway = useSharedValue(0);
 
   useEffect(() => {
     const loop = () => {
-      translateY.value = 0;
+      scaleY.value = 0.3;
+      scaleX.value = 1;
       opacity.value = 0;
-      translateX.value = 0;
-      scaleX.value = 0.5;
-      opacity.value = withDelay(delay, withSequence(
-        withTiming(0.45, { duration: duration * 0.25 }),
-        withTiming(0.22, { duration: duration * 0.45 }),
-        withTiming(0, { duration: duration * 0.3 }),
-      ));
-      translateY.value = withDelay(delay, withTiming(-300, { duration, easing: Easing.out(Easing.quad) }));
-      translateX.value = withDelay(delay, withSequence(
-        withTiming(amplitude, { duration: duration * 0.3, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-amplitude * 0.6, { duration: duration * 0.35, easing: Easing.inOut(Easing.sin) }),
-        withTiming(amplitude * 0.3, { duration: duration * 0.35, easing: Easing.inOut(Easing.sin) }),
-      ));
-      scaleX.value = withDelay(delay, withTiming(2.8, { duration, easing: Easing.out(Easing.quad) }));
+      sway.value = 0;
+
+      opacity.value = withDelay(
+        delay,
+        withSequence(
+          withTiming(0.9, { duration: duration * 0.15 }),
+          withTiming(0.75, { duration: duration * 0.5 }),
+          withTiming(0, { duration: duration * 0.35 }),
+        ),
+      );
+      scaleY.value = withDelay(
+        delay,
+        withTiming(1, { duration, easing: Easing.out(Easing.quad) }),
+      );
+      scaleX.value = withDelay(
+        delay,
+        withSequence(
+          withTiming(0.7, { duration: duration * 0.3, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1.1, { duration: duration * 0.35, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.85, { duration: duration * 0.35, easing: Easing.inOut(Easing.sin) }),
+        ),
+      );
+      sway.value = withDelay(
+        delay,
+        withSequence(
+          withTiming(swayAmp, { duration: duration * 0.4, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-swayAmp * 0.7, { duration: duration * 0.3, easing: Easing.inOut(Easing.sin) }),
+          withTiming(swayAmp * 0.3, { duration: duration * 0.3, easing: Easing.inOut(Easing.sin) }),
+        ),
+      );
     };
     loop();
-    const id = setInterval(loop, duration + delay + 300);
+    const id = setInterval(loop, duration + delay + 100);
     return () => clearInterval(id);
   }, []);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [
-      { translateX: x + translateX.value },
-      { translateY: translateY.value },
+      { translateX: x + sway.value },
+      { scaleY: scaleY.value },
       { scaleX: scaleX.value },
     ],
   }));
 
-  return <Animated.View style={[styles.wisp, style]} />;
+  return (
+    <Animated.View
+      style={[
+        {
+          position: "absolute",
+          bottom: 0,
+          width: baseWidth,
+          height: baseHeight,
+          borderRadius: baseWidth / 2,
+          borderTopLeftRadius: baseWidth * 0.45,
+          borderTopRightRadius: baseWidth * 0.45,
+          backgroundColor: color,
+          marginLeft: -baseWidth / 2,
+        },
+        style,
+      ]}
+    />
+  );
+}
+
+// Floating ember particle
+function Ember({ x, delay, duration }: { x: number; delay: number; duration: number }) {
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const translateX = useSharedValue(x);
+
+  useEffect(() => {
+    const loop = () => {
+      translateY.value = 0;
+      opacity.value = 0;
+      translateX.value = x;
+
+      opacity.value = withDelay(
+        delay,
+        withSequence(
+          withTiming(0.9, { duration: 200 }),
+          withTiming(0.6, { duration: duration * 0.5 }),
+          withTiming(0, { duration: duration * 0.5 }),
+        ),
+      );
+      translateY.value = withDelay(
+        delay,
+        withTiming(-(60 + Math.random() * 40), { duration, easing: Easing.out(Easing.quad) }),
+      );
+      translateX.value = withDelay(
+        delay,
+        withSequence(
+          withTiming(x + (Math.random() > 0.5 ? 12 : -12), { duration: duration * 0.5, easing: Easing.inOut(Easing.sin) }),
+          withTiming(x + (Math.random() > 0.5 ? -8 : 8), { duration: duration * 0.5, easing: Easing.inOut(Easing.sin) }),
+        ),
+      );
+    };
+    loop();
+    const id = setInterval(loop, duration + delay + 200);
+    return () => clearInterval(id);
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
+  }));
+
+  return <Animated.View style={[styles.ember, style]} />;
 }
 
 export default function AltarSplash({ onDone }: Props) {
   const screenOpacity = useSharedValue(0);
   const exitOpacity = useSharedValue(1);
-  const textScale = useSharedValue(0.88);
-  const textOpacity = useSharedValue(0);
-  const glowPulse = useSharedValue(0.7);
+  const titleOpacity = useSharedValue(0);
+  const glowPulse = useSharedValue(0.6);
 
   useEffect(() => {
-    screenOpacity.value = withTiming(1, { duration: 600 });
-    textOpacity.value = withDelay(200, withTiming(1, { duration: 1000, easing: Easing.out(Easing.quad) }));
-    textScale.value = withDelay(200, withTiming(1, { duration: 1200, easing: Easing.out(Easing.back(1.2)) }));
-    glowPulse.value = withDelay(800, withSequence(
-      withTiming(1, { duration: 800 }),
-      withTiming(0.7, { duration: 700 }),
-      withTiming(1, { duration: 700 }),
-      withTiming(0.82, { duration: 500 }),
-    ));
+    screenOpacity.value = withTiming(1, { duration: 700 });
+    titleOpacity.value = withDelay(500, withTiming(1, { duration: 900 }));
+    glowPulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.65, { duration: 700, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+      true,
+    );
 
     const timer = setTimeout(() => {
       exitOpacity.value = withTiming(0, { duration: 700 }, (finished) => {
         if (finished) runOnJS(onDone)();
       });
-    }, 3200);
+    }, 3400);
     return () => clearTimeout(timer);
   }, []);
 
   const rootStyle = useAnimatedStyle(() => ({
     opacity: screenOpacity.value * exitOpacity.value,
   }));
-
-  const textWrapStyle = useAnimatedStyle(() => ({
-    opacity: textOpacity.value,
-    transform: [{ scale: textScale.value }],
-  }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowPulse.value,
-  }));
+  const titleStyle = useAnimatedStyle(() => ({ opacity: titleOpacity.value }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glowPulse.value }));
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, styles.root, rootStyle]}>
 
-      {/* Ambient deep blue background glow */}
-      <Animated.View style={[styles.bgGlow, glowStyle]} />
+      {/* Fire container — centered, small */}
+      <Animated.View style={styles.fireWrap}>
+        {/* Base glow on the ground */}
+        <Animated.View style={[styles.baseGlow, glowStyle]} />
 
-      {/* Text block */}
-      <Animated.View style={[styles.textWrap, textWrapStyle]}>
-        {/* Outer red-ember glow layer (blurred halo) */}
-        <Animated.Text style={[styles.textHaloRed, glowStyle]}>
-          HIS ALTAR
-        </Animated.Text>
-        {/* Mid blue glow */}
-        <Animated.Text style={[styles.textHaloBlue, glowStyle]}>
-          HIS ALTAR
-        </Animated.Text>
-        {/* Crisp foreground text */}
-        <Animated.Text style={styles.textMain}>
-          HIS ALTAR
-        </Animated.Text>
+        {/* Flame layers — back to front, tallest first */}
+        {/* Deep red back flames */}
+        <FlameTongue x={-10} baseWidth={28} baseHeight={70} color="#8B0000" delay={0}   duration={1200} swayAmp={6} />
+        <FlameTongue x={8}   baseWidth={24} baseHeight={60} color="#9B1010" delay={300} duration={1100} swayAmp={-5} />
+
+        {/* Orange mid flames */}
+        <FlameTongue x={-6}  baseWidth={22} baseHeight={56} color="#CC4400" delay={100} duration={1000} swayAmp={-7} />
+        <FlameTongue x={10}  baseWidth={20} baseHeight={50} color="#DD5500" delay={500} duration={950}  swayAmp={5} />
+        <FlameTongue x={0}   baseWidth={26} baseHeight={64} color="#E06000" delay={200} duration={1100} swayAmp={4} />
+
+        {/* Bright orange-yellow inner flames */}
+        <FlameTongue x={-4}  baseWidth={18} baseHeight={46} color="#FF7700" delay={50}  duration={900}  swayAmp={-4} />
+        <FlameTongue x={6}   baseWidth={16} baseHeight={40} color="#FF8800" delay={400} duration={850}  swayAmp={6} />
+
+        {/* Yellow core */}
+        <FlameTongue x={0}   baseWidth={14} baseHeight={34} color="#FFAA00" delay={150} duration={800}  swayAmp={3} />
+        <FlameTongue x={-3}  baseWidth={10} baseHeight={26} color="#FFD000" delay={250} duration={700}  swayAmp={-3} />
+
+        {/* Hot white tip */}
+        <FlameTongue x={1}   baseWidth={8}  baseHeight={18} color="#FFF5CC" delay={300} duration={600}  swayAmp={2} />
+
+        {/* Floating embers */}
+        <Ember x={-14} delay={0}    duration={1400} />
+        <Ember x={12}  delay={350}  duration={1200} />
+        <Ember x={-4}  delay={700}  duration={1500} />
+        <Ember x={18}  delay={200}  duration={1300} />
+        <Ember x={-20} delay={900}  duration={1100} />
+        <Ember x={5}   delay={550}  duration={1600} />
       </Animated.View>
 
-      {/* Smoke wisps rising from behind the text */}
-      <Animated.View style={styles.smokeLayer}>
-        <SmokeWisp x={0}   delay={0}    duration={2400} amplitude={14} />
-        <SmokeWisp x={-18} delay={550}  duration={2800} amplitude={-20} />
-        <SmokeWisp x={18}  delay={950}  duration={2100} amplitude={12} />
-        <SmokeWisp x={-8}  delay={1450} duration={2600} amplitude={-10} />
-        <SmokeWisp x={10}  delay={320}  duration={2900} amplitude={16} />
-      </Animated.View>
+      {/* Title below the fire */}
+      <Animated.Text style={[styles.title, titleStyle]}>His Altar</Animated.Text>
 
     </Animated.View>
   );
@@ -136,70 +234,49 @@ export default function AltarSplash({ onDone }: Props) {
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: "#03050f",
+    backgroundColor: "#080410",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 999,
   },
-  bgGlow: {
-    position: "absolute",
-    width: width * 1.2,
-    height: width * 1.2,
-    borderRadius: width * 0.6,
-    backgroundColor: "rgba(10, 40, 130, 0.22)",
-    shadowColor: "#0a4fff",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 120,
-  },
-  textWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textHaloRed: {
-    position: "absolute",
-    fontFamily: "Georgia",
-    fontSize: 46,
-    letterSpacing: 10,
-    color: "transparent",
-    textShadowColor: "rgba(220, 60, 10, 0.75)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 38,
-  },
-  textHaloBlue: {
-    position: "absolute",
-    fontFamily: "Georgia",
-    fontSize: 46,
-    letterSpacing: 10,
-    color: "transparent",
-    textShadowColor: "rgba(30, 100, 255, 0.9)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 28,
-  },
-  textMain: {
-    fontFamily: "Georgia",
-    fontSize: 46,
-    letterSpacing: 10,
-    color: "rgba(200, 225, 255, 0.95)",
-    textShadowColor: "rgba(60, 140, 255, 0.8)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
-  },
-  smokeLayer: {
-    position: "absolute",
-    bottom: "46%",
-    left: 0,
-    right: 0,
-    height: 200,
+  fireWrap: {
+    width: 80,
+    height: 90,
     alignItems: "center",
     justifyContent: "flex-end",
+    marginBottom: 32,
   },
-  wisp: {
+  baseGlow: {
     position: "absolute",
-    bottom: 0,
-    width: 14,
-    height: 55,
-    borderRadius: 10,
-    backgroundColor: "rgba(180, 200, 255, 0.18)",
+    bottom: -10,
+    width: 80,
+    height: 30,
+    borderRadius: 40,
+    backgroundColor: "rgba(220, 80, 0, 0.45)",
+    shadowColor: "#ff4400",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+  },
+  ember: {
+    position: "absolute",
+    bottom: 10,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#FF9900",
+    shadowColor: "#FF6600",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+  },
+  title: {
+    fontFamily: "Georgia",
+    fontSize: 28,
+    color: "rgba(255, 230, 180, 0.9)",
+    letterSpacing: 4,
+    textShadowColor: "rgba(220, 100, 20, 0.7)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
   },
 });

@@ -60,6 +60,10 @@ export default function ContactProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [openSections, setOpenSections] = useState<Set<Section>>(new Set());
+  const [filterCaller, setFilterCaller] = useState<string | null>(null);
+  const [filterOutcome, setFilterOutcome] = useState<string | null>(null);
+  const [filterCampus, setFilterCampus] = useState<string | null>(null);
+  const [filterFlagged, setFilterFlagged] = useState(false);
   const autoAssigned = useRef(false);
 
   const toggleSection = useCallback((s: Section) => {
@@ -315,39 +319,113 @@ export default function ContactProfileScreen() {
         )}
 
         {/* Call history */}
-        {openSections.has("history") && (
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {logs.length === 0 ? (
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No calls logged yet</Text>
-            ) : (
-              <View style={{ gap: 10 }}>
-                {logs.map((log) => (
-                  <View key={log.id} style={[styles.logEntry, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                    <View style={styles.logHeader}>
-                      <Text style={[styles.logCaller, { color: colors.primary }]}>{log.callerName}</Text>
-                      <Text style={[styles.logDate, { color: colors.mutedForeground }]}>{formatDate(log.calledAt)}</Text>
-                    </View>
-                    {log.outcome && (
-                      <Text style={[styles.logField, { color: colors.foreground }]}>
-                        <Text style={{ color: colors.mutedForeground }}>Outcome: </Text>{log.outcome}
-                      </Text>
+        {openSections.has("history") && (() => {
+          const uniqueCallers = [...new Set(logs.map(l => l.callerName).filter(Boolean))] as string[];
+          const uniqueOutcomes = [...new Set(logs.map(l => l.outcome).filter(Boolean))] as string[];
+          const uniqueCampuses = [...new Set(logs.map(l => l.campus).filter(Boolean))] as string[];
+          const hasFlagged = logs.some(l => l.flagged);
+          const activeFilters = [filterCaller, filterOutcome, filterCampus, filterFlagged ? "flagged" : null].filter(Boolean).length;
+
+          const filtered = logs.filter(l => {
+            if (filterCaller && l.callerName !== filterCaller) return false;
+            if (filterOutcome && l.outcome !== filterOutcome) return false;
+            if (filterCampus && l.campus !== filterCampus) return false;
+            if (filterFlagged && !l.flagged) return false;
+            return true;
+          });
+
+          function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+            return (
+              <Pressable
+                onPress={onPress}
+                style={[styles.filterChip, {
+                  backgroundColor: active ? colors.primary : colors.muted,
+                  borderColor: active ? colors.primary : colors.border,
+                }]}
+              >
+                <Text style={[styles.filterChipText, { color: active ? colors.primaryForeground : colors.mutedForeground }]}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          }
+
+          return (
+            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              {logs.length === 0 ? (
+                <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No calls logged yet</Text>
+              ) : (
+                <>
+                  {/* Filter bar */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterBar}>
+                    {activeFilters > 0 && (
+                      <Chip label="✕ Clear" active={false} onPress={() => { setFilterCaller(null); setFilterOutcome(null); setFilterCampus(null); setFilterFlagged(false); }} />
                     )}
-                    {log.servicesOffered && (
-                      <Text style={[styles.logField, { color: colors.foreground }]}>
-                        <Text style={{ color: colors.mutedForeground }}>Services: </Text>{log.servicesOffered}
-                      </Text>
+                    {hasFlagged && (
+                      <Chip label="⚑ Flagged" active={filterFlagged} onPress={() => setFilterFlagged(f => !f)} />
                     )}
-                    {log.feedback && (
-                      <Text style={[styles.logField, { color: colors.foreground }]}>
-                        <Text style={{ color: colors.mutedForeground }}>Feedback: </Text>{log.feedback}
-                      </Text>
-                    )}
+                    {uniqueCallers.length > 1 && uniqueCallers.map(name => (
+                      <Chip key={name} label={name} active={filterCaller === name} onPress={() => setFilterCaller(f => f === name ? null : name)} />
+                    ))}
+                    {uniqueOutcomes.map(o => (
+                      <Chip key={o} label={o} active={filterOutcome === o} onPress={() => setFilterOutcome(f => f === o ? null : o)} />
+                    ))}
+                    {uniqueCampuses.length > 1 && uniqueCampuses.map(c => (
+                      <Chip key={c} label={c} active={filterCampus === c} onPress={() => setFilterCampus(f => f === c ? null : c)} />
+                    ))}
+                  </ScrollView>
+
+                  {/* Results count if filtered */}
+                  {activeFilters > 0 && (
+                    <Text style={[styles.filterCount, { color: colors.mutedForeground }]}>
+                      {filtered.length} of {logs.length} call{logs.length !== 1 ? "s" : ""}
+                    </Text>
+                  )}
+
+                  {/* Log entries */}
+                  <View style={{ gap: 10 }}>
+                    {filtered.length === 0 ? (
+                      <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No calls match the selected filters</Text>
+                    ) : filtered.map((log) => (
+                      <View key={log.id} style={[styles.logEntry, { backgroundColor: colors.muted, borderColor: log.flagged ? "rgba(239,68,68,0.4)" : colors.border }]}>
+                        <View style={styles.logHeader}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.logCaller, { color: colors.primary }]}>{log.callerName}</Text>
+                            {log.campus && <Text style={[styles.logField, { color: colors.mutedForeground, fontSize: 10 }]}>{log.campus}</Text>}
+                          </View>
+                          <View style={{ alignItems: "flex-end", gap: 4 }}>
+                            <Text style={[styles.logDate, { color: colors.mutedForeground }]}>{formatDate(log.calledAt)}</Text>
+                            {log.flagged && <Text style={{ fontSize: 9, color: "#f87171", letterSpacing: 1 }}>⚑ FLAGGED</Text>}
+                          </View>
+                        </View>
+                        {log.outcome && (
+                          <Text style={[styles.logField, { color: colors.foreground }]}>
+                            <Text style={{ color: colors.mutedForeground }}>Outcome: </Text>{log.outcome}
+                          </Text>
+                        )}
+                        {log.servicesOffered && (
+                          <Text style={[styles.logField, { color: colors.foreground }]}>
+                            <Text style={{ color: colors.mutedForeground }}>Services: </Text>{log.servicesOffered}
+                          </Text>
+                        )}
+                        {log.feedback && (
+                          <Text style={[styles.logField, { color: colors.foreground }]}>
+                            <Text style={{ color: colors.mutedForeground }}>Feedback: </Text>{log.feedback}
+                          </Text>
+                        )}
+                        {log.flagNote && (
+                          <Text style={[styles.logField, { color: "#f87171" }]}>
+                            <Text style={{ color: colors.mutedForeground }}>Flag note: </Text>{log.flagNote}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
+                </>
+              )}
+            </View>
+          );
+        })()}
 
         {/* Call button */}
         <View style={{ marginTop: 8, gap: 0 }}>
@@ -467,4 +545,8 @@ const styles = StyleSheet.create({
   callBtnText: { fontFamily: "Georgia", fontSize: 15, letterSpacing: 2 },
   keypadBox: { alignItems: "center", justifyContent: "center", paddingVertical: 28, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, marginTop: 10, gap: 4 },
   keypadSeg: { fontFamily: "Georgia", fontSize: 52, letterSpacing: 8, lineHeight: 62, textAlign: "center" },
+  filterBar: { flexDirection: "row", gap: 8, paddingBottom: 10 },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
+  filterChipText: { fontFamily: "Georgia", fontSize: 11, letterSpacing: 0.5 },
+  filterCount: { fontFamily: "Georgia", fontSize: 11, letterSpacing: 0.5, marginBottom: 6 },
 });

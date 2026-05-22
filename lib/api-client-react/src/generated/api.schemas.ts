@@ -382,6 +382,8 @@ export interface PxpCallLog {
   notes: string;
   servicesOffered: string;
   feedback: string;
+  flagged: boolean;
+  flagNote: string;
   calledAt: string;
 }
 

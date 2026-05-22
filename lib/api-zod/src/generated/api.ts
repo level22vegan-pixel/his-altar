@@ -572,6 +572,8 @@ export const ListPxpCallLogsResponse = zod.object({
       notes: zod.string(),
       servicesOffered: zod.string(),
       feedback: zod.string(),
+      flagged: zod.boolean(),
+      flagNote: zod.string(),
       calledAt: zod.coerce.date(),
     }),
   ),

@@ -1700,6 +1700,10 @@ components:
           type: string
         feedback:
           type: string
+        flagged:
+          type: boolean
+        flagNote:
+          type: string
         calledAt:
           type: string
           format: date-time
@@ -1712,6 +1716,8 @@ components:
         - notes
         - servicesOffered
         - feedback
+        - flagged
+        - flagNote
         - calledAt
     PxpCallLogList:
       type: object

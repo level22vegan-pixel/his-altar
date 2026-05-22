@@ -27,7 +27,8 @@ router.get("/billing-status", async (req: any, res) => {
       .limit(1);
 
     if (!org) {
-      res.status(404).json({ error: "Org not found" });
+      // PIN-only logins have no org row — return a default "no account" state
+      res.json({ trialActive: false, trialDaysLeft: 0, trialEndsAt: null, subscription: null, noOrg: true });
       return;
     }
 
@@ -85,7 +86,7 @@ router.post("/checkout", async (req: any, res) => {
       .limit(1);
 
     if (!org) {
-      res.status(404).json({ error: "Org not found" });
+      res.status(400).json({ error: "Please sign in with a church account to manage billing." });
       return;
     }
 

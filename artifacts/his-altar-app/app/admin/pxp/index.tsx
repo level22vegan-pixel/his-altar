@@ -31,9 +31,9 @@ export default function PxpScreen() {
   function handleAction(action: string) {
     if (action === "call") {
       if (selectedContact) {
-        router.push({ pathname: "/admin/pxp/call" as any, params: { contactId: selectedContact.id, contactName: `${selectedContact.firstName} ${selectedContact.lastName}` } });
+        router.push({ pathname: "/admin/pxp/contact/[id]" as any, params: { id: selectedContact.id } });
       } else {
-        router.push("/admin/pxp/call" as any);
+        router.push("/admin/pxp/logs" as any);
       }
     } else if (action === "logs") {
       router.push("/admin/pxp/logs" as any);

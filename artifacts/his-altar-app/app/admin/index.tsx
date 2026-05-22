@@ -8,7 +8,6 @@ import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 
 const MENU = [
-  { icon: "person-circle-outline", label: "Admin Profile", desc: "Identity, church & account settings", route: "/admin/profile" },
   { icon: "flame-outline", label: "Altar Report", desc: "Log service responses", route: "/admin/altar-report" },
   { icon: "people-outline", label: "Roster Manager", desc: "Add or remove workers", route: "/admin/roster" },
   { icon: "book-outline", label: "Dbanc", desc: "Prayer contact database", route: "/admin/dbanc" },

@@ -78,38 +78,6 @@ export default function NotificationsScreen() {
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>REGISTERED DEVICES</Text>
-          {loadingDevices ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
-          ) : devices.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              No staff devices yet. Staff must log in at least once to appear here.
-            </Text>
-          ) : (
-            <View style={styles.deviceList}>
-              {devices.map(d => (
-                <View key={d.id} style={[styles.deviceRow, { borderBottomColor: colors.border }]}>
-                  <Ionicons name="phone-portrait-outline" size={16} color={colors.primary} />
-                  <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text style={[styles.deviceName, { color: colors.foreground }]}>
-                      {d.deviceName || "Unknown Device"}
-                    </Text>
-                    <Text style={[styles.deviceCampus, { color: colors.mutedForeground }]}>
-                      {d.campus || "No campus"} · {new Date(d.updatedAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-          <View style={[styles.badge, { backgroundColor: colors.muted }]}>
-            <Text style={[styles.badgeText, { color: colors.primary }]}>
-              {devices.length} device{devices.length !== 1 ? "s" : ""} will receive this notification
-            </Text>
-          </View>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>COMPOSE MESSAGE</Text>
 
           <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Message Type</Text>
@@ -165,6 +133,38 @@ export default function NotificationsScreen() {
             onPress={handleSend}
             loading={sending}
           />
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>REGISTERED DEVICES</Text>
+          {loadingDevices ? (
+            <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
+          ) : devices.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              No staff devices yet. Staff must log in at least once to appear here.
+            </Text>
+          ) : (
+            <View style={styles.deviceList}>
+              {devices.map(d => (
+                <View key={d.id} style={[styles.deviceRow, { borderBottomColor: colors.border }]}>
+                  <Ionicons name="phone-portrait-outline" size={16} color={colors.primary} />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={[styles.deviceName, { color: colors.foreground }]}>
+                      {d.deviceName || "Unknown Device"}
+                    </Text>
+                    <Text style={[styles.deviceCampus, { color: colors.mutedForeground }]}>
+                      {d.campus || "No campus"} · {new Date(d.updatedAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+          <View style={[styles.badge, { backgroundColor: colors.muted }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }]}>
+              {devices.length} device{devices.length !== 1 ? "s" : ""} will receive this notification
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

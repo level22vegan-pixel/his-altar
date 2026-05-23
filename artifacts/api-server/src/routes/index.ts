@@ -21,6 +21,7 @@ import { orgsRouter } from "./orgs";
 import { superadminRouter } from "./superadmin";
 import { stripeRouter } from "./stripe";
 import { webauthnRouter } from "./webauthn";
+import { notificationsRouter } from "./notifications";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use("/orgs", orgsRouter);
 router.use("/superadmin", superadminRouter);
 router.use("/stripe", stripeRouter);
 router.use("/webauthn", webauthnRouter);
+router.use("/notifications", notificationsRouter);
 
 export default router;

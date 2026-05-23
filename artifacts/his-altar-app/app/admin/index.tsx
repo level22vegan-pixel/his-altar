@@ -13,6 +13,7 @@ const MENU = [
   { icon: "book-outline", label: "Dbanc", desc: "Prayer contact database", route: "/admin/dbanc" },
   { icon: "list-outline", label: "Contact Form Fields", desc: "Add or remove custom fields", route: "/admin/dbanc/fields" },
   { icon: "call-outline", label: "PXP Follow-Up", desc: "Call system & logs", route: "/admin/pxp" },
+  { icon: "notifications-outline", label: "Notifications", desc: "Send push alerts to staff", route: "/admin/notifications" },
 ] as const;
 
 export default function AdminScreen() {

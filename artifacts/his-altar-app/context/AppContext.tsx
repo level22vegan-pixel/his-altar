@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 
 export interface OrgSession {
   orgId: number;
@@ -41,6 +44,32 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null);
 
 const BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+
+async function registerPushToken(campus: string, orgToken?: string) {
+  if (Platform.OS === "web") return;
+  if (!Device.isDevice) return;
+  try {
+    const existing = await Notifications.getPermissionsAsync();
+    let granted = (existing as unknown as { granted: boolean }).granted;
+    if (!granted) {
+      const result = await Notifications.requestPermissionsAsync();
+      granted = (result as unknown as { granted: boolean }).granted;
+    }
+    if (!granted) return;
+    const { data: pushToken } = await Notifications.getExpoPushTokenAsync();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (orgToken) headers["Authorization"] = `Bearer ${orgToken}`;
+    await fetch(`${BASE}/api/notifications/register`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        token: pushToken,
+        campus,
+        deviceName: Device.deviceName ?? "",
+      }),
+    });
+  } catch {}
+}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orgSession, setOrgSession] = useState<OrgSession | null>(null);
@@ -91,10 +120,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const session: OrgSession = { orgId: data.orgId, orgName: data.orgName, token: data.token };
     setOrgSession(session);
     await AsyncStorage.setItem("orgSession", JSON.stringify(session));
-    // Org admin automatically gets full campus admin access
     const adminCampus: CampusSession = { campus: "main", role: "admin" };
     setCampusSessionState(adminCampus);
     await AsyncStorage.setItem("campusSession", JSON.stringify(adminCampus));
+    registerPushToken("main", session.token);
   }, []);
 
   const signupOrg = useCallback(async (orgName: string, contactName: string, email: string, password: string) => {
@@ -139,6 +168,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const session: CampusSession = { campus, role, ...(adminCode ? { adminCode } : {}) };
     setCampusSessionState(session);
     AsyncStorage.setItem("campusSession", JSON.stringify(session));
+    registerPushToken(campus);
   }, []);
 
   const logoutCampus = useCallback(async () => {

@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useGetPxpConfig, useUpdatePxpConfig } from "@workspace/api-client-react";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 
@@ -164,6 +164,11 @@ export default function SimulationScreen() {
   }
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
     <View style={[styles.root, { backgroundColor: colors.background, paddingTop: topPad }]}>
       {/* Header */}
       <View style={styles.header}>
@@ -208,7 +213,12 @@ export default function SimulationScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.content} {...swipeResponder.panHandlers}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        {...swipeResponder.panHandlers}
+      >
         {/* Script card */}
         <View style={[styles.scriptCard, { backgroundColor: colors.card, borderColor: node.isSpine ? colors.primary : node.isTerminal ? "#3a7a5a" : colors.border }]}>
           <View style={styles.nodeHeader}>
@@ -299,6 +309,7 @@ export default function SimulationScreen() {
         )}
       </ScrollView>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 

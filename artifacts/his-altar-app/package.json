@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "expo-device": "^8.0.10",
-    "expo-local-authentication": "^55.0.14",
+    "expo-local-authentication": "^17.0.8",
     "expo-notifications": "^0.32.17"
   }
 }

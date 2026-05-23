@@ -17,11 +17,23 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.hisaltar.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSUserNotificationUsageDescription": "His Altar sends push notifications for team updates and ministry alerts.",
+        "NSFaceIDUsageDescription": "His Altar uses Face ID to securely unlock admin features.",
+        "NSCameraUsageDescription": "His Altar uses the camera for worker profile photos.",
+        "NSLocalNetworkUsageDescription": "His Altar connects to the ministry server on your local network.",
+        "ITSPrivacyPolicyURL": "https://hisaltar.app/privacy"
       }
     },
     "android": {
-      "package": "com.hisaltar.app"
+      "package": "com.hisaltar.app",
+      "permissions": [
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -34,7 +46,19 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-local-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#7c3aed",
+          "sounds": [],
+          "androidMode": "default",
+          "androidCollapsedTitle": "His Altar",
+          "iosDisplayInForeground": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

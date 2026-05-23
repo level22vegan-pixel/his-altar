@@ -10,6 +10,7 @@ import { useAppContext } from "@/context/AppContext";
 import HamburgerMenu from "@/components/HamburgerMenu";
 import StaffMenu from "@/components/StaffMenu";
 import NotificationPrefsModal from "@/components/NotificationPrefsModal";
+import BillingGate from "@/components/BillingGate";
 
 const TILES = [
   {
@@ -70,6 +71,7 @@ export default function TeamScreen() {
   const visibleTiles = TILES.filter((t) => t.id !== "admin" || isAdmin);
 
   return (
+    <BillingGate>
     <LinearGradient
       colors={["#06050f", "#0d0818", "#06050f"]}
       locations={[0, 0.6, 1]}
@@ -135,6 +137,7 @@ export default function TeamScreen() {
         </View>
       </View>
     </LinearGradient>
+    </BillingGate>
   );
 }
 

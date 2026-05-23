@@ -11,7 +11,8 @@ import { useAppContext } from "@/context/AppContext";
 const MENU = [
   { icon: "call-outline", label: "Start Call", desc: "Select contact & begin script", action: "call" },
   { icon: "time-outline", label: "Call Logs", desc: "History of all logged calls", action: "logs" },
-  { icon: "git-branch-outline", label: "Script Simulation", desc: "Walk through script tree", action: "simulation" },
+  { icon: "create-outline", label: "Script Editor", desc: "Edit the full call script tree", action: "script" },
+  { icon: "git-branch-outline", label: "Script Simulation", desc: "Walk through script as a caller", action: "simulation" },
 ] as const;
 
 export default function PxpScreen() {
@@ -37,6 +38,8 @@ export default function PxpScreen() {
       }
     } else if (action === "logs") {
       router.push("/admin/pxp/logs" as any);
+    } else if (action === "script") {
+      router.push("/admin/pxp/script" as any);
     } else {
       router.push("/admin/pxp/simulation" as any);
     }

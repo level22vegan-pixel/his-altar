@@ -89,10 +89,7 @@ router.post("/", async (req, res) => {
       crisisFlag = false, doNotContact = false, assignedCallerId, servicesNotes = "",
       serviceTime = "", prayerType = "", serviceDate = "", prayedForBy = "",
     } = req.body as Record<string, unknown>;
-    if (!firstName || !lastName || !phone) {
-      res.status(400).json({ message: "firstName, lastName, and phone are required" });
-      return;
-    }
+    // Fields are fully configurable — no required fields enforced server-side
     const orgId = req.orgId ?? 1;
     const [contact] = await db
       .insert(dbancContactsTable)

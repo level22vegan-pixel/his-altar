@@ -1577,6 +1577,9 @@ components:
             type: string
         sortOrder:
           type: integer
+        systemKey:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time

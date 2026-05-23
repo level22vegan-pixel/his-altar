@@ -432,6 +432,7 @@ export const ListDbancCustomFieldsResponse = zod.object({
       fieldType: zod.string(),
       options: zod.array(zod.string()),
       sortOrder: zod.number(),
+      systemKey: zod.string().nullish(),
       createdAt: zod.coerce.date(),
     }),
   ),
@@ -467,6 +468,7 @@ export const UpdateDbancCustomFieldResponse = zod.object({
   fieldType: zod.string(),
   options: zod.array(zod.string()),
   sortOrder: zod.number(),
+  systemKey: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 

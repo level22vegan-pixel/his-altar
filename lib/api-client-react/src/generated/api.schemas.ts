@@ -324,6 +324,7 @@ export interface DbancCustomField {
   fieldType: string;
   options: string[];
   sortOrder: number;
+  systemKey?: string | null;
   createdAt: string;
 }
 

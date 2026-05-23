@@ -18,53 +18,16 @@ import { useColors } from "@/hooks/useColors";
 const FIELD_TYPES = ["text", "select", "boolean"] as const;
 type FieldType = typeof FIELD_TYPES[number];
 
-// ── Same visual helpers as the real form ────────────────────────────────────
+// ── Shared visual helpers ─────────────────────────────────────────────────────
 
-function FormLabel({ children }: { children: string }) {
+function FieldLabel({ children }: { children: string }) {
   return <Text style={fl.text}>{children}</Text>;
 }
 const fl = StyleSheet.create({
   text: { fontSize: 10, letterSpacing: 3, textTransform: "uppercase", fontFamily: "Georgia", color: "rgba(255,255,255,0.35)", marginBottom: 10, marginTop: 18 },
 });
 
-function StaticInput({ label, placeholder }: { label: string; placeholder?: string }) {
-  const colors = useColors();
-  return (
-    <View>
-      <FormLabel>{label}</FormLabel>
-      <View style={[si.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[si.placeholder, { color: colors.mutedForeground }]}>{placeholder ?? label}</Text>
-      </View>
-    </View>
-  );
-}
-const si = StyleSheet.create({
-  box: { padding: 14, borderRadius: 10, borderWidth: 1, marginBottom: 4 },
-  placeholder: { fontFamily: "Georgia", fontSize: 14 },
-});
-
-function StaticChips({ label, items }: { label: string; items: string[] }) {
-  const colors = useColors();
-  return (
-    <View>
-      <FormLabel>{label}</FormLabel>
-      <View style={sc.row}>
-        {items.map(item => (
-          <View key={item} style={[sc.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[sc.text, { color: colors.foreground }]}>{item}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-const sc = StyleSheet.create({
-  row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
-  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1 },
-  text: { fontSize: 12, fontFamily: "Georgia" },
-});
-
-// ── Inline edit panel ────────────────────────────────────────────────────────
+// ── Inline edit / add panel ────────────────────────────────────────────────────
 
 function EditPanel({
   label, setLabel, fieldType, setFieldType, options, setOptions,
@@ -140,61 +103,67 @@ const ep = StyleSheet.create({
   cancelBtnText: { fontSize: 12, fontFamily: "Georgia" },
 });
 
-// ── Custom field row ─────────────────────────────────────────────────────────
+// ── Field row (rendered as it appears in the form) ────────────────────────────
 
-function CustomFieldRow({
-  field, isEditing, onEdit, onDelete, colors,
+function FieldRow({
+  field, onEdit, onDelete, colors,
 }: {
   field: { id: number; label: string; fieldType: string; options?: unknown };
-  isEditing: boolean; onEdit: () => void; onDelete: () => void; colors: any;
+  onEdit: () => void; onDelete: () => void; colors: any;
 }) {
   const opts = Array.isArray(field.options) ? (field.options as string[]) : [];
 
   return (
-    <View style={[cfr.wrap, { borderColor: isEditing ? colors.primary : "transparent" }]}>
+    <View>
       {/* Label row with controls */}
-      <View style={cfr.labelRow}>
-        <Text style={[cfr.label, { color: "rgba(255,255,255,0.35)" }]}>{field.label.toUpperCase()}</Text>
-        <Pressable onPress={onEdit} hitSlop={10} style={cfr.iconBtn}>
+      <View style={fr.labelRow}>
+        <Text style={[fr.label, { color: "rgba(255,255,255,0.35)" }]}>{field.label.toUpperCase()}</Text>
+        <Pressable onPress={onEdit} hitSlop={10} style={fr.iconBtn}>
           <Ionicons name="pencil-outline" size={15} color={colors.primary} />
         </Pressable>
-        <Pressable onPress={onDelete} hitSlop={10} style={cfr.iconBtn}>
+        <Pressable onPress={onDelete} hitSlop={10} style={fr.iconBtn}>
           <Ionicons name="trash-outline" size={15} color={colors.destructive} />
         </Pressable>
       </View>
 
-      {/* Rendered field */}
+      {/* Visual preview of the field */}
       {field.fieldType === "boolean" && (
-        <View style={sc.row}>
+        <View style={pr.chips}>
           {["Yes", "No"].map(o => (
-            <View key={o} style={[sc.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[sc.text, { color: colors.foreground }]}>{o}</Text>
+            <View key={o} style={[pr.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[pr.chipText, { color: colors.foreground }]}>{o}</Text>
             </View>
           ))}
         </View>
       )}
       {field.fieldType === "select" && opts.length > 0 && (
-        <View style={sc.row}>
+        <View style={pr.chips}>
           {opts.map(o => (
-            <View key={o} style={[sc.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Text style={[sc.text, { color: colors.foreground }]}>{o}</Text>
+            <View key={o} style={[pr.chip, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[pr.chipText, { color: colors.foreground }]}>{o}</Text>
             </View>
           ))}
         </View>
       )}
       {field.fieldType === "text" && (
-        <View style={[si.box, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[si.placeholder, { color: colors.mutedForeground }]}>{field.label}…</Text>
+        <View style={[pr.textBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[pr.placeholder, { color: colors.mutedForeground }]}>{field.label}…</Text>
         </View>
       )}
     </View>
   );
 }
-const cfr = StyleSheet.create({
-  wrap: { borderRadius: 10, borderWidth: 1, paddingTop: 0 },
+const fr = StyleSheet.create({
   labelRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 18, marginBottom: 8 },
   label: { flex: 1, fontSize: 10, letterSpacing: 3, fontFamily: "Georgia" },
   iconBtn: { padding: 4 },
+});
+const pr = StyleSheet.create({
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1 },
+  chipText: { fontSize: 12, fontFamily: "Georgia" },
+  textBox: { padding: 14, borderRadius: 10, borderWidth: 1, marginBottom: 4 },
+  placeholder: { fontFamily: "Georgia", fontSize: 14 },
 });
 
 // ── Main screen ───────────────────────────────────────────────────────────────
@@ -255,10 +224,17 @@ export default function FieldsScreen() {
   }
 
   function handleDelete(field: { id: number; label: string }) {
-    Alert.alert("Remove Field", `Remove "${field.label}" from the form?`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: async () => { await del.mutateAsync({ id: field.id }); fieldsQ.refetch(); } },
-    ]);
+    Alert.alert(
+      "Remove Field",
+      `Remove "${field.label}" from the contact form? This won't affect existing contacts.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove", style: "destructive",
+          onPress: async () => { await del.mutateAsync({ id: field.id }); fieldsQ.refetch(); },
+        },
+      ]
+    );
   }
 
   return (
@@ -277,21 +253,6 @@ export default function FieldsScreen() {
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 60 }]}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Standard fields */}
-        <StaticInput label="First Name" placeholder="e.g. John" />
-        <StaticInput label="Last Name" placeholder="e.g. Smith" />
-        <StaticInput label="Phone" placeholder="(555) 000-0000" />
-        <StaticChips label="Carrier" items={["AT&T", "Verizon", "T-Mobile", "Sprint", "Other"]} />
-        <StaticChips label="Gender" items={["Male", "Female"]} />
-        <StaticChips label="Came Forward For" items={["Salvation", "Rededication", "Came Forward for Prayer"]} />
-        <StaticChips label="Service Time" items={["8:00 AM", "10:00 AM", "12:00 PM", "7:00 PM"]} />
-
-        <FormLabel>Prayer Notes</FormLabel>
-        <View style={[si.box, { backgroundColor: colors.card, borderColor: colors.border, minHeight: 70 }]}>
-          <Text style={[si.placeholder, { color: colors.mutedForeground }]}>Prayer request or notes…</Text>
-        </View>
-
-        {/* Custom fields — rendered in form position with edit controls */}
         {fields.map(field => (
           <View key={field.id}>
             {editingId === field.id ? (
@@ -303,8 +264,8 @@ export default function FieldsScreen() {
                 saving={editSaving} isNew={false} colors={colors}
               />
             ) : (
-              <CustomFieldRow
-                field={field} isEditing={false}
+              <FieldRow
+                field={field}
                 onEdit={() => startEdit(field)}
                 onDelete={() => handleDelete(field)}
                 colors={colors}
@@ -313,19 +274,22 @@ export default function FieldsScreen() {
           </View>
         ))}
 
-        {/* Add new field panel */}
         {showAdd && (
           <EditPanel
             label={newLabel} setLabel={setNewLabel}
             fieldType={newType} setFieldType={setNewType}
             options={newOptions} setOptions={setNewOptions}
-            onSave={handleAdd} onCancel={() => { setShowAdd(false); setNewLabel(""); setNewType("text"); setNewOptions(""); }}
+            onSave={handleAdd}
+            onCancel={() => { setShowAdd(false); setNewLabel(""); setNewType("text"); setNewOptions(""); }}
             saving={addSaving} isNew colors={colors}
           />
         )}
 
-        {/* Altar worker field */}
-        <StaticInput label="Name of Altar Worker" placeholder="Type a name…" />
+        {fields.length === 0 && !showAdd && (
+          <View style={styles.empty}>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No fields yet. Tap + to add one.</Text>
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -338,4 +302,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontFamily: "Georgia", letterSpacing: 4 },
   scroll: { paddingHorizontal: 20, paddingTop: 8 },
+  empty: { alignItems: "center", marginTop: 60 },
+  emptyText: { fontFamily: "Georgia", fontSize: 14 },
 });

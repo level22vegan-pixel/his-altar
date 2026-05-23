@@ -9,6 +9,7 @@ export const dbancCustomFieldsTable = pgTable("dbanc_custom_fields", {
   options: jsonb("options").notNull().default([]),
   sortOrder: integer("sort_order").notNull().default(0),
   orgId: integer("org_id").notNull().default(1),
+  systemKey: text("system_key"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

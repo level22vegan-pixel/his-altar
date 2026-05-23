@@ -55,7 +55,15 @@ export default function LandingScreen() {
         onPress={() => router.push("/pin")}
         style={({ pressed }) => [styles.enterBtn, { opacity: pressed ? 0.8 : 1 }]}
       >
-        <Text style={styles.enterBtnText}>ENTER</Text>
+        <Text style={styles.enterBtnText}>ENTER SITE</Text>
+      </Pressable>
+
+      {/* Church Sign-In button */}
+      <Pressable
+        onPress={() => router.push("/org-login")}
+        style={({ pressed }) => [styles.signInBtn, { opacity: pressed ? 0.75 : 1 }]}
+      >
+        <Text style={styles.signInBtnText}>CHURCH SIGN-IN</Text>
       </Pressable>
 
       {/* Sign up subtext */}
@@ -112,6 +120,20 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontFamily: "Georgia",
     fontSize: 17,
+    letterSpacing: 2,
+  },
+  signInBtn: {
+    marginTop: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 64,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "rgba(124,58,237,0.4)",
+  },
+  signInBtnText: {
+    color: "rgba(255,255,255,0.55)",
+    fontFamily: "Georgia",
+    fontSize: 13,
     letterSpacing: 2,
   },
   signupRow: { flexDirection: "row", marginTop: 28 },

@@ -52,10 +52,8 @@ function convertLegacyTree(legacy: any): SimTree {
   return { nodes, startId: legacy.id, spine };
 }
 
-function fillPlaceholders(text: string, contactName: string, callerName: string) {
-  return text
-    .replace(/\{contact_name\}/g, contactName || "them")
-    .replace(/\{caller_name\}/g, callerName || "you");
+function fillPlaceholders(text: string, vars: Record<string, string>) {
+  return text.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
 }
 
 export default function CallScreen() {
@@ -145,6 +143,14 @@ export default function CallScreen() {
 
   const contactName = params.contactName ?? "them";
   const callerName = callerSession?.callerName ?? "you";
+  const campus = callerSession?.campus ?? "";
+  const churchName = config.data?.churchName ?? "";
+  const placeholderVars: Record<string, string> = {
+    contact_name: contactName,
+    caller_name: callerName,
+    campus,
+    church_name: churchName,
+  };
   const stepLabel = done ? "Closing" : depth === 0 ? "Opening" : `Step ${depth + 1}`;
 
   return (
@@ -185,7 +191,7 @@ export default function CallScreen() {
                 <Text style={[styles.stepBadgeText, { color: colors.primaryForeground }]}>{stepLabel}</Text>
               </View>
               <Text style={[styles.scriptText, { color: colors.foreground }]}>
-                {fillPlaceholders(node.text, contactName, callerName)}
+                {fillPlaceholders(node.text, placeholderVars)}
               </Text>
             </View>
 

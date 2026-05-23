@@ -1,0 +1,79 @@
+⚠️ Detected that your app uses Expo Go for development, this is not recommended when building production apps.
+Learn more: https://expo.fyi/why-not-build-expo-go-for-production
+To suppress this warning, set EAS_BUILD_NO_EXPO_GO_WARNING=true.
+
+Failed to resolve plugin for module "expo-router" relative to "/Users/home/Documents/Rustic-Hebrew-Login-main/artifacts/his-altar-app". Do you have node modules installed?
+    Error: build command failed.
+home@Marcs-MacBook-Pro his-altar-app % echo "node-linker=hoisted" > ~/Documents/Rustic-Hebrew-Login-main/.npmrc 
+home@Marcs-MacBook-Pro his-altar-app % cd ~/Documents/Rustic-Hebrew-Login-main/artifacts/his-altar-app
+home@Marcs-MacBook-Pro his-altar-app % pnpm install
+Scope: all 10 workspace projects
+../..                                    |    +1190 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+../..                                    | Progress: resolved 1190, reused 1164, downloaded 0, added 1190, done
+../.. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) e…
+│ Use pnpm instead
+└─ Failed in 37ms at /Users/home/Documents/Rustic-Hebrew-Login-main
+[ELIFECYCLE] Command failed with exit code 1.
+home@Marcs-MacBook-Pro his-altar-app % npx eas-cli build --platform ios --profile production
+
+⚠️ Detected that your app uses Expo Go for development, this is not recommended when building production apps.
+Learn more: https://expo.fyi/why-not-build-expo-go-for-production
+To suppress this warning, set EAS_BUILD_NO_EXPO_GO_WARNING=true.
+
+Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
+No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
+Environment variables loaded from the "production" build profile "env" configuration: EXPO_PUBLIC_DOMAIN.
+
+
+
+✔ Using remote iOS credentials (Expo server)
+
+If you provide your Apple account credentials we will be able to generate all necessary build credentials and fully validate them.
+This is optional, but without Apple account access you will need to provide all the missing values manually and we can only run minimal validation on them.
+✔ Do you want to log in to your Apple account? … yes
+
+› Log in to your Apple Developer account to continue
+✔ Apple ID: … oldmachineboy@gmail.com
+› Restoring session /Users/home/.app-store/auth/oldmachineboy@gmail.com/cookie
+› Team MARC ANTHONY ARMSTEAD (LVF7FM6B2G)
+› Provider MARC ANTHONY ARMSTEAD (128931972)
+✔ Logged in Local session
+✔ Bundle identifier registered com.hisaltar.app
+✔ Synced capabilities: No updates
+✔ Synced capability identifiers: No updates
+✔ Fetched Apple distribution certificates
+✔ Fetched Apple provisioning profiles
+
+Project Credentials Configuration
+
+Project                   @marc223232/his-altar-app
+Bundle Identifier         com.hisaltar.app
+                          
+App Store Configuration   
+                          
+Distribution Certificate  
+Serial Number             24CFBF47DBD425C51C1865C3B45EA378
+Expiration Date           Sun, 23 May 2027 15:39:00 PDT
+Apple Team                LVF7FM6B2G (MARC ANTHONY ARMSTEAD (Individual))
+Updated                   32 minutes ago
+                          
+Provisioning Profile      
+Developer Portal ID       L4R465LQM2
+Status                    active
+Expiration                Sun, 23 May 2027 15:39:00 PDT
+Apple Team                LVF7FM6B2G (MARC ANTHONY ARMSTEAD (Individual))
+Updated                   32 minutes ago
+                          
+All credentials are ready to build @marc223232/his-altar-app (com.hisaltar.app)
+
+✔ Push Notifications are set up
+
+Bumping expo.ios.buildNumber from 6 to 7
+
+Compressing project files and uploading to EAS Build. Learn more: https://expo.fyi/eas-build-archive
+✖ Compressing project files
+Failed to upload the project tarball to EAS Build
+
+Reason: EPERM: operation not permitted, scandir '/Users/home/.Trash'
+    Error: build command failed.
+home@Marcs-MacBook-Pro his-altar-app % 

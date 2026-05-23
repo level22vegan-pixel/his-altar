@@ -55,10 +55,15 @@ export default function TeamScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 0 : insets.bottom;
 
+  // Admin access: org session (church admin) OR campus session with role "admin"
+  const isAdmin = !!(orgSession || campusSession?.role === "admin");
+
   function handleTile(route: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push(route as any);
   }
+
+  const visibleTiles = TILES.filter((t) => t.id !== "admin" || isAdmin);
 
   return (
     <LinearGradient
@@ -88,7 +93,7 @@ export default function TeamScreen() {
 
         {/* Tiles */}
         <View style={styles.tiles}>
-          {TILES.map((tile) => (
+          {visibleTiles.map((tile) => (
             <Pressable
               key={tile.id}
               onPress={() => handleTile(tile.route)}

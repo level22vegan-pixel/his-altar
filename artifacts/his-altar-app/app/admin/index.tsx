@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import React from "react";
+import React, { useEffect } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
@@ -18,8 +18,18 @@ const MENU = [
 export default function AdminScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { orgSession, logout } = useAppContext();
+  const { orgSession, campusSession, logout } = useAppContext();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+
+  const isAdmin = !!(orgSession || campusSession?.role === "admin");
+
+  useEffect(() => {
+    if (!isAdmin) {
+      router.replace("/team" as any);
+    }
+  }, [isAdmin]);
+
+  if (!isAdmin) return null;
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>

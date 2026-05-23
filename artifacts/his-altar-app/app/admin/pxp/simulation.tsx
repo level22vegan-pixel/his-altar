@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useGetPxpConfig, useUpdatePxpConfig } from "@workspace/api-client-react";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 
@@ -100,6 +100,37 @@ export default function SimulationScreen() {
     setEditingId(null);
   }
 
+  function jumpToSpine(idx: number) {
+    if (!tree) return;
+    const id = tree.spine[idx];
+    if (!id) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setHistory([id]);
+    setEditingId(null);
+  }
+
+  function stepSpine(dir: 1 | -1) {
+    if (!tree) return;
+    const cur = activeSpineIndex >= 0 ? activeSpineIndex : 0;
+    const next = cur + dir;
+    if (next < 0 || next >= tree.spine.length) return;
+    jumpToSpine(next);
+  }
+
+  const stepSpineRef = useRef(stepSpine);
+  useEffect(() => { stepSpineRef.current = stepSpine; });
+
+  const swipeResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx < -40) stepSpineRef.current(1);
+        else if (g.dx > 40) stepSpineRef.current(-1);
+      },
+    })
+  ).current;
+
   function startEdit(n: SimNode) {
     setEditingId(n.id);
     setEditTitle(n.title);
@@ -148,12 +179,20 @@ export default function SimulationScreen() {
       {/* Progress bar */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.progressBar}>
         {spineLabels.map((label, idx) => (
-          <View key={idx} style={styles.stepWrap}>
-            <View style={[styles.stepDot, { backgroundColor: idx <= activeSpineIndex ? colors.primary : colors.muted }]} />
+          <Pressable
+            key={idx}
+            onPress={() => jumpToSpine(idx)}
+            style={({ pressed }) => [styles.stepWrap, { opacity: pressed ? 0.6 : 1 }]}
+          >
+            <View style={[
+              styles.stepDot,
+              { backgroundColor: idx <= activeSpineIndex ? colors.primary : colors.muted },
+              idx === activeSpineIndex && styles.stepDotActive,
+            ]} />
             <Text style={[styles.stepLabel, { color: idx === activeSpineIndex ? colors.primary : colors.mutedForeground }]} numberOfLines={1}>
               {label}
             </Text>
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -169,7 +208,7 @@ export default function SimulationScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} {...swipeResponder.panHandlers}>
         {/* Script card */}
         <View style={[styles.scriptCard, { backgroundColor: colors.card, borderColor: node.isSpine ? colors.primary : node.isTerminal ? "#3a7a5a" : colors.border }]}>
           <View style={styles.nodeHeader}>
@@ -270,6 +309,7 @@ const styles = StyleSheet.create({
   progressBar: { paddingHorizontal: 16, paddingVertical: 10, gap: 4, alignItems: "center" },
   stepWrap: { alignItems: "center", width: 60 },
   stepDot: { width: 10, height: 10, borderRadius: 5, marginBottom: 4 },
+  stepDotActive: { width: 13, height: 13, borderRadius: 7 },
   stepLabel: { fontSize: 9, fontFamily: "Georgia", letterSpacing: 0.5, textAlign: "center" },
   indicator: { paddingVertical: 6, paddingHorizontal: 16, alignItems: "center" },
   indicatorText: { fontSize: 9, letterSpacing: 3, textTransform: "uppercase", fontFamily: "Georgia" },

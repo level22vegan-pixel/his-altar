@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.hisaltar.app"
+      "bundleIdentifier": "com.hisaltar.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.hisaltar.app"
@@ -36,6 +39,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e3eed360-626e-4675-b24f-9552d775ead5"
+      }
+    },
+    "owner": "22vegan"
   }
 }

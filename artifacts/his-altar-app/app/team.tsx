@@ -1,12 +1,14 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import React from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 import HamburgerMenu from "@/components/HamburgerMenu";
+import NotificationPrefsModal from "@/components/NotificationPrefsModal";
 
 const TILES = [
   {
@@ -54,6 +56,7 @@ export default function TeamScreen() {
   const { orgSession, campusSession } = useAppContext();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 0 : insets.bottom;
+  const [notifOpen, setNotifOpen] = useState(false);
 
   // Admin access: org session (church admin) OR campus session with role "admin"
   const isAdmin = !!(orgSession || campusSession?.role === "admin");
@@ -79,10 +82,19 @@ export default function TeamScreen() {
           </Pressable>
 
           <View style={styles.headerRight}>
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setNotifOpen(true); }}
+              style={styles.bellBtn}
+              hitSlop={10}
+            >
+              <Ionicons name="notifications-outline" size={20} color="rgba(255,255,255,0.45)" />
+            </Pressable>
             {/* Hamburger only shows for admin/org sessions */}
             <HamburgerMenu />
           </View>
         </View>
+
+        <NotificationPrefsModal visible={notifOpen} onClose={() => setNotifOpen(false)} />
 
         {/* Welcome label */}
         {(orgSession || campusSession) && (
@@ -136,7 +148,8 @@ const styles = StyleSheet.create({
   },
   backBtn: {},
   backText: { color: "rgba(255,255,255,0.35)", fontFamily: "Georgia", fontSize: 11, letterSpacing: 2 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 12 },
+  bellBtn: { padding: 4 },
   welcomeText: {
     fontFamily: "Georgia", fontSize: 10, letterSpacing: 4,
     color: "rgba(255,255,255,0.2)", textAlign: "center",

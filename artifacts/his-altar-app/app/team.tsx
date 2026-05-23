@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
 import HamburgerMenu from "@/components/HamburgerMenu";
+import StaffMenu from "@/components/StaffMenu";
 import NotificationPrefsModal from "@/components/NotificationPrefsModal";
 
 const TILES = [
@@ -89,8 +90,10 @@ export default function TeamScreen() {
             >
               <Ionicons name="notifications-outline" size={20} color="rgba(255,255,255,0.45)" />
             </Pressable>
-            {/* Hamburger only shows for admin/org sessions */}
+            {/* Admin hamburger (admin/org sessions only) */}
             <HamburgerMenu />
+            {/* Staff hamburger (non-admin staff only) */}
+            <StaffMenu />
           </View>
         </View>
 

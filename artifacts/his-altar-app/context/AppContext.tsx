@@ -71,6 +71,25 @@ async function registerPushToken(campus: string, orgToken?: string) {
   } catch {}
 }
 
+export interface NotificationHistoryEntry {
+  id: string;
+  title: string;
+  body: string;
+  type?: string;
+  receivedAt: string;
+}
+
+export const NOTIF_HISTORY_KEY = "notificationHistory";
+
+export async function addToNotifHistory(entry: NotificationHistoryEntry) {
+  try {
+    const raw = await AsyncStorage.getItem(NOTIF_HISTORY_KEY);
+    const history: NotificationHistoryEntry[] = raw ? JSON.parse(raw) : [];
+    const updated = [entry, ...history].slice(0, 50);
+    await AsyncStorage.setItem(NOTIF_HISTORY_KEY, JSON.stringify(updated));
+  } catch {}
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orgSession, setOrgSession] = useState<OrgSession | null>(null);
   const [callerSession, setCallerSession] = useState<CallerSession | null>(null);
@@ -104,6 +123,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch {}
       setIsLoading(false);
     })();
+
+    // Save every incoming notification to local history
+    if (Platform.OS !== "web") {
+      const sub = Notifications.addNotificationReceivedListener((notification) => {
+        addToNotifHistory({
+          id: notification.request.identifier,
+          title: notification.request.content.title ?? "",
+          body: notification.request.content.body ?? "",
+          type: (notification.request.content.data as any)?.type ?? "",
+          receivedAt: new Date().toISOString(),
+        });
+      });
+      return () => sub.remove();
+    }
   }, []);
 
   const loginOrg = useCallback(async (email: string, password: string) => {

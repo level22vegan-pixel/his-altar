@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator, KeyboardAvoidingView, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput, View,
+  ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
@@ -27,6 +27,8 @@ export default function NotificationsScreen() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [typeTeamUpdate, setTypeTeamUpdate] = useState(true);
+  const [typeWeeklySummary, setTypeWeeklySummary] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -46,12 +48,16 @@ export default function NotificationsScreen() {
 
   async function handleSend() {
     if (!title.trim() || !body.trim()) { setError("Title and message are required."); return; }
+    if (!typeTeamUpdate && !typeWeeklySummary) { setError("Select at least one message type."); return; }
+    const types: string[] = [];
+    if (typeTeamUpdate) types.push("team-update");
+    if (typeWeeklySummary) types.push("weekly-summary");
     setSending(true); setError(""); setSent(null);
     try {
       const res = await fetch(`${BASE_URL}/api/notifications/send`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ title: title.trim(), body: body.trim() }),
+        body: JSON.stringify({ title: title.trim(), body: body.trim(), types }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? "Send failed");
@@ -111,6 +117,26 @@ export default function NotificationsScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>COMPOSE MESSAGE</Text>
 
+          <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Message Type</Text>
+          <View style={styles.typeRow}>
+            <Pressable
+              onPress={() => { setTypeTeamUpdate(v => !v); setError(""); }}
+              style={[styles.typeChip, { borderColor: typeTeamUpdate ? colors.primary : colors.border, backgroundColor: typeTeamUpdate ? `${colors.primary}22` : colors.muted }]}
+            >
+              <Ionicons name="megaphone-outline" size={14} color={typeTeamUpdate ? colors.primary : colors.mutedForeground} />
+              <Text style={[styles.typeChipText, { color: typeTeamUpdate ? colors.primary : colors.mutedForeground }]}>Team Update</Text>
+              {typeTeamUpdate && <Ionicons name="checkmark-circle" size={14} color={colors.primary} />}
+            </Pressable>
+            <Pressable
+              onPress={() => { setTypeWeeklySummary(v => !v); setError(""); }}
+              style={[styles.typeChip, { borderColor: typeWeeklySummary ? colors.primary : colors.border, backgroundColor: typeWeeklySummary ? `${colors.primary}22` : colors.muted }]}
+            >
+              <Ionicons name="calendar-outline" size={14} color={typeWeeklySummary ? colors.primary : colors.mutedForeground} />
+              <Text style={[styles.typeChipText, { color: typeWeeklySummary ? colors.primary : colors.mutedForeground }]}>Weekly Summary</Text>
+              {typeWeeklySummary && <Ionicons name="checkmark-circle" size={14} color={colors.primary} />}
+            </Pressable>
+          </View>
+
           <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Title</Text>
           <TextInput
             value={title}
@@ -162,6 +188,9 @@ const styles = StyleSheet.create({
   deviceCampus: { fontSize: 11, fontFamily: "Georgia", marginTop: 2 },
   badge: { borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, alignItems: "center" },
   badgeText: { fontSize: 12, fontFamily: "Georgia" },
+  typeRow: { flexDirection: "row", gap: 10, marginBottom: 4 },
+  typeChip: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, padding: 12, borderRadius: 10, borderWidth: 1 },
+  typeChipText: { flex: 1, fontSize: 12, fontFamily: "Georgia" },
   fieldLabel: { fontSize: 10, fontFamily: "Georgia", letterSpacing: 2, marginBottom: 6, marginTop: 14 },
   input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, fontFamily: "Georgia" },
   multiline: { height: 100, textAlignVertical: "top" },

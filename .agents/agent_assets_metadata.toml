@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "LwsrLcpSjrV65y2XViVyQ"
@@ -12,3 +11,33 @@ id = "ZzdsoAcnxf2Lr1G0DWT9H"
 uri = "file://artifacts/his-altar-app/assets/images/altar-splash.png"
 type = "image"
 title = "pixar altar no horns centered"
+
+[[outputs]]
+id = "sjBPn-IH340fbOLHKd-_n"
+uri = "file://screenshots/screen1-landing.jpg"
+type = "image"
+title = "Screen 1 — Landing / Welcome"
+
+[[outputs]]
+id = "nbpySFxwkmT3VZileJEIB"
+uri = "file://screenshots/screen2-team.jpg"
+type = "image"
+title = "Screen 2 — Team Selection"
+
+[[outputs]]
+id = "ujXmj5sXBmZKDP7rwRaPO"
+uri = "file://screenshots/screen3-checkin.jpg"
+type = "image"
+title = "Screen 3 — Altar Check-in Roster"
+
+[[outputs]]
+id = "GNDymyB5QhbcaFEcs-Iy7"
+uri = "file://screenshots/screen4-dbanc.jpg"
+type = "image"
+title = "Screen 4 — Prayer Contacts (Dbanc)"
+
+[[outputs]]
+id = "2HWuV3oKfszwq68YkYyEk"
+uri = "file://screenshots/screen5-pxp.jpg"
+type = "image"
+title = "Screen 5 — PXP Follow-Up Call"

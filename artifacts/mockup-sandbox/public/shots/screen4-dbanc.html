@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 430px; height: 932px; background: #080613; font-family: Georgia, serif; overflow: hidden; display: flex; flex-direction: column; }
+
+  .status { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; flex-shrink: 0; }
+  .status-time { font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 600; color: #fff; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .battery { width: 25px; height: 12px; border: 1.5px solid #fff; border-radius: 3px; position: relative; padding: 2px; }
+  .battery::after { content:''; position:absolute; right:-5px; top:3px; width:3px; height:6px; background:#fff; border-radius:1px; }
+  .battery-fill { height: 100%; width: 80%; background: #fff; border-radius: 1.5px; }
+
+  .page-head { padding: 14px 20px 10px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .page-title { font-size: 22px; color: rgba(255,255,255,0.9); letter-spacing: 1px; }
+  .add-btn { width: 36px; height: 36px; border-radius: 18px; background: rgba(124,58,237,0.25); border: 1px solid rgba(124,58,237,0.5); display: flex; align-items: center; justify-content: center; color: #a78bfa; font-size: 22px; font-family: sans-serif; }
+
+  .search { margin: 0 16px 12px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; height: 44px; display: flex; align-items: center; padding: 0 14px; gap: 10px; flex-shrink: 0; }
+  .search-icon { font-size: 14px; opacity: 0.4; }
+  .search-text { font-size: 14px; color: rgba(255,255,255,0.25); font-family: -apple-system, sans-serif; }
+
+  .count { padding: 0 20px 8px; font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+
+  .list { flex: 1; overflow: hidden; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+  .contact { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+  .av { width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-family: Georgia; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .ci { flex: 1; }
+  .cn { font-size: 15px; color: rgba(255,255,255,0.88); }
+  .cp { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; font-family: -apple-system, sans-serif; }
+  .cn-note { font-size: 10px; color: rgba(167,139,250,0.7); margin-top: 3px; letter-spacing: 0.5px; }
+  .chev { color: rgba(255,255,255,0.2); font-size: 16px; }
+
+  .home-indicator { height: 22px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; flex-shrink: 0; }
+  .hi-bar { width: 134px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="status">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.4C10.7 2.4 13.1 3.5 14.8 5.3L16 4C14 1.9 11.1 0.6 8 0.6C4.9 0.6 2 1.9 0 4L1.2 5.3C2.9 3.5 5.3 2.4 8 2.4Z" fill="white"/><path d="M8 5.2C9.8 5.2 11.4 6 12.5 7.2L13.7 5.9C12.3 4.4 10.3 3.5 8 3.5C5.7 3.5 3.7 4.4 2.3 5.9L3.5 7.2C4.6 6 6.2 5.2 8 5.2Z" fill="white"/><circle cx="8" cy="10" r="1.8" fill="white"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="5" width="3" height="7" rx="1" fill="white"/><rect x="4.5" y="3" width="3" height="9" rx="1" fill="white"/><rect x="9" y="1" width="3" height="11" rx="1" fill="white"/></svg>
+      <div class="battery"><div class="battery-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="page-head">
+    <div class="page-title">Prayer Contacts</div>
+    <div class="add-btn">+</div>
+  </div>
+
+  <div class="search">
+    <span class="search-icon">🔍</span>
+    <span class="search-text">Search contacts...</span>
+  </div>
+
+  <div class="count">24 CONTACTS</div>
+
+  <div class="list">
+    <div class="contact">
+      <div class="av" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);">A</div>
+      <div class="ci">
+        <div class="cn">Amanda Foster</div>
+        <div class="cp">(832) 555-0142 · Hallmark</div>
+        <div class="cn-note">Salvation prayer at altar — 5/18</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+    <div class="contact">
+      <div class="av" style="background:linear-gradient(135deg,#0369a1,#0c4a6e);">D</div>
+      <div class="ci">
+        <div class="cn">Derek Washington</div>
+        <div class="cp">(713) 555-0287 · Northwest</div>
+        <div class="cn-note">Healing — requests follow-up</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+    <div class="contact">
+      <div class="av" style="background:linear-gradient(135deg,#b45309,#92400e);">M</div>
+      <div class="ci">
+        <div class="cn">Maria Gonzalez</div>
+        <div class="cp">(281) 555-0391 · Sugar Land</div>
+        <div class="cn-note">Rededication — called twice</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+    <div class="contact">
+      <div class="av" style="background:linear-gradient(135deg,#065f46,#064e3b);">J</div>
+      <div class="ci">
+        <div class="cn">James & Priscilla Kim</div>
+        <div class="cp">(346) 555-0518 · Pearland</div>
+        <div class="cn-note">Marriage restoration prayer</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+    <div class="contact">
+      <div class="av" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);">R</div>
+      <div class="ci">
+        <div class="cn">Rachel Thompson</div>
+        <div class="cp">(832) 555-0644 · Hallmark</div>
+        <div class="cn-note">Salvation — first time visitor</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+    <div class="contact">
+      <div class="av" style="background:linear-gradient(135deg,#9d174d,#831843);">T</div>
+      <div class="ci">
+        <div class="cn">Thomas & Linda Okafor</div>
+        <div class="cp">(713) 555-0773 · Katy</div>
+        <div class="cn-note">Financial breakthrough — prayer</div>
+      </div>
+      <div class="chev">›</div>
+    </div>
+  </div>
+
+  <div class="home-indicator"><div class="hi-bar"></div></div>
+</body>
+</html>

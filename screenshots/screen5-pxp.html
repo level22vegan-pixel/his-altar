@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 430px; height: 932px; background: #06050f; font-family: Georgia, serif; overflow: hidden; display: flex; flex-direction: column; }
+
+  .status { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; flex-shrink: 0; }
+  .status-time { font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 600; color: #fff; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .battery { width: 25px; height: 12px; border: 1.5px solid #fff; border-radius: 3px; position: relative; padding: 2px; }
+  .battery::after { content:''; position:absolute; right:-5px; top:3px; width:3px; height:6px; background:#fff; border-radius:1px; }
+  .battery-fill { height: 100%; width: 80%; background: #fff; border-radius: 1.5px; }
+
+  .call-header { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+  .caller-info { display: flex; flex-direction: column; gap: 2px; }
+  .caller-label { font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.3); }
+  .caller-name { font-size: 14px; color: rgba(255,255,255,0.8); }
+  .call-badge { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 6px; }
+  .call-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; }
+  .call-badge-text { font-size: 11px; color: #4ade80; letter-spacing: 1px; }
+
+  .contact-bar { margin: 16px 20px; background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.3); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .c-av { width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(135deg,#7c3aed,#5b21b6); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .c-info { flex: 1; }
+  .c-name { font-size: 15px; color: rgba(255,255,255,0.9); }
+  .c-sub { font-size: 10px; letter-spacing: 1px; color: rgba(167,139,250,0.7); margin-top: 3px; }
+
+  .script-card { margin: 0 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px 22px; flex-shrink: 0; }
+  .script-label { font-size: 9px; letter-spacing: 4px; color: rgba(255,255,255,0.25); margin-bottom: 14px; }
+  .script-text { font-size: 16px; line-height: 1.65; color: rgba(255,255,255,0.85); }
+  .script-text .hl { color: #c4b5fd; }
+
+  .responses-label { padding: 18px 20px 8px; font-size: 9px; letter-spacing: 4px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+  .responses { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .resp-btn {
+    border-radius: 14px; padding: 16px 20px;
+    font-family: Georgia, serif; font-size: 14px; color: rgba(255,255,255,0.82);
+    text-align: center; border: 1px solid;
+  }
+
+  .home-indicator { height: 22px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; flex-shrink: 0; }
+  .hi-bar { width: 134px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="status">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.4C10.7 2.4 13.1 3.5 14.8 5.3L16 4C14 1.9 11.1 0.6 8 0.6C4.9 0.6 2 1.9 0 4L1.2 5.3C2.9 3.5 5.3 2.4 8 2.4Z" fill="white"/><path d="M8 5.2C9.8 5.2 11.4 6 12.5 7.2L13.7 5.9C12.3 4.4 10.3 3.5 8 3.5C5.7 3.5 3.7 4.4 2.3 5.9L3.5 7.2C4.6 6 6.2 5.2 8 5.2Z" fill="white"/><circle cx="8" cy="10" r="1.8" fill="white"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="5" width="3" height="7" rx="1" fill="white"/><rect x="4.5" y="3" width="3" height="9" rx="1" fill="white"/><rect x="9" y="1" width="3" height="11" rx="1" fill="white"/></svg>
+      <div class="battery"><div class="battery-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="call-header">
+    <div class="caller-info">
+      <div class="caller-label">CALLER</div>
+      <div class="caller-name">Pastor Marcus Webb</div>
+    </div>
+    <div class="call-badge">
+      <div class="call-dot"></div>
+      <span class="call-badge-text">IN CALL</span>
+    </div>
+  </div>
+
+  <div class="contact-bar">
+    <div class="c-av">A</div>
+    <div class="c-info">
+      <div class="c-name">Amanda Foster</div>
+      <div class="c-sub">HALLMARK · PRAYER CONTACT</div>
+    </div>
+  </div>
+
+  <div class="script-card">
+    <div class="script-label">SCRIPT</div>
+    <div class="script-text">
+      "Hi, may I speak with <span class="hl">Amanda</span>? This is <span class="hl">Pastor Marcus</span> calling from <span class="hl">The Way World Outreach</span>. We had the privilege of praying with you recently and just wanted to follow up and see how you're doing."
+    </div>
+  </div>
+
+  <div class="responses-label">HOW DID THEY RESPOND?</div>
+  <div class="responses">
+    <div class="resp-btn" style="background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.35);color:#4ade80;">They answered — ready to talk</div>
+    <div class="resp-btn" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:rgba(251,191,36,0.8);">Left a voicemail</div>
+    <div class="resp-btn" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);">No answer / busy</div>
+    <div class="resp-btn" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:rgba(239,68,68,0.7);">Wrong number / disconnect</div>
+  </div>
+
+  <div class="home-indicator"><div class="hi-bar"></div></div>
+</body>
+</html>

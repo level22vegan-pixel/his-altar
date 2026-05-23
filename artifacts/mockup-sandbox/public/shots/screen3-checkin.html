@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 430px; height: 932px; background: #080613; font-family: Georgia, serif; overflow: hidden; display: flex; flex-direction: column; }
+
+  .status { height: 54px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 10px; flex-shrink: 0; }
+  .status-time { font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 600; color: #fff; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .battery { width: 25px; height: 12px; border: 1.5px solid #fff; border-radius: 3px; position: relative; padding: 2px; }
+  .battery::after { content:''; position:absolute; right:-5px; top:3px; width:3px; height:6px; background:#fff; border-radius:1px; }
+  .battery-fill { height: 100%; width: 80%; background: #fff; border-radius: 1.5px; }
+
+  .top-bar { padding: 12px 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-shrink: 0; }
+  .campus-tag { background: rgba(124,58,237,0.18); border: 1px solid rgba(124,58,237,0.35); border-radius: 20px; padding: 5px 14px; font-size: 11px; letter-spacing: 2px; color: #a78bfa; }
+  .service-tag { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 5px 14px; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.45); }
+
+  .tabs { display: flex; margin: 4px 20px 0; border-radius: 12px; background: rgba(255,255,255,0.05); padding: 3px; flex-shrink: 0; }
+  .tab { flex: 1; text-align: center; padding: 8px; font-size: 12px; letter-spacing: 1.5px; border-radius: 10px; color: rgba(255,255,255,0.4); }
+  .tab.active { background: rgba(124,58,237,0.35); color: #c4b5fd; border: 1px solid rgba(124,58,237,0.4); }
+
+  .section-head { padding: 16px 20px 8px; font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+
+  .scroll { flex: 1; overflow: hidden; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 46px; height: 46px; border-radius: 23px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .info { flex: 1; }
+  .name { font-size: 14px; color: rgba(255,255,255,0.88); }
+  .role { font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .check-btn { width: 38px; height: 38px; border-radius: 19px; background: rgba(124,58,237,0.2); border: 1.5px solid rgba(124,58,237,0.5); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .check-btn.active { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.6); }
+
+  .home-indicator { height: 22px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; flex-shrink: 0; }
+  .hi-bar { width: 134px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="status">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.4C10.7 2.4 13.1 3.5 14.8 5.3L16 4C14 1.9 11.1 0.6 8 0.6C4.9 0.6 2 1.9 0 4L1.2 5.3C2.9 3.5 5.3 2.4 8 2.4Z" fill="white"/><path d="M8 5.2C9.8 5.2 11.4 6 12.5 7.2L13.7 5.9C12.3 4.4 10.3 3.5 8 3.5C5.7 3.5 3.7 4.4 2.3 5.9L3.5 7.2C4.6 6 6.2 5.2 8 5.2Z" fill="white"/><circle cx="8" cy="10" r="1.8" fill="white"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="5" width="3" height="7" rx="1" fill="white"/><rect x="4.5" y="3" width="3" height="9" rx="1" fill="white"/><rect x="9" y="1" width="3" height="11" rx="1" fill="white"/></svg>
+      <div class="battery"><div class="battery-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <div class="campus-tag">HALLMARK</div>
+    <div class="service-tag">9:00 AM</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">ROSTER</div>
+    <div class="tab">ACTIVE</div>
+    <div class="tab">ALT</div>
+  </div>
+
+  <div class="section-head">MASTER ROSTER — 8 WORKERS</div>
+
+  <div class="scroll">
+    <div class="card">
+      <div class="avatar" style="background:rgba(124,58,237,0.2);">🙏</div>
+      <div class="info"><div class="name">Pastor Marcus Webb</div><div class="role">ALTAR LEAD</div></div>
+      <div class="check-btn active">✓</div>
+    </div>
+    <div class="card">
+      <div class="avatar" style="background:rgba(56,130,200,0.2);">🙏</div>
+      <div class="info"><div class="name">Deaconess Rita Johnson</div><div class="role">ALTAR WORKER</div></div>
+      <div class="check-btn active">✓</div>
+    </div>
+    <div class="card">
+      <div class="avatar" style="background:rgba(184,134,11,0.2);">🙏</div>
+      <div class="info"><div class="name">Brother David Chen</div><div class="role">PRAYER MINISTER</div></div>
+      <div class="check-btn"></div>
+    </div>
+    <div class="card">
+      <div class="avatar" style="background:rgba(124,58,237,0.2);">🙏</div>
+      <div class="info"><div class="name">Sister Yvonne Harris</div><div class="role">ALTAR WORKER</div></div>
+      <div class="check-btn active">✓</div>
+    </div>
+    <div class="card">
+      <div class="avatar" style="background:rgba(56,130,200,0.2);">🙏</div>
+      <div class="info"><div class="name">Elder Thomas Grant</div><div class="role">ALTAR LEAD</div></div>
+      <div class="check-btn"></div>
+    </div>
+    <div class="card">
+      <div class="avatar" style="background:rgba(184,134,11,0.2);">🙏</div>
+      <div class="info"><div class="name">Minister Grace Osei</div><div class="role">PRAYER MINISTER</div></div>
+      <div class="check-btn active">✓</div>
+    </div>
+    <div class="card">
+      <div class="avatar" style="background:rgba(124,58,237,0.2);">🙏</div>
+      <div class="info"><div class="name">Deacon James Rivera</div><div class="role">ALTAR WORKER</div></div>
+      <div class="check-btn"></div>
+    </div>
+  </div>
+
+  <div class="home-indicator"><div class="hi-bar"></div></div>
+</body>
+</html>

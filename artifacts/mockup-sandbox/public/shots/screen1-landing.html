@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 430px; height: 932px;
+    background: #06050f;
+    font-family: Georgia, serif;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* Status bar */
+  .status { position: absolute; top: 0; left: 0; right: 0; height: 54px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 28px 10px; }
+  .status-time { font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 600; color: #fff; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .bar { width: 3px; background: #fff; border-radius: 1px; }
+  .wifi { width: 16px; height: 12px; position: relative; }
+  .battery { width: 25px; height: 12px; border: 1.5px solid #fff; border-radius: 3px; position: relative; padding: 2px; }
+  .battery::after { content:''; position:absolute; right:-5px; top:3px; width:3px; height:6px; background:#fff; border-radius:1px; }
+  .battery-fill { height: 100%; width: 80%; background: #fff; border-radius: 1.5px; }
+
+  /* Fire */
+  .fire-wrap { position: relative; width: 180px; height: 200px; margin-bottom: 36px; }
+  .flame { position: absolute; bottom: 0; border-radius: 50% 50% 20% 20%; }
+  .glow { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 60px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(220,80,0,0.5) 0%, transparent 70%); }
+
+  /* Title */
+  .title { font-size: 42px; letter-spacing: 8px; color: rgba(255,220,150,0.92);
+    text-align: center; margin-bottom: 8px; }
+  .subtitle { font-size: 11px; letter-spacing: 5px; color: rgba(255,255,255,0.28);
+    text-align: center; margin-bottom: 64px; }
+
+  /* Buttons */
+  .btn-primary {
+    width: 280px; height: 56px; border-radius: 16px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    border: 1px solid rgba(124,58,237,0.6);
+    color: #fff; font-family: Georgia, serif; font-size: 16px; letter-spacing: 2px;
+  }
+  .btn-secondary {
+    width: 280px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.5); font-family: Georgia, serif; font-size: 13px; letter-spacing: 2px;
+  }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="status">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.4C10.7 2.4 13.1 3.5 14.8 5.3L16 4C14 1.9 11.1 0.6 8 0.6C4.9 0.6 2 1.9 0 4L1.2 5.3C2.9 3.5 5.3 2.4 8 2.4Z" fill="white"/><path d="M8 5.2C9.8 5.2 11.4 6 12.5 7.2L13.7 5.9C12.3 4.4 10.3 3.5 8 3.5C5.7 3.5 3.7 4.4 2.3 5.9L3.5 7.2C4.6 6 6.2 5.2 8 5.2Z" fill="white"/><circle cx="8" cy="10" r="1.8" fill="white"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="5" width="3" height="7" rx="1" fill="white"/><rect x="4.5" y="3" width="3" height="9" rx="1" fill="white"/><rect x="9" y="1" width="3" height="11" rx="1" fill="white"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" fill="white" opacity="0.4"/></svg>
+      <div class="battery"><div class="battery-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="fire-wrap">
+    <div class="glow"></div>
+    <!-- Back flames -->
+    <div class="flame" style="left:50px;width:72px;height:170px;background:linear-gradient(to top,#8B0000,#CC2200,transparent);opacity:0.9;"></div>
+    <div class="flame" style="left:80px;width:60px;height:145px;background:linear-gradient(to top,#9B1010,#CC3300,transparent);opacity:0.85;"></div>
+    <!-- Mid flames -->
+    <div class="flame" style="left:55px;width:78px;height:155px;background:linear-gradient(to top,#CC4400,#FF6600,transparent);"></div>
+    <div class="flame" style="left:30px;width:54px;height:130px;background:linear-gradient(to top,#DD5500,#FF7700,transparent);opacity:0.9;"></div>
+    <div class="flame" style="left:90px;width:50px;height:120px;background:linear-gradient(to top,#E06000,#FF8800,transparent);opacity:0.85;"></div>
+    <!-- Inner flames -->
+    <div class="flame" style="left:62px;width:56px;height:110px;background:linear-gradient(to top,#FF7700,#FFAA00,transparent);"></div>
+    <div class="flame" style="left:72px;width:40px;height:90px;background:linear-gradient(to top,#FF8800,#FFCC00,transparent);"></div>
+    <!-- Core -->
+    <div class="flame" style="left:76px;width:30px;height:68px;background:linear-gradient(to top,#FFAA00,#FFE000,transparent);"></div>
+    <div class="flame" style="left:80px;width:20px;height:48px;background:linear-gradient(to top,#FFD000,#FFFACC,transparent);"></div>
+    <!-- Tip -->
+    <div class="flame" style="left:83px;width:14px;height:30px;background:linear-gradient(to top,#FFF5CC,#ffffff,transparent);opacity:0.85;"></div>
+  </div>
+
+  <div class="title">HIS ALTAR</div>
+  <div class="subtitle">CHURCH MINISTRY PLATFORM</div>
+
+  <div class="btn-primary">ENTER SITE</div>
+  <div class="btn-secondary">CHURCH SIGN-IN</div>
+
+  <div class="home-indicator"></div>
+</body>
+</html>

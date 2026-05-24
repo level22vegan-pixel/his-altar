@@ -4,10 +4,6 @@
     "appVersionSource": "local"
   },
   "build": {
-    "base": {
-      "node": "22",
-      "pnpm": "10"
-    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -26,6 +22,8 @@
     },
     "production": {
       "autoIncrement": true,
+      "node": "22",
+      "pnpm": "10",
       "ios": {
         "buildConfiguration": "Release"
       },

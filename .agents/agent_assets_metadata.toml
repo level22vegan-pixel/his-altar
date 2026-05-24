@@ -47,3 +47,27 @@ id = "xi5mVh7y80py-vRILq1WM"
 uri = "file://screenshots/appstore_screenshots.tar.gz"
 type = "unspecified"
 title = "App Store Screenshots (1242×2688)"
+
+[[outputs]]
+id = "GpknUffp7xAhrm78_gr1o"
+uri = "file://screenshots/appstore/screen1_1242x2688.jpg"
+type = "image"
+title = "Screen 1 – Welcome (1242×2688)"
+
+[[outputs]]
+id = "6myUpKQIkQuRAvVeb0hWF"
+uri = "file://screenshots/appstore/screen2_1242x2688.jpg"
+type = "image"
+title = "Screen 2 – PIN Entry (1242×2688)"
+
+[[outputs]]
+id = "OsFaVBlHWyUr-X5r3_YE8"
+uri = "file://screenshots/appstore/screen3_1242x2688.jpg"
+type = "image"
+title = "Screen 3 – Teams (1242×2688)"
+
+[[outputs]]
+id = "IT7HgscuocViNLuR0neqw"
+uri = "file://screenshots/appstore/screen4_1242x2688.jpg"
+type = "image"
+title = "Screen 4 – Home (1242×2688)"

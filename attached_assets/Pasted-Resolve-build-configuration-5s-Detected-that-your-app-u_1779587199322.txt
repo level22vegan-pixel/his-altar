@@ -1,0 +1,48 @@
+Resolve build configuration
+
+5s
+
+
+⚠️ Detected that your app uses Expo Go for development, this is not recommended when building production apps.
+Learn more: https://expo.fyi/why-not-build-expo-go-for-production
+To suppress this warning, set EAS_BUILD_NO_EXPO_GO_WARNING=true.
+Resolved "production" environment for the build. Learn more: https://docs.expo.dev/eas/environment-variables/#setting-the-environment-for-your-builds
+No environment variables with visibility "Plain text" and "Sensitive" found for the "production" environment on EAS.
+Environment variables loaded from the "production" build profile "env" configuration: EXPO_PUBLIC_DOMAIN.
+✔ Using remote iOS credentials (Expo server)
+Distribution Certificate is not validated for non-interactive builds.
+Skipping Provisioning Profile validation on Apple Servers because we aren't authenticated.
+Project Credentials Configuration
+Project                   @marc223232/his-altar-app
+Bundle Identifier         com.hisaltar.app
+                          
+App Store Configuration   
+                          
+Distribution Certificate  
+Serial Number             24CFBF47DBD425C51C1865C3B45EA378
+Expiration Date           Sun, 23 May 2027 15:39:00 PDT
+Apple Team                LVF7FM6B2G (MARC ANTHONY ARMSTEAD (Individual))
+Updated                   2 hours ago
+                          
+Provisioning Profile      
+Developer Portal ID       L4R465LQM2
+Status                    active
+Expiration                Sun, 23 May 2027 15:39:00 PDT
+Apple Team                LVF7FM6B2G (MARC ANTHONY ARMSTEAD (Individual))
+Updated                   2 hours ago
+All credentials are ready to build @marc223232/his-altar-app (com.hisaltar.app)
+- Computing project fingerprint
+✔ Computed project fingerprint
+Looking up credentials configuration for com.hisaltar.app...
+App Store Connect API Keys cannot be set up in --non-interactive mode.
+Error: build:internal command failed.
+Failed to run eas build:internal
+
+Fail job
+
+0ms
+
+
+Build failed
+
+Failed to run eas build:internal

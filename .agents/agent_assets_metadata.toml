@@ -41,3 +41,9 @@ id = "2HWuV3oKfszwq68YkYyEk"
 uri = "file://screenshots/screen5-pxp.jpg"
 type = "image"
 title = "Screen 5 — PXP Follow-Up Call (updated)"
+
+[[outputs]]
+id = "xi5mVh7y80py-vRILq1WM"
+uri = "file://screenshots/appstore_screenshots.tar.gz"
+type = "unspecified"
+title = "App Store Screenshots (1242×2688)"

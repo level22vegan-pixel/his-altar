@@ -1,0 +1,76 @@
+git add pnpm-lock.yaml
+git commit -m "use replit lockfile"
+git push origin main
+warning: could not open directory '.Trash/': Operation not permitted
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	new file:   ../../Desktop/Rustic-Hebrew-Login-main/eas.json
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	../../.CFUserTextEncoding
+	../../.DS_Store
+	../../.app-store/
+	../../.bash_history
+	../../.bash_sessions/
+	../../.dropbox/
+	../../.expo/
+	../../.gitconfig
+	../../.gitconfig.swp
+	../../.local/
+	../../.npm/
+	../../.nvm/
+	../../.ssh/
+	../../.viminfo
+	../../.zsh_history
+	../../.zsh_sessions/
+	../../Applications/
+	../../Creative Cloud Files  oldmachineboy@gmail.com 0A3F55F65E1693630A495FB3@AdobeID/
+	../../Creative Cloud Files level22vegan@gmail.com 3b0985f5fdd11bd1d633925bf2248cb930253130e81dfcd65071f841cd751c23/
+	../../Desktop/.DS_Store
+	../../Desktop/.localized
+	../../Desktop/Rustic-Hebrew-Login-main/.agents/
+	../../Desktop/Rustic-Hebrew-Login-main/.gitignore
+	../../Desktop/Rustic-Hebrew-Login-main/.npmrc
+	../../Desktop/Rustic-Hebrew-Login-main/.replit
+	../../Desktop/Rustic-Hebrew-Login-main/.replitignore
+	../../Desktop/Rustic-Hebrew-Login-main/app.json
+	../../Desktop/Rustic-Hebrew-Login-main/artifacts/
+	../../Desktop/Rustic-Hebrew-Login-main/attached_assets/
+	../../Desktop/Rustic-Hebrew-Login-main/lib/
+	../../Desktop/Rustic-Hebrew-Login-main/package.json
+	../../Desktop/Rustic-Hebrew-Login-main/pnpm-lock.yaml
+	../../Desktop/Rustic-Hebrew-Login-main/pnpm-workspace.yaml
+	../../Desktop/Rustic-Hebrew-Login-main/replit.md
+	../../Desktop/Rustic-Hebrew-Login-main/screenshots/
+	../../Desktop/Rustic-Hebrew-Login-main/scripts/
+	../../Desktop/Rustic-Hebrew-Login-main/tsconfig.base.json
+	../../Desktop/Rustic-Hebrew-Login-main/tsconfig.json
+	../../Desktop/untitled folder/
+	../.DS_Store
+	../.localized
+	../Adobe/
+	../BOX/
+	../DANCE/
+	../Insta360/
+	../M.Anthony/
+	../RLLauncher.log
+	../ROC/
+	../VideoCopilot/
+	../amberkidz.mp4
+	../../Downloads/
+	../../Dropbox
+	../../Library/
+	../../Movies/
+	../../Music/
+	../../Pictures/
+	../../Public/
+	../../insta360/
+	../../package-lock.json
+	../../test_file.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Everything up-to-date
+home@Marcs-MacBook-Pro Rustic-Hebrew-Login-main % 

@@ -71,3 +71,27 @@ id = "IT7HgscuocViNLuR0neqw"
 uri = "file://screenshots/appstore/screen4_1242x2688.jpg"
 type = "image"
 title = "Screen 4 – Home (1242×2688)"
+
+[[outputs]]
+id = "m-xUud_3FCqzsO2qUuDpM"
+uri = "file://screenshots/appstore-ipad/ipad_screen1_2048x2732.jpg"
+type = "image"
+title = "iPad Screen 1 – Welcome (2048×2732)"
+
+[[outputs]]
+id = "X7Cp6YpYDbyayprZXbPhF"
+uri = "file://screenshots/appstore-ipad/ipad_screen2_2048x2732.jpg"
+type = "image"
+title = "iPad Screen 2 – PIN Entry (2048×2732)"
+
+[[outputs]]
+id = "edSR74Fzpq4ARjxDu-OtQ"
+uri = "file://screenshots/appstore-ipad/ipad_screen3_2048x2732.jpg"
+type = "image"
+title = "iPad Screen 3 – Teams (2048×2732)"
+
+[[outputs]]
+id = "hG8XJ7Oi8Ljr2M6sfUkPT"
+uri = "file://screenshots/appstore-ipad/ipad_screen4_2048x2732.jpg"
+type = "image"
+title = "iPad Screen 4 – Admin (2048×2732)"

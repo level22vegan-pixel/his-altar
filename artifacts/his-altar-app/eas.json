@@ -22,8 +22,6 @@
     },
     "production": {
       "autoIncrement": true,
-      "node": "22",
-      "pnpm": "10",
       "ios": {
         "buildConfiguration": "Release"
       },

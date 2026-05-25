@@ -95,3 +95,9 @@ id = "hG8XJ7Oi8Ljr2M6sfUkPT"
 uri = "file://screenshots/appstore-ipad/ipad_screen4_2048x2732.jpg"
 type = "image"
 title = "iPad Screen 4 – Admin (2048×2732)"
+
+[[outputs]]
+id = "Aknp67bBqMzS1WAR4ImbB"
+uri = "file://artifacts/his-altar-app/assets/images/icon.png"
+type = "image"
+title = "App Icon (1024×1024) – iPhone & iPad"

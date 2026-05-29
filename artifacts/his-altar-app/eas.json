@@ -30,7 +30,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "his-altar-4vk7x.replit.app"
+        "EXPO_PUBLIC_DOMAIN": "hisaltar.com"
       }
     }
   },
